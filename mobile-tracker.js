@@ -33,7 +33,8 @@
       <div class="mobile-player-caption"><strong>SELECT PLAYER</strong><span>Swipe for more players</span></div>
       <div id="mobile-player-slot"></div>
     </footer>`;
-  const scoreboard = $('.home-score')?.closest('.scoreboard');
+  
+  const scoreboard = $('home-score')?.closest('.scoreboard');
   scoreboard?.after(mobile);
   const playerPanel = document.querySelector('.player-panel');
   const statPanel = document.querySelector('.stats-panel');
