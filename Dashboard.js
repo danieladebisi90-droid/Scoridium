@@ -1345,29 +1345,86 @@ console.log("Roster loop distance:", loopDistance);
 
 // Portrait phones: scrollLeft-based marquee, with manual swiping and pause.
 let mobileRosterMarqueeStop = null;
+
 function startMobileRosterMarquee(track) {
-    if (mobileRosterMarqueeStop) mobileRosterMarqueeStop();
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    let stopped=false, held=false, last=0, resumeAt=0, raf=0;
-    const pause=()=>{ held=true; resumeAt=performance.now()+5000; };
-    const release=()=>{ held=false; resumeAt=performance.now()+5000; };
-    const step=(time)=>{
-      if(stopped) return;
-      const delta=last ? Math.min(60,time-last) : 0; last=time;
-      if(track.isConnected && !held && time>resumeAt && document.visibilityState==='visible') {
-        const max=track.scrollWidth-track.clientWidth;
-        if(max>1) track.scrollLeft = track.scrollLeft>=max-1 ? 0 : track.scrollLeft+(delta*0.018);
+  if (mobileRosterMarqueeStop) mobileRosterMarqueeStop();
+
+  const reducedMotion = matchMedia(
+    "(prefers-reduced-motion: reduce)"
+  ).matches;
+
+  if (reducedMotion) return;
+
+  let stopped = false;
+  let paused = false;
+  let resumeAt = 0;
+  let lastTime = 0;
+  let position = track.scrollLeft;
+  let frame = 0;
+
+  const pause = () => {
+    paused = true;
+    position = track.scrollLeft;
+  };
+
+  const resume = () => {
+    paused = false;
+    position = track.scrollLeft;
+    resumeAt = performance.now() + 3000;
+  };
+
+  function animate(time) {
+    if (stopped) return;
+
+    const delta = lastTime
+      ? Math.min(time - lastTime, 60)
+      : 0;
+
+    lastTime = time;
+
+    if (
+      !paused &&
+      time >= resumeAt &&
+      document.visibilityState === "visible"
+    ) {
+      const maxScroll =
+        track.scrollWidth - track.clientWidth;
+
+      if (maxScroll > 1) {
+        position += delta * 0.035;
+
+        if (position >= maxScroll) {
+          position = 0;
+        }
+
+        track.scrollLeft = position;
       }
-      raf=requestAnimationFrame(step);
-    };
-    track.addEventListener('touchstart',pause,{passive:true});
-    track.addEventListener('touchend',release,{passive:true});
-    track.addEventListener('pointerdown',pause);
-    track.addEventListener('pointerup',release);
-    track.addEventListener('wheel',release,{passive:true});
-    raf=requestAnimationFrame(step);
-    mobileRosterMarqueeStop=()=>{ stopped=true;cancelAnimationFrame(raf);track.removeEventListener('touchstart',pause);track.removeEventListener('touchend',release);track.removeEventListener('pointerdown',pause);track.removeEventListener('pointerup',release);track.removeEventListener('wheel',release); };
+    }
+
+    frame = requestAnimationFrame(animate);
+  }
+
+  track.addEventListener("touchstart", pause, {
+    passive: true
+  });
+  track.addEventListener("touchend", resume, {
+    passive: true
+  });
+  track.addEventListener("pointerdown", pause);
+  track.addEventListener("pointerup", resume);
+
+  frame = requestAnimationFrame(animate);
+
+  mobileRosterMarqueeStop = () => {
+    stopped = true;
+    cancelAnimationFrame(frame);
+    track.removeEventListener("touchstart", pause);
+    track.removeEventListener("touchend", resume);
+    track.removeEventListener("pointerdown", pause);
+    track.removeEventListener("pointerup", resume);
+  };
 }
+
 
 // Refresh ticker when returning to the dashboard, including after other devices update a game.
 let lastTickerRefresh=0;
