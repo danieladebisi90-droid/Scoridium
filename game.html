@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Installable Scoridium app (iOS, Android, desktop) -->
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+  <meta name="theme-color" content="#10233F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Scoridium">
+
 <script>if(window.parent!==window){document.documentElement.classList.add('scoridium-framed');}</script>
 <style>html.scoridium-framed #shared-header {display:none!important;}html.scoridium-framed #app-header {display:none!important;}html.scoridium-framed body {padding-top:0!important;}html.scoridium-framed body {min-height:100dvh!important;}</style>
   <meta charset="UTF-8">
@@ -422,5 +431,6 @@
   <script src="supabase-config.js"></script>
   <script src="script.js?v=sidebars3"></script>
   <script src="mobile-tracker.js?v=sidebars3"></script>
+  <script src="./pwa-register.js" defer></script>
 </body>
 </html>
