@@ -47,3 +47,15 @@
  .next-game .next-game-header h2 { font-size:15px!important; }
  #open-next-game { width:100%!important; min-height:44px!important; margin-top:10px!important; border-radius:9px!important; }
 }
+
+/* MOBILE FIX: Calendar -> selected activities -> next game tracking control. */
+@media (max-width:700px) and (orientation:portrait) {
+ .game-hub-layout { display:flex!important; flex-direction:column!important; gap:12px!important; }
+ .game-schedule { display:flex!important; flex-direction:column!important; gap:12px!important; }
+ .game-schedule .game-calendar { order:1!important; }
+ .game-schedule .mobile-selected-activities { order:2!important; display:block!important; }
+ .game-schedule .games-list { display:none!important; }
+ .game-info-container { display:block!important; flex:0 0 auto!important; order:3!important; }
+ .game-info-container .previous-game { display:none!important; }
+ .game-info-container .next-game { display:block!important; }
+}

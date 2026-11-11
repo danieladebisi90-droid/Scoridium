@@ -1210,6 +1210,16 @@ async function loadDashboardRoster() {
             )
         );
     });
+    // On phones use a native swipeable roster. Do not clone or animate cards.
+    const isPortraitPhone = window.matchMedia('(max-width: 700px) and (orientation: portrait)').matches;
+    track.getAnimations().forEach(animation => animation.cancel());
+    track.classList.remove('roster-auto-scroll');
+    track.style.transform = '';
+    if (isPortraitPhone) {
+        track.scrollLeft = 0;
+        return;
+    }
+
     // Duplicate the cards for seamless infinite scrolling.
     const cards = [...track.children];
 
@@ -1250,6 +1260,7 @@ let rosterLastFrameTime = null;
 
 
 function startDashboardRosterAutoScroll() {
+    if (window.matchMedia('(max-width: 700px) and (orientation: portrait)').matches) return;
     const track = document.getElementById("dashboard-roster-track");
     if (!track) return;
 

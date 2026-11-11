@@ -995,3 +995,10 @@ body{background:linear-gradient(180deg,#101a30 0,#080e1c 48%,#070c17 100%)!impor
  .table-scroll { width:100%!important; overflow-x:auto!important; -webkit-overflow-scrolling:touch; }
  #shot-court { width:100%!important; height:auto!important; }
 }
+
+/* Mobile player profile: Game Log is the only place for game history. */
+@media (max-width: 700px) and (orientation: portrait) {
+  #panel-overview .concept-recent-panel {
+    display: none !important;
+  }
+}

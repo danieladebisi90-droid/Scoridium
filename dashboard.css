@@ -1338,3 +1338,43 @@ a.dashboard-player-card:hover {
   .mobile-dashboard-next-event p:not(.mobile-dashboard-eyebrow) { margin:0; font-size:12px; line-height:1.55; color:#68788f; }
   .mobile-dashboard-next-event a { display:inline-block; margin-top:12px; font-size:12px; font-weight:750; color:var(--team-primary,#10233f); text-decoration:none; }
 }
+
+/* MOBILE FIX: all three dashboard sections remain in document order. */
+@media (max-width:700px) and (orientation:portrait) {
+  #app-content { display:flex!important; flex-direction:column!important; overflow:visible!important; }
+  #app-content .team-overview { order:1!important; }
+  #app-content .schedule-goals-container { display:none!important; }
+  #app-content .recent-leader-container {
+    order:2!important; display:flex!important; flex-direction:column!important;
+    align-items:stretch!important; gap:12px!important; height:auto!important;
+    min-height:0!important; width:100%!important; overflow:visible!important;
+  }
+  #app-content .recent-leader-container .recent-games { display:none!important; }
+  #app-content .recent-leader-container .mobile-dashboard-next-event {
+    display:block!important; order:1!important; flex:0 0 auto!important;
+    position:relative; visibility:visible!important; opacity:1!important;
+    width:100%!important; height:auto!important; min-height:0!important;
+    background:#fff; border-radius:12px; padding:17px;
+    box-shadow:0 2px 9px #10233f0c;
+  }
+  #app-content .recent-leader-container .dashboard-roster {
+    display:block!important; order:2!important; width:100%!important;
+    min-width:0!important; max-width:100%!important; height:auto!important;
+    min-height:0!important; padding:14px!important; overflow:hidden!important;
+  }
+  #app-content .dashboard-roster-track,
+  #app-content .dashboard-roster-track.roster-auto-scroll {
+    display:flex!important; flex:0 0 auto!important; width:100%!important;
+    max-width:100%!important; min-width:0!important; height:auto!important;
+    min-height:0!important; overflow-x:auto!important; overflow-y:hidden!important;
+    scroll-snap-type:x proximity!important; scroll-behavior:auto!important;
+    transform:none!important; will-change:auto!important;
+    touch-action:pan-x!important; -webkit-overflow-scrolling:touch;
+  }
+  #app-content .dashboard-roster-track [aria-hidden="true"] {display:none!important;}
+  #app-content .dashboard-roster-track .dashboard-player-card {
+    flex:0 0 clamp(175px,69vw,240px)!important; width:clamp(175px,69vw,240px)!important;
+    height:205px!important; min-height:205px!important; max-height:none!important;
+    scroll-snap-align:start!important;
+  }
+}

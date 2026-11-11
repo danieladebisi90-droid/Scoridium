@@ -34,3 +34,22 @@
  .roster-toolbar .search-control svg { width:14px!important; height:14px!important; flex-shrink:0; }
  .roster-toolbar { gap:10px!important; }
 }
+
+/* MOBILE FIX: search HEIGHT (not width). */
+@media (max-width:700px) and (orientation:portrait) {
+ .roster-toolbar { align-items:stretch!important; gap:10px!important; }
+ .roster-toolbar .search-control {
+   display:flex!important; flex:0 0 40px!important;
+   align-self:stretch!important; width:100%!important; max-width:100%!important;
+   min-width:0!important; height:40px!important; min-height:40px!important;
+   max-height:40px!important; padding:0 12px!important;
+   margin:0!important; box-sizing:border-box!important;
+ }
+ .roster-toolbar .search-control input {
+   display:block!important; flex:1 1 auto!important; width:100%!important;
+   min-width:0!important; height:100%!important; min-height:0!important;
+   max-height:100%!important; padding:0!important; margin:0!important;
+   line-height:normal!important; font-size:13px!important;
+ }
+ .roster-toolbar .search-control svg { flex:0 0 17px!important; width:17px!important; height:17px!important; }
+}
