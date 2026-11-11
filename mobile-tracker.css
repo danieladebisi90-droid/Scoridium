@@ -54,3 +54,52 @@
   /* Shot dialog must remain visible within the court view. */
   .mobile-tracker-view .shot-dialog:not([hidden]){position:absolute;z-index:20;left:50%;top:50%;transform:translate(-50%,-50%);width:min(90%,340px);box-shadow:0 8px 30px #0004}
 }
+
+
+/* =========================================
+   MOBILE LANDSCAPE COURT SIZING FIX
+========================================= */
+
+@media (orientation: landscape) and (max-height: 650px) {
+
+    /* Keep the active view inside its allocated space */
+    #mobile-tracker,
+    .mobile-tracker-content,
+    [data-mobile-panel="court"] {
+        min-height: 0;
+    }
+
+    .mobile-tracker-content {
+        overflow: hidden;
+    }
+
+    /* Let the court view shrink to fit */
+    [data-mobile-panel="court"] {
+        overflow: hidden;
+        grid-template-rows: minmax(0, 1fr);
+    }
+
+    /* Remove desktop minimum sizing */
+    [data-mobile-panel="court"] #tracker-controls {
+        min-height: 0;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    [data-mobile-panel="court"] .court-wrap {
+        min-height: 0;
+        height: 100%;
+        max-height: 100%;
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+
+    /* Scale the court without stretching it */
+    [data-mobile-panel="court"] #basketball-court {
+        display: block;
+        width: 100%;
+        height: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+}
