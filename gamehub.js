@@ -181,11 +181,12 @@ if (totalItems === 1 && eventsForDay.length === 1) {
             }
 
             renderGameCalendar();
+            renderMobileSelectedDay();
+            renderMobileGameCard();
         });
 
         calendar.appendChild(dayButton);
     }
-    renderMobileTeamEvents();
 }
 
 
@@ -242,6 +243,8 @@ async function loadGameHubGames() {
     renderGameCalendar();
     console.log("Game Hub games:", games);
     displayGameHubGames(games);
+    renderMobileSelectedDay();
+    renderMobileGameCard();
 
     if (scheduleModal && !scheduleModal.hidden) {
     renderExistingScheduleEvents();
@@ -1920,6 +1923,8 @@ console.log("Game Hub events loaded:", gameHubEvents.length);
 
 // Refresh the calendar.
 renderGameCalendar();
+renderMobileSelectedDay();
+renderMobileGameCard();
 
 // Refresh the editor list if the popup is open.
 if (scheduleModal && !scheduleModal.hidden) {
@@ -2046,32 +2051,110 @@ deleteScheduleButton.addEventListener("click", async () => {
     });
 
 
-/* Phone-only summary fed by the existing team_events and games arrays. */
-function renderMobileTeamEvents(){
-  const title=document.getElementById('mobile-next-event-title');
-  const info=document.getElementById('mobile-next-event-info');
-  const dayHeading=document.getElementById('mobile-selected-date');
-  const dayItems=document.getElementById('mobile-day-activities');
-  if(!title||!info||!dayHeading||!dayItems)return;
-  const today=new Date();
-  const todayKey=[today.getFullYear(),String(today.getMonth()+1).padStart(2,'0'),String(today.getDate()).padStart(2,'0')].join('-');
-  const all=[
-    ...gameHubEvents.map(e=>({date:String(e.event_date||'').slice(0,10),label:e.title||({practice:'Practice',meeting:'Team Meeting',training:'Training'}[e.event_type]||'Team Event'),time:e.event_time||e.start_time||'',type:e.event_type||'Event'})),
-    ...gameHubGames.filter(g=>g.status==='scheduled').map(g=>({date:String(g.date||'').slice(0,10),label:'Game vs '+(g.opponent||'TBD'),time:g.time||'',type:'Game'}))
-  ].filter(e=>/^\d{4}-\d{2}-\d{2}$/.test(e.date));
-  all.sort((a,b)=>a.date.localeCompare(b.date)||String(a.time).localeCompare(String(b.time)));
-  const upcoming=all.find(e=>e.date>=todayKey);
-  title.textContent=upcoming?.label||'No upcoming team events';
-  info.textContent=upcoming?(formatMobileEventDate(upcoming.date)+' · '+(upcoming.type==='Game'?'Game':upcoming.type)+(upcoming.time?' · '+String(upcoming.time).slice(0,5):'')):'Check back when the schedule is updated.';
-  const date=selectedGameDate||new Date();
-  const dateKey=[date.getFullYear(),String(date.getMonth()+1).padStart(2,'0'),String(date.getDate()).padStart(2,'0')].join('-');
-  dayHeading.textContent=formatMobileEventDate(dateKey).toUpperCase();
-  dayItems.replaceChildren();
-  const matching=all.filter(e=>e.date===dateKey);
-  if(!matching.length){const empty=document.createElement('p');empty.className='mobile-no-activities';empty.textContent='No activities scheduled for this day.';dayItems.append(empty);return;}
-  for(const e of matching){const item=document.createElement('div');item.className='mobile-activity-item';const type=document.createElement('span');type.className='mobile-activity-type';type.textContent=e.type;const label=document.createElement('strong');label.textContent=e.label;const time=document.createElement('small');time.textContent=e.time?String(e.time).slice(0,5):'Time TBD';item.append(type,label,time);dayItems.append(item);}
+
+/* ==============================================
+   MOBILE GAME HUB — CALENDAR + CONTEXTUAL CARD
+   Desktop table and game cards remain unchanged.
+   ============================================== */
+function mobileDateKey(date) {
+    return [date.getFullYear(), String(date.getMonth()+1).padStart(2, '0'),
+        String(date.getDate()).padStart(2, '0')].join('-');
 }
-function formatMobileEventDate(dateKey){
-  const [y,m,d]=dateKey.split('-').map(Number);
-  return new Date(y,m-1,d).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+
+function mobileEventRow(type, title, detail) {
+    const row = document.createElement('div');
+    row.className = 'mobile-activity-item';
+    const label = document.createElement('span');
+    label.className = 'mobile-activity-type';
+    label.textContent = type;
+    const name = document.createElement('strong');
+    name.textContent = title;
+    const info = document.createElement('small');
+    info.textContent = detail;
+    row.append(label, name, info);
+    return row;
+}
+
+function renderMobileSelectedDay() {
+    const container = document.getElementById('mobile-day-activities');
+    const heading = document.getElementById('mobile-selected-date');
+    if (!container || !heading) return;
+    container.replaceChildren();
+    if (!selectedGameDate) {
+        heading.textContent = 'SELECT A DATE';
+        container.appendChild(mobileEventRow('Calendar', 'Choose a date',
+            'Tap a date to see its games and team events.'));
+        return;
+    }
+    const key = mobileDateKey(selectedGameDate);
+    heading.textContent = selectedGameDate.toLocaleDateString('en-US', {
+        weekday:'short', month:'short', day:'numeric'
+    }).toUpperCase();
+    const games = gameHubGames.filter(game => String(game.date).slice(0,10) === key);
+    const events = gameHubEvents.filter(event => String(event.event_date).slice(0,10) === key);
+    for (const game of games) {
+        const finished = game.status === 'completed';
+        const score = finished && game.team_score != null && game.opponent_score != null
+            ? ` · ${game.team_score}–${game.opponent_score}` : '';
+        container.appendChild(mobileEventRow(finished ? 'Final Game' : 'Game',
+            `${gameHubTeamName} vs ${game.opponent || 'Opponent'}`,
+            `${game.location || 'Location TBD'}${score}`));
+    }
+    for (const event of events) {
+        container.appendChild(mobileEventRow(event.event_type || 'Team event',
+            event.title || 'Team Event',
+            event.start_time || event.time || 'Time TBD'));
+    }
+    if (!games.length && !events.length) {
+        container.appendChild(mobileEventRow('Schedule','No events', 'Nothing scheduled for this date.'));
+    }
+}
+
+function renderMobileGameCard() {
+    const card = document.getElementById('mobile-context-game');
+    if (!card) return;
+    const heading = card.querySelector('[data-mobile-game-heading]');
+    const date = card.querySelector('[data-mobile-game-date]');
+    const matchup = card.querySelector('[data-mobile-game-matchup]');
+    const result = card.querySelector('[data-mobile-game-result]');
+    const action = card.querySelector('[data-mobile-game-action]');
+
+    const selectedDayKey = selectedGameDate ? mobileDateKey(selectedGameDate) : null;
+    const completedOnDay = selectedDayKey ? gameHubGames.filter(game =>
+        String(game.date).slice(0,10) === selectedDayKey && game.status === 'completed'
+    ).sort((a,b) => String(b.date).localeCompare(String(a.date))) : [];
+
+    // A past, completed game gets a box-score card. Future game taps never
+    // change the next-game tracker target.
+    let game = completedOnDay[0] || null;
+    let completed = Boolean(game);
+    if (!game) {
+        const today = mobileDateKey(new Date());
+        game = gameHubGames.filter(g =>
+            ['scheduled','live','paused'].includes(g.status) &&
+            String(g.date).slice(0,10) >= today
+        ).sort((a,b) => String(a.date).localeCompare(String(b.date)))[0];
+        if (!game) {
+            game = gameHubGames.filter(g => g.status === 'completed')
+                .sort((a,b) => String(b.date).localeCompare(String(a.date)))[0];
+            completed = Boolean(game);
+        }
+    }
+
+    heading.textContent = completed ? 'PREVIOUS GAME' : 'NEXT GAME';
+    date.textContent = game ? String(game.date).slice(0,10) : 'No scheduled games';
+    matchup.textContent = game ? `${gameHubTeamName} vs ${game.opponent || 'Opponent'}` : 'No games available';
+    result.textContent = game ? (completed
+        ? (game.team_score != null && game.opponent_score != null
+            ? `FINAL · ${game.team_score} – ${game.opponent_score}` : 'FINAL')
+        : `${String(game.location || 'Location TBD').toUpperCase()} · ${game.status === 'scheduled' ? 'UPCOMING' : game.status.toUpperCase()}`) : '';
+    action.disabled = !game;
+    action.textContent = completed ? 'VIEW BOX SCORE' : 'OPEN GAME TRACKER';
+    action.onclick = () => {
+        if (!game) return;
+        const destination = completed
+            ? `stats.html?gameId=${encodeURIComponent(game.id)}`
+            : `game.html?gameId=${encodeURIComponent(game.id)}`;
+        window.location.href = destination;
+    };
 }
