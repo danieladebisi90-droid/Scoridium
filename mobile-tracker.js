@@ -1,101 +1,128 @@
-/* Scoridium mobile landscape tracker V1.
-   Reuses the ORIGINAL controls and their event listeners; no extra writes or new tracker state.
-   Mobile layout is isolated behind media query and device capability checks. */
+/* Scoridium mobile landscape tracker V3: persistent left roster,
+   central court, right stat strip; existing click handlers remain intact. */
 (() => {
   'use strict';
-  const media = window.matchMedia('(orientation: landscape) and (max-height: 650px)');
-  const $ = id => document.getElementById(id);
+  const query = '(orientation: landscape) and (max-height: 650px)';
+  const media = matchMedia(query);
   const shell = document.querySelector('.tracker-shell');
-  if (!shell) return;
+  const score = shell?.querySelector('.scoreboard');
+  if (!shell || !score) return;
 
-  // Store original locations to restore desktop DOM if the device rotates or resizes.
-  const regions = [
-    ['tracker-controls', 'court'],
-    ['game-info-panel', 'events'],
-    ['game-controls', 'events'],
-  ];
-  const original = new Map();
   const mobile = document.createElement('section');
   mobile.id = 'mobile-tracker';
-  mobile.setAttribute('aria-label','Mobile game tracking');
+  mobile.setAttribute('aria-label', 'Mobile landscape basketball tracker');
   mobile.innerHTML = `
-    <nav class="mobile-tracker-tabs" aria-label="Tracker view">
-      <button type="button" data-mobile-view="court" aria-pressed="true" aria-label="Court view" title="Court"></button>
-      <button type="button" data-mobile-view="stats" aria-pressed="false" aria-label="Stats view" title="Stats"></button>
-      <button type="button" data-mobile-view="events" aria-pressed="false" aria-label="Events view" title="Events"></button>
-    </nav>
-    <div class="mobile-tracker-content">
-      <div class="mobile-tracker-view" data-mobile-panel="court"></div>
-      <div class="mobile-tracker-view" data-mobile-panel="stats" hidden></div>
-      <div class="mobile-tracker-view" data-mobile-panel="events" hidden></div>
-    </div>
-    <footer class="mobile-player-dock" aria-label="Player selection">
-      <div class="mobile-player-caption"><strong>SELECT PLAYER</strong><span>Swipe for more players</span></div>
-      <div id="mobile-player-slot"></div>
-    </footer>`;
-  const scoreboard = $('home-score')?.closest('.scoreboard');
-  (scoreboard || shell.querySelector('.scoreboard'))?.after(mobile);
-  const playerPanel = document.querySelector('.player-panel');
-  const statPanel = document.querySelector('.stats-panel');
-  const nodes = [
-    ...regions.map(([id, view])=>[$(id),view]),
-    [statPanel,'stats'],
-    [playerPanel,'dock'],
-  ].filter(([node])=>node);
-  for(const [node] of nodes){
-    const marker=document.createComment('Original location of '+(node.id||node.className));
-    node.parentNode.insertBefore(marker,node);
-    original.set(node,marker);
+    <aside class="mobile-left-rail" aria-label="Players and period controls">
+      <div class="mobile-left-actions" id="mobile-game-actions"></div>
+      <div class="mobile-player-list" id="mobile-player-slot"></div>
+    </aside>
+    <section class="mobile-court-center" aria-label="Full basketball court">
+      <div id="mobile-court-slot"></div>
+    </section>
+    <aside class="mobile-right-rail" aria-label="Scrollable game stats">
+      <div id="mobile-stat-slot"></div>
+    </aside>`;
+  score.after(mobile);
+
+  const target = [
+    [document.getElementById('game-controls'), '#mobile-game-actions'],
+    [document.querySelector('.player-panel'), '#mobile-player-slot'],
+    [document.getElementById('tracker-controls'), '#mobile-court-slot'],
+    [document.querySelector('.stats-panel'), '#mobile-stat-slot']
+  ].filter(([node]) => !!node);
+  const restorePoints = new Map();
+  for (const [node] of target) {
+    const marker = document.createComment('restore ' + (node.id || node.className));
+    node.before(marker);
+    restorePoints.set(node, marker);
   }
+
+  const courtWrap = document.querySelector('#tracker-controls .court-wrap');
+  if (!courtWrap) return;
+  const overlay = document.createElement('div');
+  overlay.id = 'mobile-start-overlay';
+  overlay.setAttribute('role', 'group');
+  overlay.setAttribute('aria-label', 'Start game and choose attacking direction');
+  overlay.innerHTML = `
+    <div class="mobile-start-card">
+      <strong id="mobile-start-title">Ready to start?</strong>
+      <span class="mobile-start-help">Which basket does HOME attack first?</span>
+      <div class="mobile-direction-select" role="group" aria-label="Home first-half attack direction">
+        <button type="button" data-home-direction="left" aria-pressed="true">← LEFT</button>
+        <button type="button" data-home-direction="right" aria-pressed="false">RIGHT →</button>
+      </div>
+      <button type="button" id="mobile-start-action" class="primary">START GAME</button>
+      <small id="mobile-start-note" aria-live="polite"></small>
+    </div>`;
+  courtWrap.appendChild(overlay);
+  const startAction = overlay.querySelector('#mobile-start-action');
+  const startNote = overlay.querySelector('#mobile-start-note');
+  const originalStart = document.getElementById('start-game');
+  const statusElement = document.getElementById('game-status');
+  const directionButtons = [...overlay.querySelectorAll('[data-home-direction]')];
+  const direction = window.scoridiumTrackerDirection;
   let active = false;
-  let view = 'court';
-  const buttons = [...mobile.querySelectorAll('[data-mobile-view]')];
-  const panels = [...mobile.querySelectorAll('[data-mobile-panel]')];
-  function showView(next){
-    if(!['court','stats','events'].includes(next))return;
-    view=next;
-    for(const btn of buttons){const selected=btn.dataset.mobileView===next;btn.setAttribute('aria-pressed',String(selected));btn.classList.toggle('active',selected)}
-    for(const panel of panels)panel.hidden=panel.dataset.mobilePanel!==next;
-  }
-  buttons.forEach(btn=>btn.addEventListener('click',()=>showView(btn.dataset.mobileView)));
-  function setMobile(enabled){
-    if(active===enabled)return;
-    active=enabled;
-    if(enabled){
-      for(const [node,destination] of nodes){
-        const holder=destination==='dock' ? mobile.querySelector('#mobile-player-slot') : mobile.querySelector(`[data-mobile-panel="${destination}"]`);
-        holder.appendChild(node);
-      }
-      document.documentElement.classList.add('mobile-tracker-active');
-      showView(view);
-    } else {
-      document.documentElement.classList.remove('mobile-tracker-active');
-      for(const [node] of nodes){original.get(node).after(node)}
+
+  function showDirection() {
+    const selected = direction?.get() || 'left';
+    for (const btn of directionButtons) {
+      const chosen = btn.dataset.homeDirection === selected;
+      btn.classList.toggle('active', chosen);
+      btn.setAttribute('aria-pressed', String(chosen));
     }
   }
-  const sync = ()=>setMobile(media.matches);
-  media.addEventListener?.('change',sync);
+  for (const btn of directionButtons) {
+    btn.addEventListener('click', () => {
+      if (direction?.set(btn.dataset.homeDirection) === false) {
+        startNote.textContent = 'Direction is locked after recording begins.';
+      } else {
+        startNote.textContent = '';
+      }
+      showDirection();
+    });
+  }
+
+  function refreshStartOverlay() {
+    if (!active) return;
+    const status = statusElement?.textContent?.trim().toUpperCase() || '';
+    const done = status === 'LIVE' || status === 'COMPLETED' || status === 'FINAL';
+    overlay.hidden = done;
+    if (done) return;
+    startAction.textContent = originalStart?.textContent || 'START GAME';
+    startAction.disabled = !originalStart || originalStart.disabled;
+    if (status === 'PAUSED') {
+      overlay.querySelector('.mobile-start-help').textContent = 'Resume the game to continue tracking.';
+    } else {
+      overlay.querySelector('.mobile-start-help').textContent = 'Which basket does HOME attack first?';
+    }
+    showDirection();
+  }
+  startAction.addEventListener('click', () => {
+    if (!originalStart || originalStart.disabled) return;
+    startNote.textContent = 'Starting game…';
+    originalStart.click(); // Reuses original Supabase RPC + synchronization checks.
+  });
+  const observer = new MutationObserver(() => {
+    if (active) {
+      refreshStartOverlay();
+      if (overlay.hidden) startNote.textContent = '';
+    }
+  });
+  if (statusElement) observer.observe(statusElement, {childList:true, characterData:true, subtree:true});
+
+  function sync() {
+    const enabled = media.matches;
+    if (enabled === active) return;
+    active = enabled;
+    if (enabled) {
+      for (const [node, selector] of target) mobile.querySelector(selector).appendChild(node);
+      document.documentElement.classList.add('mobile-tracker-active');
+      refreshStartOverlay();
+    } else {
+      document.documentElement.classList.remove('mobile-tracker-active');
+      for (const [node] of target) restorePoints.get(node).after(node);
+    }
+  }
+  media.addEventListener?.('change', sync);
   sync();
-  // Swipe between views. On the court, only swipes starting at the
-  // left/right edge switch views, preventing accidental shot entries.
-  const content = mobile.querySelector('.mobile-tracker-content');
-  const order=['court','stats','events'];
-  let touchStart=null;
-  content.addEventListener('touchstart', event => {
-    if(event.touches.length!==1) return;
-    const t=event.touches[0];
-    const bounds=content.getBoundingClientRect();
-    const isEdge=t.clientX<bounds.left+42 || t.clientX>bounds.right-42;
-    if(view==='court' && !isEdge){touchStart=null;return;}
-    touchStart={x:t.clientX,y:t.clientY};
-  },{passive:true});
-  content.addEventListener('touchend', event => {
-    if(!touchStart || !event.changedTouches.length)return;
-    const t=event.changedTouches[0];
-    const dx=t.clientX-touchStart.x, dy=t.clientY-touchStart.y;
-    touchStart=null;
-    if(Math.abs(dx)<55 || Math.abs(dx)<Math.abs(dy)*1.4)return;
-    const idx=order.indexOf(view);
-    showView(order[Math.max(0,Math.min(order.length-1,idx+(dx<0?1:-1)))]);
-  },{passive:true});
 })();

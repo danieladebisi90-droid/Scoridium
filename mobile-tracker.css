@@ -1,164 +1,109 @@
-/* Mobile landscape interface only; desktop/iPad views retain existing styling. */
-#mobile-tracker{display:none}
-@media (orientation:portrait) and (max-width:767px) and (pointer:coarse){
-  /* Screen rotates visually without attempting unsupported orientation locks. */
-  body::after{content:"Rotate your phone to landscape to track the game";position:fixed;inset:0;z-index:10000;background:#10233f;color:#fff;display:grid;place-items:center;text-align:center;padding:26px;font-size:clamp(19px,5vw,28px);font-weight:800}
+/* V3: landscape three-column court tracker. Desktop remains unchanged. */
+#mobile-tracker { display: none; }
+@media (orientation: portrait) and (max-width: 767px) and (pointer: coarse) {
+  body::after { content: "Rotate your phone to landscape to track the game";
+    position: fixed; inset: 0; display: grid; place-items: center; z-index: 10000;
+    background: #10233f; color: white; font-weight: 800; font-size: 20px;
+    padding: 24px; text-align: center; }
 }
-@media (orientation:landscape) and (max-height:650px){
-  html.mobile-tracker-active,html.mobile-tracker-active body{height:100%;overflow:hidden}
-  html.mobile-tracker-active .topbar{display:none}
-  html.mobile-tracker-active .tracker-shell{display:grid;grid-template-rows:auto minmax(0,1fr);height:100dvh;max-width:none;margin:0;padding:5px 7px;gap:5px;min-height:0;overflow:hidden}
-  html.mobile-tracker-active .scoreboard{padding:3px 12px;border-radius:8px;min-height:0;gap:8px}
-  html.mobile-tracker-active .score-team h2{font-size:clamp(10px,2.5vh,15px);margin:0 0 2px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
-  html.mobile-tracker-active .score-team output{font-size:clamp(20px,7vh,40px)}
-  html.mobile-tracker-active .score-center{gap:1px;min-width:55px}
-  html.mobile-tracker-active .score-center strong{font-size:clamp(13px,4vh,20px)}
-  html.mobile-tracker-active .score-center>span:first-child{font-size:9px;padding:2px 6px}
-  html.mobile-tracker-active .small-label{font-size:8px}
-  html.mobile-tracker-active .tracker-grid{display:none}
-  html.mobile-tracker-active #mobile-tracker{display:grid;grid-template-rows:auto minmax(0,1fr) auto;min-height:0;gap:4px;overflow:hidden}
-  .mobile-tracker-tabs{display:flex;gap:5px;min-height:0;touch-action:pan-y}
-  .mobile-tracker-tabs button{flex:1;padding:5px 8px;font-size:11px;background:#e8edf3;color:#10233f;border-radius:7px}
-  .mobile-tracker-tabs button.active{background:var(--navy,#123B78);color:#fff}
-  .mobile-tracker-content{min-height:0;overflow:hidden;position:relative}
-  .mobile-tracker-view:not([hidden]){height:100%;min-height:0;overflow:auto;display:grid;gap:5px;align-content:start}
-  .mobile-tracker-view[hidden]{display:none!important}
-  .mobile-tracker-view .panel{padding:6px 9px;border-radius:8px}
-  .mobile-tracker-view .section-heading{margin-bottom:4px}
-  .mobile-tracker-view .section-heading h2{font-size:12px}
-  .mobile-tracker-view .court-wrap{max-width:min(94vw,700px)}
-  .mobile-tracker-view #basketball-court{height:auto;max-height:calc(100dvh - 151px);width:100%;touch-action:manipulation}
-  .mobile-tracker-view .court-view-toggle{gap:4px}
-  .mobile-tracker-view .court-view-toggle button{padding:3px 7px;font-size:10px}
-  .mobile-tracker-view .hint{font-size:10px;margin:3px 0}
-  .mobile-tracker-view .stats-panel{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;align-items:start}
-  .mobile-tracker-view .stats-panel>h3{display:none}
-  .mobile-tracker-view .stats-panel .subsection{margin-top:0}
-  .mobile-tracker-view .stats-panel .button-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
-  .mobile-tracker-view .stats-panel button{padding:7px 4px;font-size:10px}
-  .mobile-tracker-view .stats-panel h3,.mobile-tracker-view .stats-panel h4{font-size:10px;margin:0 0 4px}
-  .mobile-tracker-view .stats-panel .button-row{display:flex;flex-wrap:wrap;gap:3px}
-  .mobile-tracker-view .stats-panel .free-throw-grid{display:block}
-  .mobile-tracker-view .stats-panel .free-throw-team{margin-bottom:5px}
-  .mobile-tracker-view #game-info-panel{min-height:0}
-  .mobile-tracker-view #game-controls{order:-1}
-  .mobile-tracker-view #game-controls .hint{display:none}
-  .mobile-tracker-view #game-info-panel .event-list{max-height:calc(100dvh - 220px)}
-  .mobile-tracker-view .game-info-tabs button{font-size:10px;padding:5px}
-  .mobile-player-dock{background:#fff;padding:4px 7px;border-radius:8px;min-height:0}
-  .mobile-player-caption{display:flex;justify-content:space-between;font-size:9px;margin-bottom:3px;color:#14243a}
-  #mobile-player-slot .player-panel{padding:0;border-radius:0;box-shadow:none}
-  #mobile-player-slot .player-panel h3{display:none}
-  #mobile-player-slot .player-grid{display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;scroll-snap-type:x proximity;padding:1px 2px 4px;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
-  #mobile-player-slot .player-grid button{flex:0 0 auto;min-width:55px;min-height:35px;scroll-snap-align:start;font-size:12px;padding:6px 10px}
-  /* Shot dialog must remain visible within the court view. */
-  .mobile-tracker-view .shot-dialog:not([hidden]){position:absolute;z-index:20;left:50%;top:50%;transform:translate(-50%,-50%);width:min(90%,340px);box-shadow:0 8px 30px #0004}
-}
-
-/* Mobile V2 — fixed three-part workspace and discreet page indicators. */
-@media (orientation:landscape) and (max-height:650px) {
-  html.mobile-tracker-active,
-  html.mobile-tracker-active body {
-    width:100%; height:100dvh; overflow:hidden!important;
-    overscroll-behavior:none;
+@media (orientation: landscape) and (max-height: 650px) {
+  html.mobile-tracker-active, html.mobile-tracker-active body {
+    height: 100%; width: 100%; overflow: hidden !important; overscroll-behavior: none;
   }
+  html.mobile-tracker-active .topbar, html.mobile-tracker-active .tracker-grid { display: none !important; }
   html.mobile-tracker-active .tracker-shell {
-    height:100dvh!important;
-    max-height:100dvh!important;
-    overflow:hidden!important;
-    grid-template-rows:auto minmax(0,1fr)!important;
+    display: grid !important; grid-template-rows: auto minmax(0,1fr) !important;
+    width: 100%; max-width: none; height: 100dvh !important; min-height: 0;
+    margin: 0; padding: max(2px,env(safe-area-inset-top)) 4px max(2px,env(safe-area-inset-bottom));
+    gap: 3px; overflow: hidden;
   }
+  html.mobile-tracker-active .scoreboard {
+    min-height: 0; padding: 1px 6px; gap: 3px; border-radius: 5px;
+  }
+  html.mobile-tracker-active .score-team h2 {
+    margin: 0; font-size: clamp(10px,2.4dvh,13px); line-height: 1.1;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  html.mobile-tracker-active .score-team output { font-size: clamp(18px,5.7dvh,30px); line-height:1; }
+  html.mobile-tracker-active .score-center { gap:0; min-width: 55px; }
+  html.mobile-tracker-active .score-center strong { font-size: clamp(12px,3.3dvh,18px); }
+  html.mobile-tracker-active .score-center > span:first-child { padding: 1px 5px; font-size: 9px; }
+  html.mobile-tracker-active .small-label { font-size: 8px; }
   html.mobile-tracker-active #mobile-tracker {
-    grid-template-rows:14px minmax(0,1fr) auto!important;
-    overflow:hidden!important;
+    display: grid; grid-template-columns: clamp(64px,10vw,108px) minmax(0,1fr) clamp(82px,14vw,140px);
+    grid-template-rows: minmax(0,1fr); gap: 3px; overflow:hidden; min-height:0;
   }
-  .mobile-tracker-tabs {
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    gap:9px;
-    height:14px;
-    touch-action:manipulation;
+  .mobile-left-rail, .mobile-court-center, .mobile-right-rail {
+    min-height: 0; min-width: 0; overflow: hidden;
+    background: white; border-radius: 5px;
   }
-  .mobile-tracker-tabs button,
-  .mobile-tracker-tabs button.active {
-    flex:0 0 auto;
-    box-sizing:border-box;
-    width:8px;
-    height:8px;
-    min-width:8px;
-    min-height:8px;
-    padding:0;
-    border:0;
-    border-radius:50%;
-    background:#8c9cb0;
-    color:transparent;
-    cursor:pointer;
-    font-size:0;
+  .mobile-left-rail { display:flex; flex-direction:column; padding: 3px; gap: 4px; }
+  .mobile-left-actions { flex: 0 0 auto; min-height:0; }
+  .mobile-left-actions #game-controls { padding:0; border-radius:0; }
+  .mobile-left-actions #game-controls .section-heading, .mobile-left-actions #game-controls .hint { display: none; }
+  .mobile-left-actions #game-controls .button-row { display:flex; flex-direction:column; gap:3px; }
+  .mobile-left-actions #start-game { display:none !important; }
+  .mobile-left-actions #end-quarter, .mobile-left-actions #end-game {
+    display:block; width:100%; font-size:9px; padding:6px 1px; border-radius:4px;
+    overflow-wrap:anywhere; line-height:1.15;
   }
-  .mobile-tracker-tabs button.active {
-    background:var(--team-secondary,#FFD600);
-    box-shadow:0 0 0 2px #ffffff55;
+  .mobile-player-list { flex:1 1 auto; overflow-y:auto; overflow-x:hidden; min-height:0;
+    scrollbar-width:thin; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+  .mobile-player-list .player-panel { padding:0; border-radius:0; }
+  .mobile-player-list .player-panel h3 { font-size:9px; margin:4px 0; text-align:center; }
+  .mobile-player-list #player-grid { display:flex !important; flex-direction:column; gap:3px;
+    grid-template-columns:none !important; overflow:visible; padding:0; }
+  .mobile-player-list #player-grid button { width:100%; min-height:34px; padding:6px 1px; font-size:12px;
+    flex:0 0 auto; border-radius:4px; }
+  .mobile-court-center { position:relative; }
+  .mobile-court-center #mobile-court-slot, .mobile-court-center #tracker-controls {
+    height:100%; min-height:0; width:100%; min-width:0; padding:0; margin:0;
   }
-  .mobile-tracker-tabs button:focus-visible {
-    outline:2px solid #fff;
-    outline-offset:3px;
+  .mobile-court-center #tracker-controls { display:flex; flex-direction:column; gap:0; overflow:hidden; }
+  .mobile-court-center #tracker-controls > .section-heading,
+  .mobile-court-center #tracker-controls > .hint { display:none !important; }
+  .mobile-court-center .court-wrap { position:relative; flex:1 1 auto; display:flex; align-items:center;
+    justify-content:center; width:100%; max-width:none; min-width:0; min-height:0;
+    height:100%; padding:0; margin:0; overflow:hidden; }
+  .mobile-court-center .court-view-toggle { display:none !important; }
+  .mobile-court-center #basketball-court { display:block; flex:0 1 auto;
+    width:min(100%, calc((100dvh - 45px) * 860 / 470)); height:100%;
+    max-width:100%; max-height:100%; margin:auto; object-fit:contain;
+    touch-action:manipulation; }
+  /* The original shot dialog still uses original shot handlers. */
+  .mobile-court-center .shot-dialog:not([hidden]) { z-index:50; max-width:min(85%,270px); }
+  .mobile-right-rail { overflow-y:auto; overflow-x:hidden; scrollbar-width:thin;
+    overscroll-behavior:contain; -webkit-overflow-scrolling:touch; padding:3px; }
+  .mobile-right-rail .stats-panel { padding:0; display:flex; flex-direction:column; gap:4px; }
+  .mobile-right-rail .stats-panel > h3 { text-align:center; font-size:10px; margin:2px 0; }
+  .mobile-right-rail .stats-panel .subsection { margin:0; min-width:0; }
+  .mobile-right-rail .stats-panel .subsection h3, .mobile-right-rail .stats-panel h4 {
+    font-size:9px; margin:4px 0 2px; text-align:center;
   }
-  .mobile-tracker-content,
-  .mobile-tracker-view:not([hidden]) {
-    min-height:0!important;
-    height:100%;
-    overflow:hidden!important;
-  }
-  /* Keep the existing desktop toggle controls for desktop JS, but only
-     show the Undo button in the mobile court controls. */
-  .mobile-tracker-view .court-view-toggle #full-court-btn,
-  .mobile-tracker-view .court-view-toggle #half-court-btn,
-  .mobile-tracker-view .court-view-toggle .court-side-toggle { display:none!important; }
-  .mobile-tracker-view .court-view-toggle {
-    display:flex;
-    justify-content:flex-end;
-    margin:0;
-    padding:0;
-    min-height:0;
-  }
-  .mobile-tracker-view .court-view-toggle #undo-event {
-    padding:2px 9px;
-    font-size:10px;
-  }
-  [data-mobile-panel="court"] #tracker-controls {
-    height:100%;
-    min-height:0;
-    overflow:hidden;
-    display:flex;
-    flex-direction:column;
-  }
-  [data-mobile-panel="court"] .court-wrap {
-    flex:1 1 auto;
-    min-height:0;
-    max-width:none;
-    width:100%;
-    height:auto;
-    overflow:hidden;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-  }
-  [data-mobile-panel="court"] #basketball-court {
-    flex:1 1 auto;
-    width:100%;
-    height:100%;
-    max-height:100%;
-    min-height:0;
-    object-fit:contain;
-  }
-  .mobile-player-dock {
-    max-height:68px;
-    overflow:hidden;
-  }
-  #mobile-player-slot .player-grid {
-    max-width:100%;
-    overflow-x:auto;
-    overflow-y:hidden;
+  .mobile-right-rail .stats-panel .button-grid { display:grid !important;
+    grid-template-columns:1fr !important; gap:3px; }
+  .mobile-right-rail .stats-panel button { display:block; width:100%; font-size:10px;
+    padding:7px 1px; line-height:1.1; min-height:32px; white-space:normal; }
+  .mobile-right-rail .stats-panel .free-throw-grid,
+  .mobile-right-rail .stats-panel .button-row { display:flex; flex-direction:column; gap:3px; }
+  .mobile-right-rail .stats-panel .free-throw-team { margin:0 0 4px; }
+  .mobile-right-rail .stats-panel .opponent-stats { display:grid; }
+  #mobile-start-overlay { position:absolute; inset:0; display:grid; place-items:center; z-index:10;
+    background:rgba(10,24,43,.65); padding:8px; }
+  #mobile-start-overlay[hidden] { display:none !important; }
+  .mobile-start-card { background:#f8fafc; color:#10233f; width:min(100%,315px);
+    border-radius:10px; padding:12px; box-shadow:0 10px 25px #0004;
+    display:flex; flex-direction:column; align-items:stretch; gap:7px; text-align:center; }
+  .mobile-start-card strong { font-size:16px; }
+  .mobile-start-help { font-size:11px; }
+  .mobile-direction-select { display:grid; grid-template-columns:1fr 1fr; gap:5px; }
+  .mobile-direction-select button { font-size:11px; padding:8px 3px; }
+  .mobile-direction-select button.active { background:var(--team-secondary,#d1d5db); color:#111827;
+    outline:2px solid #10233f; }
+  #mobile-start-action { background:var(--team-primary,#181818); color:#fff; padding:10px; }
+  #mobile-start-note { min-height:12px; font-size:10px; }
+  @media (max-height:380px) {
+    .mobile-left-actions #end-quarter,.mobile-left-actions #end-game { font-size:8px; padding:4px 0; }
+    .mobile-start-card { padding:7px; gap:3px; }
   }
 }

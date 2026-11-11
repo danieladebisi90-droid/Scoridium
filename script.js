@@ -37,7 +37,7 @@ let courtView = "full";
 let courtSide = "home";
 let currentGame = null;
 let teamName = "OUR TEAM";
-let state = { period: 1, status: "not_started", events: [] };
+let state = { period: 1, status: "not_started", events: [], homeAttacksLeftFirstHalf: true };
 
 // Official FIBA court measurements (metres)
 const FIBA_COURT = {
@@ -52,7 +52,7 @@ const FIBA_COURT = {
 try {
   const saved = JSON.parse(localStorage.getItem(key) || "null");
   if (saved && Array.isArray(saved.events)) {
-    state = { period: saved.period || 1, status: saved.status || "not_started", events: saved.events };
+    state = { period: saved.period || 1, status: saved.status || "not_started", events: saved.events, homeAttacksLeftFirstHalf: saved.homeAttacksLeftFirstHalf !== false };
   }
 } catch (error) { console.warn("Could not read saved tracker events", error); }
 
@@ -299,12 +299,10 @@ function save() {
 function detectShot(x, y) {
     const isLeftSide = x < 430;
 
-// Teams switch baskets at halftime
-const switchedEnds = state.period >= 3;
-
-const team = isLeftSide
-    ? (switchedEnds ? "away" : "home")
-    : (switchedEnds ? "home" : "away");
+// The head coach chooses the initial attacking end before starting.
+// Each team switches baskets at halftime.
+const homeAttacksLeft = (state.homeAttacksLeftFirstHalf !== false) !== (state.period >= 3);
+const team = isLeftSide === homeAttacksLeft ? "home" : "away";
 
     // Hoop positions
     const hoopX = isLeftSide ? 57.25 : 802.75;
@@ -1230,13 +1228,9 @@ function getBasketState() {
     // switch ends at halftime
     const switchedEnds = state.period >= 3;
 
-    const leftTeamName = switchedEnds
-        ? awayTeamName
-        : homeTeamName;
-
-    const rightTeamName = switchedEnds
-        ? homeTeamName
-        : awayTeamName;
+    const homeAttacksLeft = (state.homeAttacksLeftFirstHalf !== false) !== switchedEnds;
+    const leftTeamName = homeAttacksLeft ? homeTeamName : awayTeamName;
+    const rightTeamName = homeAttacksLeft ? awayTeamName : homeTeamName;
 
     return {
         homeTeamName,
@@ -1270,14 +1264,24 @@ function renderCourtLabels() {
 
 
 function getSelectedBasketSide() {
-    const switched = state.period >= 3;
-
-    if (courtSide === "home") {
-        return switched ? "right" : "left";
-    }
-
-    return switched ? "left" : "right";
+    const homeAttacksLeft = (state.homeAttacksLeftFirstHalf !== false) !== (state.period >= 3);
+    if (courtSide === "home") return homeAttacksLeft ? "left" : "right";
+    return homeAttacksLeft ? "right" : "left";
 }
+
+// Orientation is saved per game locally. Add a Supabase games column/RPC
+// before relying on orientation synchronization between different devices.
+window.scoridiumTrackerDirection = {
+    get() { return state.homeAttacksLeftFirstHalf !== false ? "left" : "right"; },
+    set(side) {
+        if (side !== "left" && side !== "right") return false;
+        if (state.status === "live" || state.status === "final" || state.events.length > 0) return false;
+        state.homeAttacksLeftFirstHalf = side === "left";
+        save();
+        renderCourtLabels();
+        return true;
+    }
+};
 
 function displayToCourt(x, y) {
     if (courtView === "full") {
