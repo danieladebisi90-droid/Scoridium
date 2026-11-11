@@ -12,3 +12,32 @@ body.scoridium-shell {display:flex; flex-direction:column; margin:0; padding: 4p
 #main-navigation a[data-view].active {opacity:1;}
 @media (prefers-reduced-motion:reduce) {#page-frame{transition:none}.shell-loading-line{animation:none}}
 /* Inner pages set html.scoridium-framed during head parsing. */
+
+/* Native-feeling mobile shell. Desktop remains unchanged. */
+.mobile-app-topbar,.mobile-bottom-nav,.mobile-more-menu{display:none}
+@media(max-width:700px) and (orientation:portrait){
+  html,body.scoridium-shell{height:100%;height:100dvh;overflow:hidden}
+  body.scoridium-shell{padding:0!important;background:#f4f6fa!important}
+  body.scoridium-shell .shell-header{display:none!important}
+  .mobile-app-topbar{display:flex;flex:none;height:57px;align-items:center;gap:10px;padding:env(safe-area-inset-top) 16px 0;background:var(--team-primary,#10233f);color:#fff;box-sizing:content-box}
+  .mobile-brand{color:#fff;font-weight:900;letter-spacing:.09em;font-size:14px;text-decoration:none;white-space:nowrap}
+  .mobile-brand span{color:var(--team-secondary,#facc15)}
+  .mobile-team-name{font-size:11px;font-weight:650;opacity:.85;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+  .mobile-team-menu-btn{border:0;background:rgba(255,255,255,.13);border-radius:9px;color:#fff;padding:6px 10px;font-size:17px}
+  body.scoridium-shell .shell-main{background:#f4f6fa!important;border-radius:0!important;min-height:0;flex:1}
+  .mobile-bottom-nav{display:flex;flex:none;align-items:center;justify-content:space-around;background:#fff;border-top:1px solid #e6eaf0;padding:4px 4px max(7px,env(safe-area-inset-bottom));box-shadow:0 -3px 15px #0f172a0b}
+  .mobile-bottom-nav a,.mobile-bottom-nav button{display:flex;flex:1;min-width:0;align-items:center;flex-direction:column;gap:3px;text-decoration:none;color:#6b7280;background:none;border:0;font-size:10px;font-weight:650;padding:5px 1px;border-radius:8px;cursor:pointer;font-family:inherit}
+  .mobile-bottom-nav a.active{color:var(--team-primary,#10233f);background:#eef1f6}
+  .mobile-nav-icon{font-size:23px;height:24px;line-height:23px;font-weight:700}
+  .mobile-more-menu:not([hidden]){display:flex;flex-direction:column;position:absolute;z-index:99;right:12px;top:calc(55px + env(safe-area-inset-top));width:175px;background:#fff;box-shadow:0 8px 28px #0f172a32;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden}
+  .mobile-more-menu a{font-size:13px;padding:15px;text-decoration:none;color:#18263a;border-bottom:1px solid #f1f3f5}
+}
+/* The mobile tracker retains its tested landscape three-column interface. */
+@media (orientation:landscape) and (max-height:650px){
+  body.scoridium-shell.tracker-fullscreen{padding:0!important;width:100%;height:100dvh;overflow:hidden}
+  body.scoridium-shell.tracker-fullscreen .shell-header,
+  body.scoridium-shell.tracker-fullscreen .mobile-app-topbar,
+  body.scoridium-shell.tracker-fullscreen .mobile-bottom-nav{display:none!important}
+  body.scoridium-shell.tracker-fullscreen .shell-main{height:100%;flex:1;min-height:0;border-radius:0!important}
+  body.scoridium-shell.tracker-fullscreen #page-frame{height:100%;width:100%;display:block}
+}
