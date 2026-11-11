@@ -107,3 +107,22 @@
     .mobile-start-card { padding:7px; gap:3px; }
   }
 }
+
+
+@media (orientation: landscape) and (max-height: 650px) {
+  .mobile-back-button {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 6px 2px;
+    margin-bottom: 5px;
+    background: #173C78;
+    color: #fff;
+    text-align: center;
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 4px;
+  }
+}
+
