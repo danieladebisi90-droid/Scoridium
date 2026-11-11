@@ -1319,3 +1319,22 @@ a.dashboard-player-card:hover {
     height: 73px;
 }
 
+
+/* Mobile portrait: overview -> next team event -> team roster only */
+.mobile-dashboard-next-event { display:none; }
+@media (max-width:700px) and (orientation:portrait) {
+  html,body { min-height:100%!important; height:auto!important; overflow-x:hidden!important; overflow-y:auto!important; }
+  #app-content { display:flex!important; flex-direction:column!important; gap:12px!important; height:auto!important; min-height:0!important; overflow:visible!important; padding:12px!important; }
+  #app-content .team-overview { flex:none!important; min-height:0!important; height:auto!important; padding:14px!important; }
+  #app-content .schedule-goals-container { display:none!important; }
+  #app-content .recent-leader-container { display:contents!important; }
+  #app-content .recent-games { display:none!important; }
+  #app-content .dashboard-roster { order:3; flex:none!important; width:100%!important; height:auto!important; min-height:0!important; padding:14px!important; overflow:hidden!important; }
+  #app-content .dashboard-roster-track { flex:none!important; height:auto!important; min-height:160px!important; max-height:none!important; overflow-x:auto!important; overflow-y:hidden!important; }
+  #app-content .team-overview { order:1; }
+  #app-content .mobile-dashboard-next-event { order:2; display:block; background:white; border-radius:12px; padding:17px; box-shadow:0 2px 9px #10233f0c; }
+  .mobile-dashboard-eyebrow { font-size:11px; font-weight:850; letter-spacing:.10em; margin:0 0 9px; color:#6a778c; }
+  .mobile-dashboard-next-event h2 { margin:0 0 7px; font-family:inherit; font-size:19px; line-height:1.25; color:#10233f; }
+  .mobile-dashboard-next-event p:not(.mobile-dashboard-eyebrow) { margin:0; font-size:12px; line-height:1.55; color:#68788f; }
+  .mobile-dashboard-next-event a { display:inline-block; margin-top:12px; font-size:12px; font-weight:750; color:var(--team-primary,#10233f); text-decoration:none; }
+}

@@ -26,3 +26,11 @@
 .add-player{background:var(--team-primary);color:var(--team-primary-ink)}
 .team-emblem{color:var(--team-primary-ink);-webkit-text-stroke:2px var(--team-secondary)}
 .roster-preview-nav{background:var(--team-primary);color:var(--team-primary-ink)}
+
+/* Phone roster: compact search field */
+@media(max-width:700px) and (orientation:portrait) {
+ .roster-toolbar .search-control { flex:0 1 205px!important; width:min(205px,100%)!important; max-width:205px!important; height:34px!important; padding:0 9px!important; border-radius:8px!important; margin:0!important; }
+ .roster-toolbar .search-control input { font-size:11px!important; }
+ .roster-toolbar .search-control svg { width:14px!important; height:14px!important; flex-shrink:0; }
+ .roster-toolbar { gap:10px!important; }
+}

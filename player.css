@@ -974,3 +974,24 @@ body{background:linear-gradient(180deg,#101a30 0,#080e1c 48%,#070c17 100%)!impor
 .player-analysis-modal .zone-grey {
     background: #B8C1CC;
 }
+
+/* Phone-only player profile: easier to read and navigate without sideways scrolling */
+@media(max-width:700px) and (orientation:portrait) {
+ .player-page { width:100%!important; max-width:100%!important; min-width:0!important; padding:10px 12px 24px!important; box-sizing:border-box!important; }
+ .profile-page-toolbar { margin:0 0 10px!important; }
+ .profile-view-label { display:none!important; }
+ .player-banner { gap:12px!important; padding:12px!important; min-height:105px!important; margin-bottom:12px!important; overflow:hidden!important; }
+ .banner-jersey { width:68px!important; height:80px!important; flex-shrink:0!important; }
+ .player-heading { border-left:0!important; padding-left:0!important; }
+ .player-heading h1 { font-size:clamp(19px,5vw,26px)!important; line-height:1.15!important; overflow-wrap:anywhere; }
+ .player-heading p { line-height:1.4!important; }
+ .letter-mark { display:none!important; }
+ .profile-tabs { display:grid!important; grid-template-columns:repeat(4,minmax(0,1fr))!important; gap:4px!important; }
+ .profile-tabs button { min-width:0!important; min-height:38px!important; padding:7px 3px!important; font-size:clamp(9px,2.6vw,12px)!important; letter-spacing:0!important; }
+ .panel { padding:12px!important; min-width:0!important; }
+ .season-average-grid { grid-template-columns:repeat(3,minmax(0,1fr))!important; gap:7px!important; }
+ .average-tile { padding:10px 4px!important; }
+ .concept-overview-grid,.concept-shot-panel,.concept-season-grid,.career-lower { grid-template-columns:minmax(0,1fr)!important; }
+ .table-scroll { width:100%!important; overflow-x:auto!important; -webkit-overflow-scrolling:touch; }
+ #shot-court { width:100%!important; height:auto!important; }
+}

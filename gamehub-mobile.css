@@ -29,3 +29,21 @@
  .mobile-activity-item strong{font-size:14px;color:#172437}
  .mobile-activity-item small{font-size:12px;color:#69778b}
 }
+
+/* Phone: schedule calendar, season games, then open-game control */
+@media(max-width:700px) and (orientation:portrait) {
+ .mobile-team-events-summary { display:none!important; }
+ .game-schedule { display:flex!important; flex-direction:column!important; gap:12px!important; }
+ .game-schedule .game-calendar { order:1; }
+ .game-schedule .mobile-selected-activities { order:2; }
+ .game-schedule .games-list { display:block!important; order:3; width:100%!important; min-width:0!important; max-height:none!important; height:auto!important; overflow:visible!important; border-radius:14px!important; background:#fff!important; padding:14px!important; box-shadow:0 2px 8px #0f172a0b; }
+ .games-list .games-list-header h2 { font-size:15px!important; }
+ .games-list .games-table-scroll { overflow-x:auto!important; -webkit-overflow-scrolling:touch; }
+ .games-list .games-table { min-width:480px; font-size:11px!important; }
+ .games-list .games-table td,.games-list .games-table th { padding:9px 7px!important; }
+ .game-info-container { display:block!important; height:auto!important; min-height:0!important; width:100%!important; overflow:visible!important; }
+ .game-info-container .previous-game { display:none!important; }
+ .game-info-container .next-game { display:block!important; height:auto!important; min-height:0!important; background:#fff!important; padding:15px!important; border-radius:14px!important; box-shadow:0 2px 8px #0f172a0b; }
+ .next-game .next-game-header h2 { font-size:15px!important; }
+ #open-next-game { width:100%!important; min-height:44px!important; margin-top:10px!important; border-radius:9px!important; }
+}

@@ -16,6 +16,7 @@
 <style>html.scoridium-framed #shared-header {display:none!important;}html.scoridium-framed #app-header {display:none!important;}html.scoridium-framed body {padding-top:0!important;}html.scoridium-framed body {min-height:100dvh!important;}</style>
   <script src="team-theme-boot.js"></script>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Basketball Stats</title>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="dashboard.css">
@@ -60,6 +61,12 @@
 
 </section>
 
+        <section class="mobile-dashboard-next-event" aria-label="Next team event">
+          <p class="mobile-dashboard-eyebrow">NEXT TEAM EVENT</p>
+          <h2 id="dashboard-mobile-event-title">Loading schedule…</h2>
+          <p id="dashboard-mobile-event-details">Checking upcoming team activities</p>
+          <a href="gamehub.html">View schedule <span aria-hidden="true">›</span></a>
+        </section>
         <section class="schedule-goals-container">
             <div class="weekly-schedule">
                 <div class="weekly-header"> <h2>WEEKLY SCHEDULE</h2>
@@ -121,6 +128,7 @@
 <script src="Dashboard.js" defer></script>
 
 
+  <script src="dashboard-mobile-event.js" defer></script>
   <script src="./pwa-register.js" defer></script>
 </body>
 </html>
