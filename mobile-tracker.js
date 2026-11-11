@@ -3,7 +3,7 @@
    Mobile layout is isolated behind media query and device capability checks. */
 (() => {
   'use strict';
-  const media = window.matchMedia('(orientation: landscape) and (max-height: 650px) and (pointer: coarse)');
+  const media = window.matchMedia('(orientation: landscape) and (max-height: 650px)');
   const $ = id => document.getElementById(id);
   const shell = document.querySelector('.tracker-shell');
   if (!shell) return;
@@ -20,9 +20,9 @@
   mobile.setAttribute('aria-label','Mobile game tracking');
   mobile.innerHTML = `
     <nav class="mobile-tracker-tabs" aria-label="Tracker view">
-      <button type="button" data-mobile-view="court" aria-pressed="true">Court</button>
-      <button type="button" data-mobile-view="stats" aria-pressed="false">Stats</button>
-      <button type="button" data-mobile-view="events" aria-pressed="false">Events</button>
+      <button type="button" data-mobile-view="court" aria-pressed="true" aria-label="Court view" title="Court"></button>
+      <button type="button" data-mobile-view="stats" aria-pressed="false" aria-label="Stats view" title="Stats"></button>
+      <button type="button" data-mobile-view="events" aria-pressed="false" aria-label="Events view" title="Events"></button>
     </nav>
     <div class="mobile-tracker-content">
       <div class="mobile-tracker-view" data-mobile-panel="court"></div>
@@ -33,9 +33,8 @@
       <div class="mobile-player-caption"><strong>SELECT PLAYER</strong><span>Swipe for more players</span></div>
       <div id="mobile-player-slot"></div>
     </footer>`;
-  
   const scoreboard = $('home-score')?.closest('.scoreboard');
-  scoreboard?.after(mobile);
+  (scoreboard || shell.querySelector('.scoreboard'))?.after(mobile);
   const playerPanel = document.querySelector('.player-panel');
   const statPanel = document.querySelector('.stats-panel');
   const nodes = [
@@ -77,15 +76,26 @@
   const sync = ()=>setMobile(media.matches);
   media.addEventListener?.('change',sync);
   sync();
-  // Swipe only on the navigation strip; avoid intercepting shot-chart taps and court gestures.
-  let startX=null,startY=null;
-  const nav=mobile.querySelector('.mobile-tracker-tabs');
-  nav.addEventListener('touchstart',e=>{if(e.touches.length!==1)return;startX=e.touches[0].clientX;startY=e.touches[0].clientY},{passive:true});
-  nav.addEventListener('touchend',e=>{
-    if(startX===null||!e.changedTouches.length)return;
-    const dx=e.changedTouches[0].clientX-startX,dy=e.changedTouches[0].clientY-startY;startX=null;
-    if(Math.abs(dx)<45||Math.abs(dx)<Math.abs(dy)*1.5)return;
-    const views=['court','stats','events'];const idx=views.indexOf(view);
-    showView(views[Math.max(0,Math.min(2,idx+(dx<0?1:-1)))]);
+  // Swipe between views. On the court, only swipes starting at the
+  // left/right edge switch views, preventing accidental shot entries.
+  const content = mobile.querySelector('.mobile-tracker-content');
+  const order=['court','stats','events'];
+  let touchStart=null;
+  content.addEventListener('touchstart', event => {
+    if(event.touches.length!==1) return;
+    const t=event.touches[0];
+    const bounds=content.getBoundingClientRect();
+    const isEdge=t.clientX<bounds.left+42 || t.clientX>bounds.right-42;
+    if(view==='court' && !isEdge){touchStart=null;return;}
+    touchStart={x:t.clientX,y:t.clientY};
+  },{passive:true});
+  content.addEventListener('touchend', event => {
+    if(!touchStart || !event.changedTouches.length)return;
+    const t=event.changedTouches[0];
+    const dx=t.clientX-touchStart.x, dy=t.clientY-touchStart.y;
+    touchStart=null;
+    if(Math.abs(dx)<55 || Math.abs(dx)<Math.abs(dy)*1.4)return;
+    const idx=order.indexOf(view);
+    showView(order[Math.max(0,Math.min(order.length-1,idx+(dx<0?1:-1)))]);
   },{passive:true});
 })();

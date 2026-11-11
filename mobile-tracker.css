@@ -4,7 +4,7 @@
   /* Screen rotates visually without attempting unsupported orientation locks. */
   body::after{content:"Rotate your phone to landscape to track the game";position:fixed;inset:0;z-index:10000;background:#10233f;color:#fff;display:grid;place-items:center;text-align:center;padding:26px;font-size:clamp(19px,5vw,28px);font-weight:800}
 }
-@media (orientation:landscape) and (max-height:650px) and (pointer:coarse){
+@media (orientation:landscape) and (max-height:650px){
   html.mobile-tracker-active,html.mobile-tracker-active body{height:100%;overflow:hidden}
   html.mobile-tracker-active .topbar{display:none}
   html.mobile-tracker-active .tracker-shell{display:grid;grid-template-rows:auto minmax(0,1fr);height:100dvh;max-width:none;margin:0;padding:5px 7px;gap:5px;min-height:0;overflow:hidden}
@@ -55,51 +55,110 @@
   .mobile-tracker-view .shot-dialog:not([hidden]){position:absolute;z-index:20;left:50%;top:50%;transform:translate(-50%,-50%);width:min(90%,340px);box-shadow:0 8px 30px #0004}
 }
 
-
-/* =========================================
-   MOBILE LANDSCAPE COURT SIZING FIX
-========================================= */
-
-@media (orientation: landscape) and (max-height: 650px) {
-
-    /* Keep the active view inside its allocated space */
-    #mobile-tracker,
-    .mobile-tracker-content,
-    [data-mobile-panel="court"] {
-        min-height: 0;
-    }
-
-    .mobile-tracker-content {
-        overflow: hidden;
-    }
-
-    /* Let the court view shrink to fit */
-    [data-mobile-panel="court"] {
-        overflow: hidden;
-        grid-template-rows: minmax(0, 1fr);
-    }
-
-    /* Remove desktop minimum sizing */
-    [data-mobile-panel="court"] #tracker-controls {
-        min-height: 0;
-        height: 100%;
-        overflow: hidden;
-    }
-
-    [data-mobile-panel="court"] .court-wrap {
-        min-height: 0;
-        height: 100%;
-        max-height: 100%;
-        overflow: hidden;
-        box-sizing: border-box;
-    }
-
-    /* Scale the court without stretching it */
-    [data-mobile-panel="court"] #basketball-court {
-        display: block;
-        width: 100%;
-        height: 100%;
-        max-height: 100%;
-        object-fit: contain;
-    }
+/* Mobile V2 — fixed three-part workspace and discreet page indicators. */
+@media (orientation:landscape) and (max-height:650px) {
+  html.mobile-tracker-active,
+  html.mobile-tracker-active body {
+    width:100%; height:100dvh; overflow:hidden!important;
+    overscroll-behavior:none;
+  }
+  html.mobile-tracker-active .tracker-shell {
+    height:100dvh!important;
+    max-height:100dvh!important;
+    overflow:hidden!important;
+    grid-template-rows:auto minmax(0,1fr)!important;
+  }
+  html.mobile-tracker-active #mobile-tracker {
+    grid-template-rows:14px minmax(0,1fr) auto!important;
+    overflow:hidden!important;
+  }
+  .mobile-tracker-tabs {
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:9px;
+    height:14px;
+    touch-action:manipulation;
+  }
+  .mobile-tracker-tabs button,
+  .mobile-tracker-tabs button.active {
+    flex:0 0 auto;
+    box-sizing:border-box;
+    width:8px;
+    height:8px;
+    min-width:8px;
+    min-height:8px;
+    padding:0;
+    border:0;
+    border-radius:50%;
+    background:#8c9cb0;
+    color:transparent;
+    cursor:pointer;
+    font-size:0;
+  }
+  .mobile-tracker-tabs button.active {
+    background:var(--team-secondary,#FFD600);
+    box-shadow:0 0 0 2px #ffffff55;
+  }
+  .mobile-tracker-tabs button:focus-visible {
+    outline:2px solid #fff;
+    outline-offset:3px;
+  }
+  .mobile-tracker-content,
+  .mobile-tracker-view:not([hidden]) {
+    min-height:0!important;
+    height:100%;
+    overflow:hidden!important;
+  }
+  /* Keep the existing desktop toggle controls for desktop JS, but only
+     show the Undo button in the mobile court controls. */
+  .mobile-tracker-view .court-view-toggle #full-court-btn,
+  .mobile-tracker-view .court-view-toggle #half-court-btn,
+  .mobile-tracker-view .court-view-toggle .court-side-toggle { display:none!important; }
+  .mobile-tracker-view .court-view-toggle {
+    display:flex;
+    justify-content:flex-end;
+    margin:0;
+    padding:0;
+    min-height:0;
+  }
+  .mobile-tracker-view .court-view-toggle #undo-event {
+    padding:2px 9px;
+    font-size:10px;
+  }
+  [data-mobile-panel="court"] #tracker-controls {
+    height:100%;
+    min-height:0;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+  [data-mobile-panel="court"] .court-wrap {
+    flex:1 1 auto;
+    min-height:0;
+    max-width:none;
+    width:100%;
+    height:auto;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  [data-mobile-panel="court"] #basketball-court {
+    flex:1 1 auto;
+    width:100%;
+    height:100%;
+    max-height:100%;
+    min-height:0;
+    object-fit:contain;
+  }
+  .mobile-player-dock {
+    max-height:68px;
+    overflow:hidden;
+  }
+  #mobile-player-slot .player-grid {
+    max-width:100%;
+    overflow-x:auto;
+    overflow-y:hidden;
+  }
 }
