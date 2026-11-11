@@ -42,74 +42,106 @@
   if (!courtWrap) return;
   const overlay = document.createElement('div');
   overlay.id = 'mobile-start-overlay';
-  overlay.setAttribute('role', 'group');
-  overlay.setAttribute('aria-label', 'Start game and choose attacking direction');
+  overlay.setAttribute('role','dialog');
+  overlay.setAttribute('aria-label','Opening Tip-Off');
   overlay.innerHTML = `
     <div class="mobile-start-card">
-      <strong id="mobile-start-title">Ready to start?</strong>
-      <span class="mobile-start-help">Which basket does HOME attack first?</span>
-      <div class="mobile-direction-select" role="group" aria-label="Home first-half attack direction">
-        <button type="button" data-home-direction="left" aria-pressed="true">← LEFT</button>
-        <button type="button" data-home-direction="right" aria-pressed="false">RIGHT →</button>
+      <strong id="mobile-start-title">Tip-Off</strong>
+      <span class="mobile-start-help">Who won the opening tip?</span>
+      <div class="mobile-tip-winner" role="group" aria-label="Tip winner">
+        <button type="button" data-tip-winner="home" aria-pressed="true">Home</button>
+        <button type="button" data-tip-winner="away" aria-pressed="false">Away</button>
       </div>
-      <button type="button" id="mobile-start-action" class="primary">START GAME</button>
+      <span id="mobile-tip-question" class="mobile-start-help">Which basket are they scoring on?</span>
+      <div class="mobile-direction-select" role="group" aria-label="Opening scoring basket">
+        <button type="button" data-tip-side="left" aria-pressed="true">← LEFT</button>
+        <button type="button" data-tip-side="right" aria-pressed="false">RIGHT →</button>
+      </div>
+      <button type="button" id="mobile-start-action" class="primary">CONFIRM TIP-OFF</button>
       <small id="mobile-start-note" aria-live="polite"></small>
     </div>`;
   courtWrap.appendChild(overlay);
-  const startAction = overlay.querySelector('#mobile-start-action');
-  const startNote = overlay.querySelector('#mobile-start-note');
+  const tipoff = window.scoridiumTipoff;
   const originalStart = document.getElementById('start-game');
   const statusElement = document.getElementById('game-status');
-  const directionButtons = [...overlay.querySelectorAll('[data-home-direction]')];
-  const direction = window.scoridiumTrackerDirection;
+  const startAction = overlay.querySelector('#mobile-start-action');
+  const startNote = overlay.querySelector('#mobile-start-note');
+  const winnerButtons = [...overlay.querySelectorAll('[data-tip-winner]')];
+  const sideButtons = [...overlay.querySelectorAll('[data-tip-side]')];
+  let winner = 'home';
+  let side = 'left';
+  let submitting = false;
   let active = false;
 
-  function showDirection() {
-    const selected = direction?.get() || 'left';
-    for (const btn of directionButtons) {
-      const chosen = btn.dataset.homeDirection === selected;
-      btn.classList.toggle('active', chosen);
-      btn.setAttribute('aria-pressed', String(chosen));
-    }
-  }
-  for (const btn of directionButtons) {
-    btn.addEventListener('click', () => {
-      if (direction?.set(btn.dataset.homeDirection) === false) {
-        startNote.textContent = 'Direction is locked after recording begins.';
-      } else {
-        startNote.textContent = '';
-      }
-      showDirection();
+  function updateTipoffForm() {
+    const names = tipoff?.getTeams() || {home:'HOME',away:'AWAY'};
+    winnerButtons.forEach(button => {
+      button.textContent = names[button.dataset.tipWinner] || button.dataset.tipWinner.toUpperCase();
+      const selected = button.dataset.tipWinner === winner;
+      button.classList.toggle('active',selected);
+      button.setAttribute('aria-pressed',String(selected));
+    });
+    const name = names[winner] || 'the tip-winning team';
+    overlay.querySelector('#mobile-tip-question').textContent =
+      `Which basket are ${name} scoring on?`;
+    sideButtons.forEach(button => {
+      const selected = button.dataset.tipSide === side;
+      button.classList.toggle('active',selected);
+      button.setAttribute('aria-pressed',String(selected));
     });
   }
+  winnerButtons.forEach(button=>button.addEventListener('click',()=>{
+    if(submitting) return;
+    winner=button.dataset.tipWinner;
+    startNote.textContent='';updateTipoffForm();
+  }));
+  sideButtons.forEach(button=>button.addEventListener('click',()=>{
+    if(submitting) return;
+    side=button.dataset.tipSide;
+    startNote.textContent='';updateTipoffForm();
+  }));
 
   function refreshStartOverlay() {
-    if (!active) return;
-    const status = statusElement?.textContent?.trim().toUpperCase() || '';
-    const done = status === 'LIVE' || status === 'COMPLETED' || status === 'FINAL';
+    const status = tipoff?.getStatus() || 'not_started';
+    const done = status === 'live' || status === 'final';
     overlay.hidden = done;
     if (done) return;
-    startAction.textContent = originalStart?.textContent || 'START GAME';
-    startAction.disabled = !originalStart || originalStart.disabled;
-    if (status === 'PAUSED') {
-      overlay.querySelector('.mobile-start-help').textContent = 'Resume the game to continue tracking.';
-    } else {
-      overlay.querySelector('.mobile-start-help').textContent = 'Which basket does HOME attack first?';
-    }
-    showDirection();
+    const paused = status === 'paused';
+    overlay.querySelector('#mobile-start-title').textContent = paused ? 'Game Paused' : 'Tip-Off';
+    overlay.querySelector('.mobile-start-help').textContent = paused
+      ? 'Resume the existing game using its saved direction.'
+      : 'Who won the opening tip?';
+    overlay.querySelector('.mobile-tip-winner').hidden = paused;
+    overlay.querySelector('#mobile-tip-question').hidden = paused;
+    overlay.querySelector('.mobile-direction-select').hidden = paused;
+    startAction.textContent = paused ? 'RESUME GAME' : 'CONFIRM TIP-OFF';
+    startAction.disabled = submitting || !tipoff || (paused && originalStart?.disabled);
+    updateTipoffForm();
   }
-  startAction.addEventListener('click', () => {
-    if (!originalStart || originalStart.disabled) return;
-    startNote.textContent = 'Starting game…';
-    originalStart.click(); // Reuses original Supabase RPC + synchronization checks.
-  });
-  const observer = new MutationObserver(() => {
-    if (active) {
+  startAction.addEventListener('click', async () => {
+    if (submitting || !tipoff) return;
+    if (tipoff.getStatus() === 'paused') {originalStart?.click();return;}
+    submitting = true;
+    startAction.disabled = true;
+    startNote.textContent = 'Saving official tip-off…';
+    try {
+      const result = await tipoff.confirm(winner,side);
+      startNote.textContent = result.ok ? '' : (result.message || 'Could not start game.');
+    } finally {
+      submitting=false;
       refreshStartOverlay();
-      if (overlay.hidden) startNote.textContent = '';
     }
   });
-  if (statusElement) observer.observe(statusElement, {childList:true, characterData:true, subtree:true});
+  window.addEventListener('scoridium-request-tipoff',()=>{
+    refreshStartOverlay();
+    if (!overlay.hidden) overlay.scrollIntoView?.({block:'nearest'});
+  });
+  window.addEventListener('scoridium-tipoff-teams-loaded',updateTipoffForm);
+  window.addEventListener('scoridium-direction-changed',updateTipoffForm);
+  if(statusElement) new MutationObserver(refreshStartOverlay)
+    .observe(statusElement,{childList:true,characterData:true,subtree:true});
+  updateTipoffForm();
+  refreshStartOverlay();
 
   function sync() {
     const enabled = media.matches;
