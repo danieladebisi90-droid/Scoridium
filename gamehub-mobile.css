@@ -1,0 +1,31 @@
+/* Mobile Game Hub — simple schedule view */
+.mobile-team-events-summary,.mobile-selected-activities{display:none}
+@media(max-width:700px) and (orientation:portrait){
+ html,body{height:auto!important;min-height:100%!important;overflow:auto!important;}
+ body{padding:12px!important;background:#f4f6fa!important;display:block!important}
+ #app-content{display:block!important;flex:none!important;min-height:0!important}
+ .game-hub-layout{display:flex!important;flex-direction:column!important;min-height:0!important;height:auto!important;gap:12px!important}
+ .game-schedule{display:contents!important}
+ .game-info-container,.games-list{display:none!important}
+ .mobile-team-events-summary,.mobile-selected-activities{display:block!important;background:#fff;border-radius:14px;padding:17px;box-shadow:0 2px 8px #0f172a0b;color:#172437}
+ .mobile-section-label{font-size:10px;letter-spacing:.11em;font-weight:800;color:#687991;margin-bottom:10px}
+ .mobile-team-events-summary h2{font-size:19px;line-height:1.25;margin:0 0 8px;color:#172437;font-family:inherit}
+ .mobile-team-events-summary p{font-size:12px;color:#667386;margin:0;line-height:1.6}
+ .game-calendar{display:flex!important;min-height:0!important;height:auto!important;padding:15px!important;overflow:visible!important;border-radius:14px!important;box-shadow:0 2px 8px #0f172a0b}
+ .game-calendar-header{flex-wrap:wrap!important;gap:10px}
+ .game-calendar-header h2{font-size:15px!important;font-family:inherit!important;letter-spacing:0}
+ .calendar-controls{gap:7px!important;flex-wrap:wrap;justify-content:flex-end}
+ #calendar-month{font-size:12px!important;white-space:nowrap}
+ .calendar-subscribe-btn,.manage-schedule-btn{font-size:11px!important}
+ .calendar-weekdays{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;margin:12px 0 5px!important}
+ .calendar-weekdays span{text-align:center;font-size:10px!important}
+ .calendar-dates{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;grid-auto-rows:40px!important;gap:3px!important;flex:none!important;min-height:0!important}
+ .calendar-day{font-size:12px!important;min-height:38px!important;border-radius:8px!important;padding:0!important}
+ .calendar-day.selected{outline:2px solid var(--team-primary,#10233f)!important}
+ .mobile-day-activities{display:flex;flex-direction:column;gap:9px}
+ .mobile-no-activities{font-size:13px;color:#728095;margin:0}
+ .mobile-activity-item{display:grid;gap:4px;padding:10px 12px;background:#f4f6fa;border-radius:10px}
+ .mobile-activity-type{font-size:10px;color:#708098;text-transform:uppercase;font-weight:800}
+ .mobile-activity-item strong{font-size:14px;color:#172437}
+ .mobile-activity-item small{font-size:12px;color:#69778b}
+}

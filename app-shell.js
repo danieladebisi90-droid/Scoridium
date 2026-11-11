@@ -18,40 +18,33 @@
       return filename+url.search+url.hash;
     } catch {return null}
   };
-  
-let activeView = '';
-let loadingSeq = 0;
-
-// Full-screen mode for mobile landscape game tracking
-const trackerScreen = window.matchMedia(
-  '(orientation: landscape) and (max-height: 650px)'
-);
-
-function updateTrackerFullscreen() {
-  const currentPage = activeView.split(/[?#]/)[0];
-
-  const fullscreen =
-    currentPage === 'game.html' &&
-    trackerScreen.matches;
-
-  document.body.classList.toggle(
-    'tracker-fullscreen',
-    fullscreen
-  );
-}
-
-trackerScreen.addEventListener('change', updateTrackerFullscreen);
+  let activeView='';
+  let loadingSeq=0;
+  const trackerScreen=window.matchMedia('(orientation: landscape) and (max-height: 650px)');
+  function updateMobileTrackerMode(){
+    const inGame=activeView.split(/[?#]/)[0]==='game.html';
+    document.body.classList.toggle('tracker-fullscreen',inGame && trackerScreen.matches);
+    document.body.classList.toggle('tracker-page',inGame);
+  }
+  trackerScreen.addEventListener('change',updateMobileTrackerMode);
+  const moreMenu=document.getElementById('mobile-more-menu');
+  const moreButtons=[document.getElementById('mobile-more-btn'),document.getElementById('mobile-team-menu-btn')];
+  function setMoreOpen(open){
+    moreMenu.hidden=!open;
+    moreButtons.forEach(b=>b?.setAttribute('aria-expanded',String(open)));
+  }
+  moreButtons.forEach(b=>b?.addEventListener('click',()=>setMoreOpen(moreMenu.hidden)));
+  moreMenu.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>setMoreOpen(false)));
 
   function highlight(file){document.querySelectorAll('[data-view]').forEach(link=>link.classList.toggle('active',link.dataset.view===file.split(/[?#]/)[0]));}
   function navigate(view,{replace=false}={}) {
     const next=viewOf(view);
     if(!next)return;
     if(next===activeView)return;
-    
-    activeView = next;
+    activeView=next;
     highlight(next);
-    updateTrackerFullscreen();
-
+    setMoreOpen(false);
+    updateMobileTrackerMode();
     container.classList.add('is-loading');
     loadingSeq++;
     const newUrl='app.html?page='+encodeURIComponent(next);
@@ -60,7 +53,7 @@ trackerScreen.addEventListener('change', updateTrackerFullscreen);
     frame.src=next;
   }
   window.addEventListener('popstate',()=>navigate(new URLSearchParams(location.search).get('page')||home,{replace:true}));
-  document.querySelectorAll('#main-navigation a[data-view]').forEach(link=>link.addEventListener('click',e=>{
+  document.querySelectorAll('a[data-view]').forEach(link=>link.addEventListener('click',e=>{
     if(e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;
     const target=viewOf(link.href);if(!target)return;
     e.preventDefault();navigate(target);
@@ -93,13 +86,13 @@ trackerScreen.addEventListener('change', updateTrackerFullscreen);
       const parentSelect=document.querySelector('.season-selector');
       if(parentSelect?.value && childSelect.value!==parentSelect.value)childSelect.value=parentSelect.value;
     }
-    updateTrackerFullscreen();
+    updateMobileTrackerMode();
     container.classList.remove('is-loading');
   });
   // Show cached identity immediately; Supabase remains authoritative.
   const cached=window.__scoridiumCachedTeam?.id===teamId?window.__scoridiumCachedTeam:null;
   const displayName=t=>((t?.team_type==='club'?t?.club_name||t?.mascot:t?.mascot||t?.club_name)||'').toUpperCase();
-  if(cached)document.getElementById('shared-team-name').textContent=displayName(cached);
+  if(cached){document.getElementById('shared-team-name').textContent=displayName(cached);document.getElementById('mobile-team-name').textContent=displayName(cached);}
   async function refreshShell(){
     if(!window.supabaseClient)return;
     const [tr,sr]=await Promise.all([
@@ -109,6 +102,7 @@ trackerScreen.addEventListener('change', updateTrackerFullscreen);
     if(sessionStorage.getItem('selectedTeamId')!==teamId)return;
     if(!tr.error&&tr.data){
       document.getElementById('shared-team-name').textContent=displayName(tr.data);
+      document.getElementById('mobile-team-name').textContent=displayName(tr.data);
       window.ScoridiumTheme?.apply(tr.data);
       window.ScoridiumTheme?.cache(tr.data,teamId);
     }else if(tr.error)console.warn('Team refresh:',tr.error.message);

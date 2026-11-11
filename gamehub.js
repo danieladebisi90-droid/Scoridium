@@ -185,6 +185,7 @@ if (totalItems === 1 && eventsForDay.length === 1) {
 
         calendar.appendChild(dayButton);
     }
+    renderMobileTeamEvents();
 }
 
 
@@ -2044,3 +2045,33 @@ deleteScheduleButton.addEventListener("click", async () => {
     }
     });
 
+
+/* Phone-only summary fed by the existing team_events and games arrays. */
+function renderMobileTeamEvents(){
+  const title=document.getElementById('mobile-next-event-title');
+  const info=document.getElementById('mobile-next-event-info');
+  const dayHeading=document.getElementById('mobile-selected-date');
+  const dayItems=document.getElementById('mobile-day-activities');
+  if(!title||!info||!dayHeading||!dayItems)return;
+  const today=new Date();
+  const todayKey=[today.getFullYear(),String(today.getMonth()+1).padStart(2,'0'),String(today.getDate()).padStart(2,'0')].join('-');
+  const all=[
+    ...gameHubEvents.map(e=>({date:String(e.event_date||'').slice(0,10),label:e.title||({practice:'Practice',meeting:'Team Meeting',training:'Training'}[e.event_type]||'Team Event'),time:e.event_time||e.start_time||'',type:e.event_type||'Event'})),
+    ...gameHubGames.filter(g=>g.status==='scheduled').map(g=>({date:String(g.date||'').slice(0,10),label:'Game vs '+(g.opponent||'TBD'),time:g.time||'',type:'Game'}))
+  ].filter(e=>/^\d{4}-\d{2}-\d{2}$/.test(e.date));
+  all.sort((a,b)=>a.date.localeCompare(b.date)||String(a.time).localeCompare(String(b.time)));
+  const upcoming=all.find(e=>e.date>=todayKey);
+  title.textContent=upcoming?.label||'No upcoming team events';
+  info.textContent=upcoming?(formatMobileEventDate(upcoming.date)+' · '+(upcoming.type==='Game'?'Game':upcoming.type)+(upcoming.time?' · '+String(upcoming.time).slice(0,5):'')):'Check back when the schedule is updated.';
+  const date=selectedGameDate||new Date();
+  const dateKey=[date.getFullYear(),String(date.getMonth()+1).padStart(2,'0'),String(date.getDate()).padStart(2,'0')].join('-');
+  dayHeading.textContent=formatMobileEventDate(dateKey).toUpperCase();
+  dayItems.replaceChildren();
+  const matching=all.filter(e=>e.date===dateKey);
+  if(!matching.length){const empty=document.createElement('p');empty.className='mobile-no-activities';empty.textContent='No activities scheduled for this day.';dayItems.append(empty);return;}
+  for(const e of matching){const item=document.createElement('div');item.className='mobile-activity-item';const type=document.createElement('span');type.className='mobile-activity-type';type.textContent=e.type;const label=document.createElement('strong');label.textContent=e.label;const time=document.createElement('small');time.textContent=e.time?String(e.time).slice(0,5):'Time TBD';item.append(type,label,time);dayItems.append(item);}
+}
+function formatMobileEventDate(dateKey){
+  const [y,m,d]=dateKey.split('-').map(Number);
+  return new Date(y,m-1,d).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+}

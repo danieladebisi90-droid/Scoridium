@@ -1181,12 +1181,7 @@ function renderScoreboard() {
   $("end-game").disabled = !live;
   $("undo-event").disabled = !live || state.events.length === 0;
   $("shot-dialog").hidden = !pendingShot;
-  
-document.querySelectorAll("#tracker-controls button").forEach(button => {
-  if (button.closest("#mobile-start-overlay")) return;
-  button.disabled = !live;
-});
-
+  document.querySelectorAll("#tracker-controls button").forEach(button => { button.disabled = !live; });
   $("shot-dialog").querySelectorAll("button").forEach(button => { button.disabled = !live; });
   $("basketball-court").style.pointerEvents = live ? "auto" : "none";
 }
