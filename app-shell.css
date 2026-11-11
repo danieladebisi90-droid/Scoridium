@@ -12,3 +12,44 @@ body.scoridium-shell {display:flex; flex-direction:column; margin:0; padding: 4p
 #main-navigation a[data-view].active {opacity:1;}
 @media (prefers-reduced-motion:reduce) {#page-frame{transition:none}.shell-loading-line{animation:none}}
 /* Inner pages set html.scoridium-framed during head parsing. */
+
+
+/* ==========================================
+   SCORIDIUM MOBILE FULLSCREEN TRACKER
+========================================== */
+
+@media (orientation: landscape) and (max-height: 650px) {
+
+  /* Remove the website navigation */
+  body.scoridium-shell.tracker-fullscreen .shell-header {
+    display: none !important;
+  }
+
+  /* Remove the shell's unused spacing */
+  body.scoridium-shell.tracker-fullscreen {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100%;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  /* Let the game tracker fill the screen */
+  body.scoridium-shell.tracker-fullscreen .shell-main {
+    flex: 1 1 auto;
+    height: 100%;
+    min-height: 0;
+    width: 100%;
+    border-radius: 0 !important;
+    overflow: hidden;
+  }
+
+  /* Expand the embedded game */
+  body.scoridium-shell.tracker-fullscreen #page-frame {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+}

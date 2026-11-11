@@ -18,15 +18,40 @@
       return filename+url.search+url.hash;
     } catch {return null}
   };
-  let activeView='';
-  let loadingSeq=0;
+  
+let activeView = '';
+let loadingSeq = 0;
+
+// Full-screen mode for mobile landscape game tracking
+const trackerScreen = window.matchMedia(
+  '(orientation: landscape) and (max-height: 650px)'
+);
+
+function updateTrackerFullscreen() {
+  const currentPage = activeView.split(/[?#]/)[0];
+
+  const fullscreen =
+    currentPage === 'game.html' &&
+    trackerScreen.matches;
+
+  document.body.classList.toggle(
+    'tracker-fullscreen',
+    fullscreen
+  );
+}
+
+trackerScreen.addEventListener('change', updateTrackerFullscreen);
+
   function highlight(file){document.querySelectorAll('[data-view]').forEach(link=>link.classList.toggle('active',link.dataset.view===file.split(/[?#]/)[0]));}
   function navigate(view,{replace=false}={}) {
     const next=viewOf(view);
     if(!next)return;
     if(next===activeView)return;
-    activeView=next;
+    
+    activeView = next;
     highlight(next);
+    updateTrackerFullscreen();
+
     container.classList.add('is-loading');
     loadingSeq++;
     const newUrl='app.html?page='+encodeURIComponent(next);
@@ -68,6 +93,7 @@
       const parentSelect=document.querySelector('.season-selector');
       if(parentSelect?.value && childSelect.value!==parentSelect.value)childSelect.value=parentSelect.value;
     }
+    updateTrackerFullscreen();
     container.classList.remove('is-loading');
   });
   // Show cached identity immediately; Supabase remains authoritative.

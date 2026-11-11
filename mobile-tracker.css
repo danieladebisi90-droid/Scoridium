@@ -107,3 +107,24 @@
     .mobile-start-card { padding:7px; gap:3px; }
   }
 }
+
+
+@media (orientation: landscape) and (max-height: 650px) {
+
+  .mobile-exit-tracker {
+    display: block;
+    width: 100%;
+    padding: 6px 2px;
+    margin-bottom: 4px;
+    background: #10233f;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+
+}
+
