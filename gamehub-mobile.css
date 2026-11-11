@@ -76,7 +76,19 @@
  .mobile-game-card-top span {font-size:12px;color:#60718a}
  .mobile-context-game h3 {font-size:18px;line-height:1.4;margin:0;color:#142a4c;overflow-wrap:anywhere}
  .mobile-context-game p {font-size:13px;margin:0;color:#546a89}
- .mobile-context-game button {min-height:46px;width:100%;border:0;border-radius:9px;
-   font-weight:800;background:#173b73;color:white;cursor:pointer}
+ 
+.mobile-context-game button {
+  min-height: 46px;
+  width: 100%;
+  border: 0;
+  border-radius: 9px;
+  font-weight: 800;
+
+  background: var(--team-secondary, #9299A5);
+  color: var(--team-secondary-ink, #151515);
+
+  cursor: pointer;
+}
+
  .mobile-context-game button:disabled {opacity:.45;cursor:not-allowed}
 }
