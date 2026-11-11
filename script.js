@@ -1272,40 +1272,98 @@ function getSelectedBasketSide() {
     return homeAttacksLeft ? "right" : "left";
 }
 
-// Direction is shared per game through Supabase when the migration is installed.
-// Until then, local selection still works but cross-device sync is unavailable.
-let directionSyncAvailable = false;
-let directionRequestSeq = 0;
+// Previewing a direction must NEVER write the shared game record.
+// The confirmed tip-off atomically establishes both the direction and LIVE status.
+let tipoffSaving = false;
 function applySharedDirection(value) {
-  if(typeof value !== 'boolean') return;
-  state.homeAttacksLeftFirstHalf=value;
-  save(); renderCourtLabels();
+  if (typeof value !== 'boolean') return;
+  state.homeAttacksLeftFirstHalf = value;
+  save();
+  renderCourtLabels();
   window.dispatchEvent(new Event('scoridium-direction-changed'));
 }
 window.scoridiumTrackerDirection = {
-  get(){ return state.homeAttacksLeftFirstHalf !== false ? 'left':'right'; },
-  set(side){
-    if(!['left','right'].includes(side)) return false;
-    if(['live','final'].includes(state.status) || state.events.length>0) return false;
-    const original=state.homeAttacksLeftFirstHalf !== false;
-    const chosen=side==='left';
-    applySharedDirection(chosen);
-    if(gameId && currentGame && directionSyncAvailable){
-      const seq=++directionRequestSeq;
-      supabaseClient.from('games').update({home_attacks_left_first_half:chosen})
-        .eq('id',gameId).eq('status','scheduled').select('id,home_attacks_left_first_half')
-        .then(({data,error})=>{
-           if(seq!==directionRequestSeq) return;
-           if(error || !data?.length){
-             console.warn('Direction was not saved to Supabase',error);
-             applySharedDirection(original);
-             window.dispatchEvent(new CustomEvent('scoridium-direction-save-failed'));
-           }
-        });
-    }
+  get() { return state.homeAttacksLeftFirstHalf !== false ? 'left' : 'right'; },
+  set(side) {
+    if (!['left', 'right'].includes(side)) return false;
+    if (state.status !== 'not_started' || state.events.length || tipoffSaving) return false;
+    applySharedDirection(side === 'left'); // preview only, local to this device
     return true;
   }
 };
+
+function getTipoffTeamNames() {
+  const ourIsHome = currentGame?.location?.toLowerCase() !== 'away';
+  return {
+    home: ourIsHome ? teamName : (currentGame?.opponent || 'OPPONENT'),
+    away: ourIsHome ? (currentGame?.opponent || 'OPPONENT') : teamName
+  };
+}
+window.scoridiumTipoff = {
+  getTeams: getTipoffTeamNames,
+  getStatus: () => state.status,
+  async confirm(winner, scoringSide) {
+    if (!currentGame || !gameId || state.status !== 'not_started' ||
+        state.events.length || tipoffSaving ||
+        !['home','away'].includes(winner) || !['left','right'].includes(scoringSide)) {
+      return {ok:false, message:'This game cannot be started from the current state.'};
+    }
+    if (eventSyncHasFailed || getEventRecoveryQueue()?.length) {
+      return {ok:false,message:'Resolve pending stat synchronization before tip-off.'};
+    }
+    tipoffSaving = true;
+    window.dispatchEvent(new Event('scoridium-tipoff-saving'));
+    try {
+      // The team's chosen basket is converted to HOME's initial direction.
+      const homeLeft = winner === 'home' ? scoringSide === 'left' : scoringSide === 'right';
+      const {data,error} = await supabaseClient.rpc('confirm_game_tipoff', {
+        p_game_id: gameId,
+        p_winner: winner,
+        p_home_attacks_left: homeLeft
+      });
+      if (error || !data) {
+        console.error('Tip-off could not be confirmed:', error);
+        // Other device may have started first: fetch official state immediately.
+        await refreshOfficialTipoffState();
+        return {ok:false,message:state.status === 'live'
+          ? 'Another device started this game. Its direction is now loaded.'
+          : 'Could not save tip-off. Check database migration and permissions.'};
+      }
+      currentGame = {...currentGame,...data};
+      applySharedDirection(data.home_attacks_left_first_half);
+      state.period = Number(data.current_period) || 1;
+      state.status = 'live';
+      save(); renderPeriodOptions(); render();
+      return {ok:true};
+    } catch (error) {
+      console.error('Tip-off failed:',error);
+      return {ok:false,message:'Network error: tip-off was not confirmed.'};
+    } finally {
+      tipoffSaving = false;
+      window.dispatchEvent(new Event('scoridium-tipoff-saving'));
+    }
+  }
+};
+
+async function refreshOfficialTipoffState() {
+  if (!gameId || !currentGame || !navigator.onLine) return;
+  const {data:game,error} = await supabaseClient.from('games')
+    .select('id,status,current_period,home_attacks_left_first_half,opening_tip_winner')
+    .eq('id',gameId).single();
+  if (error || !game) { console.warn('Could not refresh official game state',error); return; }
+  currentGame={...currentGame,...game};
+  if(typeof game.home_attacks_left_first_half==='boolean') applySharedDirection(game.home_attacks_left_first_half);
+  state.status= game.status === 'completed' ? 'final'
+    : game.status === 'live' ? 'live'
+    : game.status === 'paused' ? 'paused' : 'not_started';
+  state.period=Math.max(1,Number(game.current_period)||1);
+  save();renderPeriodOptions();render();
+}
+window.addEventListener('focus',()=>{void refreshOfficialTipoffState();});
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible') void refreshOfficialTipoffState();
+});
+window.addEventListener('online',()=>{void refreshOfficialTipoffState();});
 
 function displayToCourt(x, y) {
     if (courtView === "full") {
@@ -1579,7 +1637,16 @@ function renderPlayByPlay() {
             event.period === Number(filter)
         );
 
-    if (!matching.length) {
+    // The opening tip is an official game-level event, not a player stat.
+    // Render it from the shared games record to avoid duplicate game_events
+    // writes when multiple devices observe the same tip-off.
+    const tipWinner = currentGame?.opening_tip_winner;
+    const showOpeningTip =
+        (filter === "all" || Number(filter) === 1) &&
+        (tipWinner === "home" || tipWinner === "away") &&
+        state.status !== "not_started";
+
+    if (!matching.length && !showOpeningTip) {
         list.textContent = "No events yet.";
         return;
     }
@@ -1740,6 +1807,19 @@ edit.addEventListener("click", async () => {
 
             list.appendChild(row);
         });
+
+    // Play-by-play is displayed newest first, so the opening tip belongs at
+    // the bottom, before the first recorded possession or shot.
+    if (showOpeningTip) {
+        const names = getTipoffTeamNames();
+        const winnerName = names[tipWinner] || tipWinner.toUpperCase();
+        const row = document.createElement("div");
+        row.className = "play-row";
+        const label = document.createElement("span");
+        label.textContent = `Q1 · ${winnerName} won the opening tip · 0–0`;
+        row.appendChild(label);
+        list.appendChild(row);
+    }
 }
 
 function render() {
@@ -1937,40 +2017,27 @@ document.querySelectorAll("[data-opponent-stat]").forEach(button => {
     });
 });
 
+// Desktop and phone use the SAME tip-off confirmation path.
+// During paused games, resume through the existing RPC; do not reset direction.
 $("start-game").addEventListener("click", async () => {
-    if (state.status === "final" || !currentGame) return;
-
+    if (!currentGame || state.status === 'final' || tipoffSaving) return;
+    if (state.status === 'not_started') {
+      // Show the shared Tip-Off form even when the original desktop button is clicked.
+      window.dispatchEvent(new Event('scoridium-request-tipoff'));
+      return;
+    }
+    if (state.status !== 'paused') return;
     if (eventSyncHasFailed || getEventRecoveryQueue()?.length) {
-        alert("Resolve pending synchronization before starting/resuming the game.");
-        return;
+        alert('Resolve pending synchronization before resuming the game.');return;
     }
-    const total = scores();
-
-    const { error } = await supabaseClient.rpc(
-        "update_live_game",
-        {
-            p_game_id: gameId,
-            p_status: "live",
-            p_period: state.period,
-            p_team_score: total.us,
-            p_opponent_score: total.opponent
-        }
-    );
-
-    if (error) {
-        console.error("Could not start game:", error);
-        alert("Could not update game status in Supabase.");
-        return;
-    }
-
-    state.status = "live";
-    save();
-    render();
-
-    console.log("Game status updated to LIVE");
+    const total=scores();
+    const {error}=await supabaseClient.rpc('update_live_game',{
+      p_game_id:gameId,p_status:'live',p_period:state.period,
+      p_team_score:total.us,p_opponent_score:total.opponent
+    });
+    if(error){console.error('Could not resume game',error);alert('Could not resume the game.');return;}
+    state.status='live';save();render();
 });
-
-
 
 $("end-quarter").addEventListener("click", async () => {
     if (state.status !== "live" || !currentGame) return;
@@ -2523,6 +2590,7 @@ async function loadSelectedGame() {
   const {data:team,error:teamError} = await supabaseClient.from("teams").select("mascot").eq("id",game.team_id).single();
   if (teamError) console.warn("Team name loading failed",teamError);
   teamName=team?.mascot || "OUR TEAM";
+  window.dispatchEvent(new Event("scoridium-tipoff-teams-loaded"));
   await loadGameEvents();
   
   // Restore the shared game status from Supabase.
@@ -2704,18 +2772,16 @@ function startGameTrackingRealtime() {
 
             gameRealtimeRefreshTimer = null;
 
-            // Do not reconcile while local uploads are pending.
-            if (!canSafelyReconcileEvents()) {
-                console.warn(
-                    "Realtime refresh postponed: local changes pending."
-                );
-                return;
+            // Pending stat writes must not block receiving the official
+            // game status or tip-off direction from the other device.
+            const canRefreshEvents = canSafelyReconcileEvents();
+            if (canRefreshEvents) {
+                await loadGameEvents();
+            } else {
+                console.warn('Realtime: event reconcile postponed; game status still refreshes.');
             }
 
             console.log("Realtime: Refreshing Game Tracking...");
-
-            // Synchronize recorded events.
-            await loadGameEvents();
 
             // Refresh the game status and period.
             const { data: game, error } = await supabaseClient
@@ -2733,6 +2799,8 @@ function startGameTrackingRealtime() {
             }
 
             if (game) {
+                // Keep game-level tip-off metadata current on other devices.
+                currentGame = {...currentGame, ...game};
                 if(typeof game.home_attacks_left_first_half==='boolean') applySharedDirection(game.home_attacks_left_first_half);
 
                 state.status =
