@@ -53,3 +53,14 @@
  }
  .roster-toolbar .search-control svg { flex:0 0 17px!important; width:17px!important; height:17px!important; }
 }
+
+/* Consolidated mobile fixes: tabs and compact search HEIGHT, preserve full width. */
+.roster-panel[hidden], .roster-info-panel[hidden] { display:none!important; }
+.roster-info-panel {margin-top:12px;}
+.roster-info-panel h2 {margin:0 0 12px;font-size:18px;}
+.roster-info-panel p {font-size:13px;line-height:1.6;overflow-wrap:anywhere;}
+.roster-tabs button:not(.is-selected) {cursor:pointer;}
+@media(max-width:700px) and (orientation:portrait) {
+ .roster-toolbar .search-control {flex:0 0 auto!important;width:100%!important;max-width:100%!important;height:40px!important;min-height:40px!important;max-height:40px!important;padding:0 10px!important;align-self:stretch!important;}
+ .roster-toolbar .search-control input {height:100%!important;min-height:0!important;padding:0!important;line-height:normal!important;}
+}

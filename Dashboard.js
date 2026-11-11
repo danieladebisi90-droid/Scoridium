@@ -394,7 +394,8 @@ async function loadTeamTicker() {
         item.textContent = recordText;
     });  
     
-    const today = new Date().toLocaleDateString("en-CA");
+    const now = new Date();
+    const today = [now.getFullYear(),String(now.getMonth()+1).padStart(2,"0"),String(now.getDate()).padStart(2,"0")].join("-");
 
     const { data: upcomingGames, error: upcomingError } = await supabaseClient
         .from("games")
@@ -1217,6 +1218,7 @@ async function loadDashboardRoster() {
     track.style.transform = '';
     if (isPortraitPhone) {
         track.scrollLeft = 0;
+        startMobileRosterMarquee(track);
         return;
     }
 
@@ -1340,3 +1342,42 @@ console.log("Roster loop distance:", loopDistance);
     track.addEventListener("focusout", resume);
 }
 
+
+// Portrait phones: scrollLeft-based marquee, with manual swiping and pause.
+let mobileRosterMarqueeStop = null;
+function startMobileRosterMarquee(track) {
+    if (mobileRosterMarqueeStop) mobileRosterMarqueeStop();
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    let stopped=false, held=false, last=0, resumeAt=0, raf=0;
+    const pause=()=>{ held=true; resumeAt=performance.now()+5000; };
+    const release=()=>{ held=false; resumeAt=performance.now()+5000; };
+    const step=(time)=>{
+      if(stopped) return;
+      const delta=last ? Math.min(60,time-last) : 0; last=time;
+      if(track.isConnected && !held && time>resumeAt && document.visibilityState==='visible') {
+        const max=track.scrollWidth-track.clientWidth;
+        if(max>1) track.scrollLeft = track.scrollLeft>=max-1 ? 0 : track.scrollLeft+(delta*0.018);
+      }
+      raf=requestAnimationFrame(step);
+    };
+    track.addEventListener('touchstart',pause,{passive:true});
+    track.addEventListener('touchend',release,{passive:true});
+    track.addEventListener('pointerdown',pause);
+    track.addEventListener('pointerup',release);
+    track.addEventListener('wheel',release,{passive:true});
+    raf=requestAnimationFrame(step);
+    mobileRosterMarqueeStop=()=>{ stopped=true;cancelAnimationFrame(raf);track.removeEventListener('touchstart',pause);track.removeEventListener('touchend',release);track.removeEventListener('pointerdown',pause);track.removeEventListener('pointerup',release);track.removeEventListener('wheel',release); };
+}
+
+// Refresh ticker when returning to the dashboard, including after other devices update a game.
+let lastTickerRefresh=0;
+function refreshVisibleTicker(){
+  if(document.visibilityState==='hidden' || !document.querySelector('.ticker-next')) return;
+  if(Date.now()-lastTickerRefresh<10000) return;
+  lastTickerRefresh=Date.now();
+  if(typeof supabaseClient!=='undefined' && typeof selectedTeamId!=='undefined') loadTeamTicker().catch(console.warn);
+}
+document.addEventListener('visibilitychange', refreshVisibleTicker);
+window.addEventListener('focus', refreshVisibleTicker);
+window.addEventListener('seasonChanged', refreshVisibleTicker);
+setInterval(refreshVisibleTicker,60000);

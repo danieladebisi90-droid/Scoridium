@@ -187,6 +187,23 @@ function jerseySVG(player) {
     $('team-name').textContent = label.toUpperCase();
     jerseyWordmark = String(school.split(' ')[0] || mascot).toUpperCase().slice(0, 11); 
     $('school-name').textContent = school.toUpperCase();
+    const details = $('roster-team-info');
+    if (details) {
+      details.replaceChildren();
+      const known = [
+        ['School / Club', school],
+        ['Mascot', mascot],
+        ['Team Type', team.team_type || 'School'],
+        ['Division', team.division || team.age_group || 'Not specified'],
+      ];
+      known.forEach(([label, value]) => {
+        const row = document.createElement('p');
+        const strong = document.createElement('strong');
+        strong.textContent = `${label}: `;
+        row.append(strong, document.createTextNode(String(value || 'Not specified')));
+        details.appendChild(row);
+      });
+    }
     $('team-emblem').textContent = String(mascot || school).charAt(0).toUpperCase();
     window.ScoridiumTheme?.apply(team);
   }
@@ -254,5 +271,20 @@ seasonId =
     // season-to-player membership table, filter memberships here instead.
     displayRoster();
   }
+  // Wire the existing filter to the text field (was never attached).
+  $('roster-search')?.addEventListener('input', displayRoster);
+  const tabButtons = [...document.querySelectorAll('[data-roster-tab]')];
+  function activateRosterTab(tab) {
+    document.querySelector('.roster-page > .roster-panel').hidden = tab !== 'roster';
+    $('roster-info-panel').hidden = tab !== 'info';
+    $('roster-staff-panel').hidden = tab !== 'staff';
+    tabButtons.forEach(button => {
+      const active = button.dataset.rosterTab === tab;
+      button.classList.toggle('is-selected', active);
+      if (active) button.setAttribute('aria-current','page');
+      else button.removeAttribute('aria-current');
+    });
+  }
+  tabButtons.forEach(button => button.addEventListener('click', () => activateRosterTab(button.dataset.rosterTab)));
   void loadRoster();
 })();

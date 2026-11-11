@@ -13,13 +13,8 @@
   mobile.setAttribute('aria-label', 'Mobile landscape basketball tracker');
   mobile.innerHTML = `
     <aside class="mobile-left-rail" aria-label="Players and period controls">
-      
-<div class="mobile-left-actions" id="mobile-game-actions">
-  <a href="gamehub.html" class="mobile-back-button">
-    ← BACK
-  </a>
-</div>
-
+      <a class="mobile-back-button" href="gamehub.html" aria-label="Back to Game Hub">← BACK</a>
+      <div class="mobile-left-actions" id="mobile-game-actions"></div>
       <div class="mobile-player-list" id="mobile-player-slot"></div>
     </aside>
     <section class="mobile-court-center" aria-label="Full basketball court">

@@ -48,9 +48,9 @@
       </div>
     </section>
     <nav class="roster-tabs" aria-label="Roster categories">
-      <button type="button" class="is-selected" aria-current="page">Roster</button>
-      <button type="button" disabled title="Team information to be connected">Team Information</button>
-      <button type="button" disabled title="Staff management to be connected">Staff</button>
+      <button type="button" class="is-selected" data-roster-tab="roster" aria-current="page">Roster</button>
+      <button type="button" data-roster-tab="info">Team Information</button>
+      <button type="button" data-roster-tab="staff">Staff</button>
     </nav>
     <section class="roster-panel" aria-labelledby="roster-title">
       <div class="roster-toolbar">
@@ -72,6 +72,8 @@
       <div id="roster-status" class="status-message" role="status" hidden></div>
       <div id="jersey-grid" class="jersey-grid" aria-live="polite"></div>
     </section>
+    <section id="roster-info-panel" class="roster-panel roster-info-panel" hidden aria-label="Team Information"><h2>TEAM INFORMATION</h2><div id="roster-team-info">Loading team details…</div></section>
+    <section id="roster-staff-panel" class="roster-panel roster-info-panel" hidden aria-label="Staff"><h2>STAFF</h2><p>Staff directory hasn't been set up for this team yet.</p></section>
     <footer class="page-footer">SCORIDIUM <span>HOME TO THE ELEMENTS OF YOUR GAME</span></footer>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

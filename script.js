@@ -1181,14 +1181,10 @@ function renderScoreboard() {
   $("end-game").disabled = !live;
   $("undo-event").disabled = !live || state.events.length === 0;
   $("shot-dialog").hidden = !pendingShot;
-  
-document.querySelectorAll("#tracker-controls button").forEach(button => {
-  // Keep pre-game direction and start controls clickable.
-  if (button.closest("#mobile-start-overlay")) return;
-
-  button.disabled = !live;
-});
-
+  document.querySelectorAll("#tracker-controls button").forEach(button => {
+    if (button.closest("#mobile-start-overlay")) return;
+    button.disabled = !live;
+  });
   $("shot-dialog").querySelectorAll("button").forEach(button => { button.disabled = !live; });
   $("basketball-court").style.pointerEvents = live ? "auto" : "none";
 }
@@ -1276,18 +1272,39 @@ function getSelectedBasketSide() {
     return homeAttacksLeft ? "right" : "left";
 }
 
-// Orientation is saved per game locally. Add a Supabase games column/RPC
-// before relying on orientation synchronization between different devices.
+// Direction is shared per game through Supabase when the migration is installed.
+// Until then, local selection still works but cross-device sync is unavailable.
+let directionSyncAvailable = false;
+let directionRequestSeq = 0;
+function applySharedDirection(value) {
+  if(typeof value !== 'boolean') return;
+  state.homeAttacksLeftFirstHalf=value;
+  save(); renderCourtLabels();
+  window.dispatchEvent(new Event('scoridium-direction-changed'));
+}
 window.scoridiumTrackerDirection = {
-    get() { return state.homeAttacksLeftFirstHalf !== false ? "left" : "right"; },
-    set(side) {
-        if (side !== "left" && side !== "right") return false;
-        if (state.status === "live" || state.status === "final" || state.events.length > 0) return false;
-        state.homeAttacksLeftFirstHalf = side === "left";
-        save();
-        renderCourtLabels();
-        return true;
+  get(){ return state.homeAttacksLeftFirstHalf !== false ? 'left':'right'; },
+  set(side){
+    if(!['left','right'].includes(side)) return false;
+    if(['live','final'].includes(state.status) || state.events.length>0) return false;
+    const original=state.homeAttacksLeftFirstHalf !== false;
+    const chosen=side==='left';
+    applySharedDirection(chosen);
+    if(gameId && currentGame && directionSyncAvailable){
+      const seq=++directionRequestSeq;
+      supabaseClient.from('games').update({home_attacks_left_first_half:chosen})
+        .eq('id',gameId).eq('status','scheduled').select('id,home_attacks_left_first_half')
+        .then(({data,error})=>{
+           if(seq!==directionRequestSeq) return;
+           if(error || !data?.length){
+             console.warn('Direction was not saved to Supabase',error);
+             applySharedDirection(original);
+             window.dispatchEvent(new CustomEvent('scoridium-direction-save-failed'));
+           }
+        });
     }
+    return true;
+  }
 };
 
 function displayToCourt(x, y) {
@@ -2500,6 +2517,8 @@ async function loadSelectedGame() {
     $("saving-note").textContent = "DEMO — NO GAME SELECTED";
 }return; }
   currentGame=game;
+  directionSyncAvailable=typeof game.home_attacks_left_first_half==='boolean';
+  if(directionSyncAvailable) applySharedDirection(game.home_attacks_left_first_half);
   await loadGameRoster();
   const {data:team,error:teamError} = await supabaseClient.from("teams").select("mascot").eq("id",game.team_id).single();
   if (teamError) console.warn("Team name loading failed",teamError);
@@ -2701,7 +2720,7 @@ function startGameTrackingRealtime() {
             // Refresh the game status and period.
             const { data: game, error } = await supabaseClient
                 .from("games")
-                .select("status, current_period")
+                .select("*")
                 .eq("id", gameId)
                 .single();
 
@@ -2714,6 +2733,7 @@ function startGameTrackingRealtime() {
             }
 
             if (game) {
+                if(typeof game.home_attacks_left_first_half==='boolean') applySharedDirection(game.home_attacks_left_first_half);
 
                 state.status =
                     game.status === "completed"

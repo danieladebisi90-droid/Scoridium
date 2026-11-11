@@ -36,26 +36,10 @@
       <div class="season-selector-container"><select class="season-selector" aria-label="Select season"><option>Season</option></select></div>
     </nav>
   </header>
-  <div class="mobile-app-topbar" aria-label="Team header">
-    <a class="mobile-brand" href="myTeams.html" aria-label="My Teams">SCORIDIUM<span>.</span></a>
-    <span class="mobile-team-name" id="mobile-team-name">MY TEAM</span>
-    <button type="button" class="mobile-team-menu-btn" id="mobile-team-menu-btn" aria-label="More options" aria-expanded="false">•••</button>
-  </div>
-  <div class="mobile-more-menu" id="mobile-more-menu" hidden>
-    <a href="myTeams.html">Switch Team</a>
-    <a href="playbook.html">Playbook</a>
-  </div>
   <main class="shell-main" id="shell-main" aria-label="Scoridium page">
     <iframe id="page-frame" title="Scoridium content" loading="eager" allow="fullscreen" referrerpolicy="same-origin"></iframe>
     <div class="shell-loading" id="shell-loading" aria-hidden="true"><span class="shell-loading-line"></span></div>
   </main>
-  <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
-    <a href="dashboard.html" data-view="dashboard.html"><span class="mobile-nav-icon">⌂</span><span>Home</span></a>
-    <a href="gamehub.html" data-view="gamehub.html"><span class="mobile-nav-icon">▦</span><span>Games</span></a>
-    <a href="roster.html" data-view="roster.html"><span class="mobile-nav-icon">♙</span><span>Roster</span></a>
-    <a href="stats.html" data-view="stats.html"><span class="mobile-nav-icon">▥</span><span>Stats</span></a>
-    <button type="button" id="mobile-more-btn" aria-expanded="false"><span class="mobile-nav-icon">⋯</span><span>More</span></button>
-  </nav>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="team-theme.js"></script>

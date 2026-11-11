@@ -1378,3 +1378,8 @@ a.dashboard-player-card:hover {
     scroll-snap-align:start!important;
   }
 }
+
+@media(max-width:700px) and (orientation:portrait) {
+ #app-content .mobile-dashboard-next-event {box-sizing:border-box!important;max-width:100%!important;min-width:0!important;overflow-wrap:anywhere!important;overflow:hidden!important;}
+ #app-content .mobile-dashboard-next-event * {min-width:0;max-width:100%;overflow-wrap:anywhere;}
+}
