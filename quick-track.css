@@ -6,3 +6,28 @@
  html.mobile-tracker-active .quick-mode .mobile-left-rail .player-panel,
  html.mobile-tracker-active .quick-mode .mobile-right-rail .stats-panel{display:block!important}
 }
+
+/* Phase 1.1: portrait-phone Quick Track. Keep landscape court workflow intact. */
+@media (orientation:portrait) and (max-width:767px) and (pointer:coarse){
+  /* The older court-only tracker blocked portrait with a full-screen warning. */
+  body::after{display:none!important;content:none!important}
+  html,body{height:auto!important;min-height:100%;overflow-x:hidden!important;overflow-y:auto!important}
+  .tracker-shell{height:auto!important;min-height:100dvh;display:flex!important;flex-direction:column;gap:8px;padding:8px}
+  .topbar{padding:8px 12px}
+  .scoreboard{min-height:100px;padding:8px 5px}
+  .score-team h2{font-size:11px;margin:3px 0}
+  .score-team output{font-size:clamp(26px,8vw,40px)}
+  .score-center{gap:3px;min-width:65px}
+  .score-center strong{font-size:16px}
+  .tracker-grid{display:flex!important;flex-direction:column;gap:8px;min-height:0}
+  .right-column{display:flex!important;flex-direction:column;gap:8px;order:-1}
+  .right-column #game-controls{order:0}
+  .right-column #quick-track-panel{order:1;width:100%}
+  .right-column .player-panel,.right-column .stats-panel{display:none!important}
+  .left-column{order:1;min-width:0}
+  .left-column #tracker-controls{display:none!important}
+  #mobile-tracker{display:none!important}
+  .quick-track-panel .quick-grid button{min-height:54px;font-size:17px}
+  .quick-track-panel .quick-shortcuts button,.quick-track-panel .quick-stats button{min-height:46px}
+  .quick-track-panel .quick-opponent{margin-top:10px}
+}
