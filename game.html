@@ -17,6 +17,7 @@
   <title>Basketball | Game</title>
   <link rel="stylesheet" href="tracker.css">
   <link rel="stylesheet" href="mobile-tracker.css?v=tipoff4">
+  <link rel="stylesheet" href="quick-track.css?v=1">
 </head>
 <body>
   <header class="topbar">
@@ -353,6 +354,10 @@
           </div>
           <p class="hint">After Q4, ending the quarter finishes the game unless the score is tied (overtime). Confirmations protect against accidental endings.</p>
         </section>
+        <section class="panel quick-track-panel" id="quick-track-panel" aria-label="Quick live tracking">
+          <div class="quick-head"><h3>QUICK TRACK</h3><button type="button" id="quick-view-toggle">Court controls</button></div>
+          <div id="quick-track-root"></div>
+        </section>
         <section class="panel player-panel">
           <h3>SELECT PLAYER</h3>
           <div class="player-grid" id="player-grid">
@@ -431,6 +436,7 @@
   <script src="supabase-config.js"></script>
   <script src="script.js?v=tipoff5"></script>
   <script src="mobile-tracker.js?v=tipoff4"></script>
+  <script src="quick-track.js?v=1"></script>
   <script src="./pwa-register.js" defer></script>
 </body>
 </html>

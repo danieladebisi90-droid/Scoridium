@@ -1426,3 +1426,17 @@ a.dashboard-player-card:hover {
     overflow: visible !important;
   }
 }
+
+.dashboard-roster-track {
+  scroll-snap-type: none;
+  scroll-behavior: auto;
+}
+
+
+/* Hide Team News ticker on mobile only */
+@media (max-width: 700px) and (orientation: portrait) {
+  #shared-footer,
+  #team-news-ticker {
+    display: none !important;
+  }
+}

@@ -1143,6 +1143,10 @@ function eventDescription(event) {
 
     return `${name} — ${event.made ? "Made" : "Missed"} Free Throw`;
 }
+  if (event.type === "no_assist") return "No assist (confirmed)";
+  if (event.type === "team_offensive_rebound" || event.type === "team_defensive_rebound") {
+    return `${event.team === "us" ? teamName : currentGame?.opponent || "OPPONENT"} — Team ${event.type === "team_offensive_rebound" ? "offensive" : "defensive"} rebound`;
+  }
   if (event.type === "opponent_score") return `Opponent — +${event.points} points`;
   const names = { assist:"Assist", defensive_rebound:"Defensive rebound", offensive_rebound:"Offensive rebound", steal:"Steal", block:"Block", turnover:"Turnover", foul:"Personal foul" };
   const name = event.team === "opponent"
@@ -1423,7 +1427,9 @@ function renderCourt() {
     markers.replaceChildren();
 
     state.events
-        .filter(event => event.type === "shot")
+        .filter(event => event.type === "shot" &&
+            event.x != null && event.y != null &&
+            Number.isFinite(Number(event.x)) && Number.isFinite(Number(event.y)))
         .forEach(event => {
 
             // Convert saved coordinates to the current court view
@@ -1481,7 +1487,8 @@ function renderCourt() {
 function renderUnassigned() {
   const list = $("unassigned-list"); list.replaceChildren();
   const unassigned = state.events
-    .filter(e => e.team === "us" && e.playerId == null)
+    .filter(e => e.team === "us" && e.playerId == null &&
+      !e.linkedEventId && !String(e.type).startsWith("team_"))
     .reverse();
   $("tab-unassigned-count").textContent =
     unassigned.length > 0 ? `(${unassigned.length})` : "";

@@ -1342,89 +1342,99 @@ console.log("Roster loop distance:", loopDistance);
     track.addEventListener("focusout", resume);
 }
 
-
-// Portrait phones: scrollLeft-based marquee, with manual swiping and pause.
 let mobileRosterMarqueeStop = null;
 
 function startMobileRosterMarquee(track) {
-  if (mobileRosterMarqueeStop) mobileRosterMarqueeStop();
+  if (!track) return;
 
-  const reducedMotion = matchMedia(
+  if (mobileRosterMarqueeStop) {
+    mobileRosterMarqueeStop();
+    mobileRosterMarqueeStop = null;
+  }
+
+  const reducedMotion = window.matchMedia(
     "(prefers-reduced-motion: reduce)"
   ).matches;
 
   if (reducedMotion) return;
 
   let stopped = false;
-  let paused = false;
-  let resumeAt = 0;
+  let isPaused = false;
+  let animationFrame = null;
   let lastTime = 0;
-  let position = track.scrollLeft;
-  let frame = 0;
+  let currentPosition = track.scrollLeft;
+  let resumeTimeout = null;
 
-  const pause = () => {
-    paused = true;
-    position = track.scrollLeft;
-  };
+  function pauseAutoScroll() {
+    isPaused = true;
+    currentPosition = track.scrollLeft;
 
-  const resume = () => {
-    paused = false;
-    position = track.scrollLeft;
-    resumeAt = performance.now() + 3000;
-  };
+    if (resumeTimeout) {
+      clearTimeout(resumeTimeout);
+      resumeTimeout = null;
+    }
+  }
 
-  function animate(time) {
+  function scheduleResume() {
+    if (resumeTimeout) clearTimeout(resumeTimeout);
+
+    resumeTimeout = setTimeout(() => {
+      currentPosition = track.scrollLeft;
+      isPaused = false;
+    }, 1500); // resumes 1.5s after touching stops
+  }
+
+  function step(timestamp) {
     if (stopped) return;
 
-    const delta = lastTime
-      ? Math.min(time - lastTime, 60)
-      : 0;
+    if (!lastTime) lastTime = timestamp;
+    const delta = Math.min(timestamp - lastTime, 40);
+    lastTime = timestamp;
 
-    lastTime = time;
+    if (!isPaused && document.visibilityState === "visible") {
+      const maxScroll = track.scrollWidth - track.clientWidth;
 
-    if (
-      !paused &&
-      time >= resumeAt &&
-      document.visibilityState === "visible"
-    ) {
-      const maxScroll =
-        track.scrollWidth - track.clientWidth;
+      if (maxScroll > 0) {
+        currentPosition += delta * 0.035;
 
-      if (maxScroll > 1) {
-        position += delta * 0.035;
-
-        if (position >= maxScroll) {
-          position = 0;
+        if (currentPosition >= maxScroll) {
+          currentPosition = 0;
         }
 
-        track.scrollLeft = position;
+        track.scrollLeft = currentPosition;
       }
     }
 
-    frame = requestAnimationFrame(animate);
+    animationFrame = requestAnimationFrame(step);
   }
 
-  track.addEventListener("touchstart", pause, {
-    passive: true
-  });
-  track.addEventListener("touchend", resume, {
-    passive: true
-  });
-  track.addEventListener("pointerdown", pause);
-  track.addEventListener("pointerup", resume);
+  track.addEventListener("touchstart", pauseAutoScroll, { passive: true });
+  track.addEventListener("touchmove", pauseAutoScroll, { passive: true });
+  track.addEventListener("touchend", scheduleResume, { passive: true });
 
-  frame = requestAnimationFrame(animate);
+  track.addEventListener("pointerdown", pauseAutoScroll);
+  track.addEventListener("pointerup", scheduleResume);
+  track.addEventListener("mouseenter", pauseAutoScroll);
+  track.addEventListener("mouseleave", scheduleResume);
 
-  mobileRosterMarqueeStop = () => {
+  animationFrame = requestAnimationFrame(step);
+
+  mobileRosterMarqueeStop = function () {
     stopped = true;
-    cancelAnimationFrame(frame);
-    track.removeEventListener("touchstart", pause);
-    track.removeEventListener("touchend", resume);
-    track.removeEventListener("pointerdown", pause);
-    track.removeEventListener("pointerup", resume);
+
+    if (animationFrame) cancelAnimationFrame(animationFrame);
+    if (resumeTimeout) clearTimeout(resumeTimeout);
+
+    track.removeEventListener("touchstart", pauseAutoScroll);
+    track.removeEventListener("touchmove", pauseAutoScroll);
+    track.removeEventListener("touchend", scheduleResume);
+
+    track.removeEventListener("pointerdown", pauseAutoScroll);
+    track.removeEventListener("pointerup", scheduleResume);
+    track.removeEventListener("mouseenter", pauseAutoScroll);
+    track.removeEventListener("mouseleave", scheduleResume);
   };
 }
-
 
 // Refresh ticker when returning to the dashboard, including after other devices update a game.
 let lastTickerRefresh=0;
