@@ -1,0 +1,63 @@
+/* Full-screen focused tracking. Legacy controls are retained in Court view. */
+html.focus-tracker,html.focus-tracker body{height:100dvh!important;width:100%;overflow:hidden!important}
+html.focus-tracker body::after{display:none!important;content:none!important}
+html.focus-tracker .topbar{display:none!important}
+html.focus-tracker .focus-nav{height:45px;display:flex;align-items:center;justify-content:space-between;gap:8px;background:#10233f;color:white;padding:4px 10px;box-sizing:border-box}
+html.focus-tracker .focus-hub{color:#fff;font-size:12px;font-weight:800;text-decoration:none;white-space:nowrap}
+html.focus-tracker .focus-tabs{display:flex;gap:5px;min-width:0}
+html.focus-tracker .focus-tabs button{padding:6px 10px;min-height:34px;border:1px solid #56708d;border-radius:8px;background:#1c3553;color:#e7eef7;font-size:12px}
+html.focus-tracker .focus-tabs button.active{background:#ffd600;color:#10233f;border-color:#ffd600}
+html.focus-tracker .tracker-shell{max-width:none!important;width:100%!important;height:calc(100dvh - 45px)!important;min-height:0!important;margin:0!important;padding:7px!important;gap:7px!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+html.focus-tracker .scoreboard{flex:0 0 auto;min-height:80px;padding:7px 14px!important;border-radius:10px;gap:6px}
+html.focus-tracker .score-team h2{font-size:clamp(12px,2vw,19px);margin:3px 0}
+html.focus-tracker .score-team output{font-size:clamp(28px,4.2vw,52px)}
+html.focus-tracker .score-center{gap:3px;min-width:60px}
+html.focus-tracker .score-center strong{font-size:clamp(16px,2vw,24px)}
+html.focus-tracker .focus-stage{display:flex;flex:1;min-height:0;min-width:0}
+html.focus-tracker .focus-track,html.focus-tracker .focus-review{width:100%;min-height:0;min-width:0;display:none}
+html.focus-tracker .tracker-shell[data-focus-view="track"] .focus-track{display:flex;flex-direction:column;gap:6px}
+html.focus-tracker .tracker-shell[data-focus-view="review"] .focus-review{display:flex;flex-direction:column}
+html.focus-tracker .focus-quick-slot,html.focus-tracker .focus-info-slot{flex:1;min-height:0;min-width:0;overflow-y:auto;overscroll-behavior:contain}
+html.focus-tracker #quick-track-panel{width:100%;border:0!important;box-shadow:none!important;padding:10px!important;margin:0}
+html.focus-tracker #quick-view-toggle{display:none!important}
+html.focus-tracker .quick-head{margin-bottom:4px}
+html.focus-tracker .quick-step{margin:5px 0}
+html.focus-tracker .quick-opponent{margin-top:8px;padding:8px}
+html.focus-tracker .quick-opponent h4{font-size:12px;margin:0 0 6px}
+html.focus-tracker .quick-grid button{min-height:44px!important;padding:7px 3px!important}
+html.focus-tracker .quick-stats button,html.focus-tracker .quick-shortcuts button{min-height:42px!important;padding:7px 2px!important}
+html.focus-tracker .focus-game-actions{display:flex;gap:6px;flex:none;padding:4px 0}
+html.focus-tracker .focus-game-actions button{flex:1;min-height:37px;background:#e6ecf4;color:#10233f;font-size:11px;padding:5px}
+html.focus-tracker .focus-game-actions button:last-child{color:#a02c32}
+html.focus-tracker #game-info-panel{height:100%;min-height:0;display:flex;flex-direction:column}
+html.focus-tracker #game-info-panel .game-info-content{overflow:auto;min-height:0;flex:1}
+html.focus-tracker .tracker-grid{display:none!important;min-height:0;overflow:auto}
+html.focus-tracker #mobile-tracker{display:none!important}
+html.focus-tracker .tracker-shell[data-focus-view="court"] .tracker-grid{display:grid!important;flex:1;overflow:auto}
+html.focus-tracker .tracker-shell[data-focus-view="court"] #mobile-tracker{display:none!important}
+html.focus-tracker .tracker-shell[data-focus-view="court"] .player-panel,
+html.focus-tracker .tracker-shell[data-focus-view="court"] .stats-panel{display:block!important}
+html.focus-tracker .tracker-shell[data-focus-view="court"] #quick-track-panel{display:none!important}
+@media(orientation:landscape) and (max-height:650px){
+ html.focus-tracker.mobile-tracker-active .tracker-shell[data-focus-view="court"] #mobile-tracker{display:grid!important;flex:1}
+ html.focus-tracker.mobile-tracker-active .tracker-shell[data-focus-view="court"] .tracker-grid{display:none!important}
+}
+@media(max-width:740px){
+ html.focus-tracker .focus-nav{padding:3px 6px;gap:3px}
+ html.focus-tracker .focus-tabs button{font-size:10px;padding:5px 6px}
+ html.focus-tracker .focus-hub{font-size:10px}
+ html.focus-tracker .scoreboard{min-height:70px!important;padding:5px!important}
+ html.focus-tracker .score-team h2{font-size:11px}
+ html.focus-tracker .score-team output{font-size:30px}
+ html.focus-tracker .focus-game-actions button{font-size:10px}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .tracker-grid{display:flex!important;flex-direction:column}
+}
+@media (orientation:portrait) and (max-width:767px) and (pointer:coarse){
+ html.focus-tracker .tracker-shell{height:calc(100dvh - 45px)!important;min-height:0!important;display:flex!important;overflow:hidden!important}
+ html.focus-tracker .right-column{order:0!important}
+ html.focus-tracker .focus-stage{order:0!important}
+ html.focus-tracker .left-column{order:0!important}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .right-column .player-panel,
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .right-column .stats-panel,
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .left-column #tracker-controls{display:block!important}
+}

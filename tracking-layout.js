@@ -1,0 +1,83 @@
+/* Focused game tracking navigation. No changes to event writes or Supabase sync. */
+(() => {
+  'use strict';
+  const shell=document.querySelector('.tracker-shell');
+  const scoreboard=shell?.querySelector('.scoreboard');
+  const quick=document.getElementById('quick-track-panel');
+  const info=document.getElementById('game-info-panel');
+  if(!shell||!scoreboard||!quick||!info)return;
+  document.documentElement.classList.add('focus-tracker');
+  const nav=document.createElement('nav');
+  nav.className='focus-nav';
+  nav.setAttribute('aria-label','Game tracking views');
+  nav.innerHTML=`<a class="focus-hub" href="gamehub.html">← Game Hub</a>
+    <div class="focus-tabs" role="group" aria-label="Tracker screen">
+      <button type="button" data-focus-view="track" class="active" aria-pressed="true">Track</button>
+      <button type="button" data-focus-view="review" aria-pressed="false">Play-by-play <span id="focus-unassigned-count"></span></button>
+      <button type="button" data-focus-view="court" aria-pressed="false">Court</button>
+    </div>`;
+  shell.before(nav);
+  const stage=document.createElement('div');
+  stage.className='focus-stage';
+  stage.innerHTML=`<section class="focus-track" aria-label="Quick game tracking">
+        <div class="focus-quick-slot"></div>
+        <div class="focus-game-actions">
+          <button type="button" data-original="start-game">Start / Resume</button>
+          <button type="button" data-original="end-quarter">End Quarter</button>
+          <button type="button" data-original="end-game">End Game</button>
+        </div>
+      </section>
+      <section class="focus-review" aria-label="Game events and statistics">
+        <div class="focus-info-slot"></div>
+      </section>`;
+  scoreboard.after(stage);
+  stage.querySelector('.focus-quick-slot').appendChild(quick);
+  stage.querySelector('.focus-info-slot').appendChild(info);
+  // Existing tab handlers keep the box score, play-by-play and unassigned tools working.
+  const buttons=[...nav.querySelectorAll('[data-focus-view]')];
+  let view='track';
+  function show(next){
+    view=next;
+    shell.dataset.focusView=next;
+    buttons.forEach(b=>{const active=b.dataset.focusView===next;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});
+    if(next==='review'){
+      const plays=document.querySelector('[data-info-tab="plays"]');
+      if(plays && !info.querySelector('.game-info-tabs .active'))plays.click();
+    }
+  }
+  buttons.forEach(b=>b.addEventListener('click',()=>show(b.dataset.focusView)));
+  stage.querySelectorAll('[data-original]').forEach(button=>button.addEventListener('click',()=>{
+    const target=document.getElementById(button.dataset.original);
+    if(!target)return;
+    if(button.dataset.original==='start-game' && !target.disabled && document.documentElement.classList.contains('mobile-tracker-active')){
+      // Mobile opening-tip setup lives on the existing court view.
+      show('court');
+      window.dispatchEvent(new Event('scoridium-request-tipoff'));
+      return;
+    }
+    target.click();
+  }));
+  const unassigned=document.getElementById('tab-unassigned-count');
+  const badge=document.getElementById('focus-unassigned-count');
+  if(unassigned&&badge){const paint=()=>{const count=Number(unassigned.textContent||0);badge.textContent=count>0?`(${count})`:'';};new MutationObserver(paint).observe(unassigned,{childList:true,characterData:true,subtree:true});paint();}
+  // Swipe right to see plays, swipe left to return to the tracker.
+  // Avoid taking over horizontal scrolling inside tables or on the court.
+  let touch=null;
+  stage.addEventListener('touchstart',event=>{
+    const target=event.target;
+    if(target.closest('button,select,input,table,.table-scroll,.event-list')){touch=null;return;}
+    if(event.touches.length!==1)return;
+    touch={x:event.touches[0].clientX,y:event.touches[0].clientY};
+  },{passive:true});
+  stage.addEventListener('touchend',event=>{
+    if(!touch||event.changedTouches.length!==1)return;
+    const dx=event.changedTouches[0].clientX-touch.x,dy=event.changedTouches[0].clientY-touch.y;
+    touch=null;
+    if(Math.abs(dx)<75||Math.abs(dy)>Math.abs(dx)*0.65)return;
+    if(view==='track'&&dx<0)show('review');
+    else if(view==='review'&&dx>0)show('track');
+  },{passive:true});
+  // Quick Track starts immediately. Legacy court remains a separate view.
+  shell.classList.add('quick-mode');
+  show('track');
+})();

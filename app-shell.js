@@ -23,7 +23,7 @@
   const trackerScreen=window.matchMedia('(orientation: landscape) and (max-height: 650px)');
   function updateMobileTrackerMode(){
     const inGame=activeView.split(/[?#]/)[0]==='game.html';
-    document.body.classList.toggle('tracker-fullscreen',inGame && trackerScreen.matches);
+    document.body.classList.toggle('tracker-fullscreen',inGame);
     document.body.classList.toggle('tracker-page',inGame);
   }
   trackerScreen.addEventListener('change',updateMobileTrackerMode);

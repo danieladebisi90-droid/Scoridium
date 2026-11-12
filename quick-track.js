@@ -46,14 +46,23 @@
     // Independent stat entry linked to its source shot, never another scoring shot.
     stored({type,team,playerId:pid,linkedEventId:activeShot});reset();
   }
+  function getTeamNames(){
+    // The existing scoreboard already accounts for home/away game selection.
+    const home = document.getElementById('home-name')?.textContent?.trim() || 'Home';
+    const away = document.getElementById('away-name')?.textContent?.trim() || 'Away';
+    const isHome = currentGame?.is_home !== false && currentGame?.home_away !== 'away';
+    // teamName is the canonical tracked team from script.js.
+    return {us:teamName || (isHome?home:away),opponent:currentGame?.opponent || (isHome?away:home)};
+  }
   function paint(){
+    const names = getTeamNames();
     if(!quick){root.innerHTML='<p class="quick-note">Original court and detailed stat controls are active.</p>';return;}
     const who = own();
     let html='';
     if(stage==='grid'){
       html=`<div class="quick-step">1 · TAP A JERSEY NUMBER</div>${rosterGrid()}`;
-      html+=`<div class="quick-opponent"><h4>TEAM QUICK SCORE (UNASSIGNED)</h4>${buttons([['team-ft','FT +1'],['team-2','TEAM +2'],['team-3','TEAM +3']],'quick-shortcuts')}</div>`;
-      html+=`<div class="quick-opponent"><h4>OPPONENT · TEAM STATS</h4>${buttons([['opp-ft','FT +1'],['opp-2','2PT +2'],['opp-3','3PT +3'],['opp-miss2','2PT MISS'],['opp-miss3','3PT MISS'],['opp-to','TO'],['opp-pf','PF'],['opp-reb','REB']])}</div>`;
+      html+=`<div class="quick-opponent"><h4>${escape(names.us)} · QUICK SCORE</h4>${buttons([['team-ft','FT +1'],['team-2','TEAM +2'],['team-3','TEAM +3']],'quick-shortcuts')}</div>`;
+      html+=`<div class="quick-opponent"><h4>${escape(names.opponent)} · TEAM STATS</h4>${buttons([['opp-ft','FT +1'],['opp-2','2PT +2'],['opp-3','3PT +3'],['opp-miss2','2PT MISS'],['opp-miss3','3PT MISS'],['opp-to','TO'],['opp-pf','PF'],['opp-reb','REB']])}</div>`;
     }else if(stage==='stats'){
       html=`<div class="quick-step">#${escape(who?.number??'?')} · CHOOSE STAT</div>`;
       html+=buttons([['made-ft','FT +1'],['made-2','2PT MADE'],['made-3','3PT MADE'],['miss-ft','FT MISS'],['miss-2','2PT MISS'],['miss-3','3PT MISS'],['oreb','O REB'],['dreb','D REB'],['ast','AST'],['stl','STL'],['blk','BLK'],['to','TO'],['pf','PF']]);
@@ -63,8 +72,8 @@
       html+=buttons([['no-assist','NO ASSIST'],['unknown-assist','UNKNOWN / SKIP']],'quick-actions');
     }else if(stage==='rebound'){
       html=`<div class="quick-step">MISSED SHOT · WHO GOT THE REBOUND?</div>`;
-      html+=buttons([['reb-us','OUR TEAM'],['reb-opp','OPPONENT']],'quick-actions');
-      html+=`<div class="quick-note">${reboundTeam==='us'?'Select one of our players, or use Team REB / Unknown.':'Opponent rebound is recorded at team level.'}</div>`;
+      html+=buttons([['reb-us',escape(names.us)],['reb-opp',escape(names.opponent)]],'quick-actions');
+      html+=`<div class="quick-note">${reboundTeam==='us'?'Select one of our players, or use Team REB / Unknown.':`${escape(names.opponent)} rebound is recorded at team level.`}</div>`;
       if(reboundTeam==='us') html+=rosterGrid('rebound-player');
       html+=buttons([['team-reb','TEAM REB'],['unknown-reb','UNKNOWN / SKIP']],'quick-actions');
     }else if(stage==='steal'){
@@ -118,5 +127,8 @@
   // Roster loads asynchronously; paint the grid when the existing render runs.
   const original=renderPlayers;
   renderPlayers=function(){original(); if(stage==='grid'||stage==='assist'||stage==='rebound'||stage==='steal')paint();};
+  // Team names arrive asynchronously; respond when canonical scoreboard changes.
+  const homeLabel = document.getElementById('home-name');
+  if(homeLabel) new MutationObserver(()=>{if(stage==='grid'||stage==='rebound')paint();}).observe(homeLabel,{childList:true,subtree:true,characterData:true});
   paint();
 })();
