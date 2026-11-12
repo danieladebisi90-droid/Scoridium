@@ -48,3 +48,86 @@ html.focus-tracker .focus-game-actions button[data-original="end-quarter"]{backg
 html.focus-tracker .focus-game-actions button:focus-visible,
 html.focus-tracker .qv-button:focus-visible{outline:3px solid #2563EB;outline-offset:2px}
 @media(max-width:740px){html.focus-tracker .scoreboard .score-team{padding:4px 2px}}
+
+
+/* =====================================
+   SCORIDIUM — TEAM HEADERS & FONT UPDATE
+   ===================================== */
+
+/* Tracked team header */
+html.focus-tracker .qv-tracked .qv-team-heading {
+  background: var(--qt-primary, #173C75);
+  border-left: 5px solid var(--qt-secondary, #FFD600);
+  border-radius: 7px;
+  padding: 7px 12px;
+}
+
+/* Tracked team name */
+html.focus-tracker .qv-tracked .qv-team-heading strong {
+  color: #FFFFFF;
+  font-size: clamp(17px, 2vw, 21px);
+  font-weight: 850;
+}
+
+/* Tracked team subtitle */
+html.focus-tracker .qv-tracked .qv-team-heading small {
+  color: #E0E8F3;
+  font-size: clamp(12px, 1.4vw, 14px);
+}
+
+/* TEAM shortcut */
+html.focus-tracker .qv-tracked .qv-team-btn {
+  background: var(--qt-secondary, #FFD600);
+  color: #102440;
+  border: 1px solid var(--qt-secondary, #FFD600);
+  font-size: 15px;
+  font-weight: 850;
+}
+
+/* Opponent header — neutral fallback */
+html.focus-tracker .qv-opponent .qv-team-heading {
+  background: var(--qt-opponent, #64748B);
+  border-radius: 7px;
+  padding: 7px 12px;
+}
+
+/* Opponent name */
+html.focus-tracker .qv-opponent .qv-team-heading strong {
+  color: #FFFFFF;
+  font-size: clamp(17px, 2vw, 21px);
+  font-weight: 850;
+}
+
+/* Opponent subtitle */
+html.focus-tracker .qv-opponent .qv-team-heading small {
+  color: #F1F5F9;
+  font-size: clamp(12px, 1.4vw, 14px);
+}
+
+/* Bigger player jersey numbers */
+html.focus-tracker .qv-grid .qv-tile {
+  font-size: clamp(17px, 2.4vw, 23px);
+  font-weight: 850;
+}
+
+/* Bigger stat buttons */
+html.focus-tracker .qv-opp-buttons .qv-button,
+html.focus-tracker .qv-choices .qv-button {
+  font-size: clamp(13px, 1.7vw, 18px);
+  font-weight: 850;
+}
+
+/* Keep compact screens readable */
+@media (max-height: 650px) {
+  html.focus-tracker .qv-team-heading {
+    padding: 3px 8px !important;
+  }
+
+  html.focus-tracker .qv-team-heading strong {
+    font-size: 14px !important;
+  }
+
+  html.focus-tracker .qv-team-heading small {
+    font-size: 10px !important;
+  }
+}
