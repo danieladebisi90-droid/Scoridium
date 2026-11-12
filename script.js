@@ -1171,6 +1171,8 @@ function totalAt(index) { return scores(state.events.slice(0, index + 1)); }
 function renderScoreboard() {
   const total = scores();
   const isHome = currentGame?.location?.toLowerCase() !== "away";
+  const scorePanel=document.querySelector(".scoreboard");
+  if(scorePanel)scorePanel.dataset.trackedSide=isHome?"home":"away";
   $("home-name").textContent = isHome ? teamName : currentGame?.opponent || "OPPONENT";
   $("away-name").textContent = isHome ? currentGame?.opponent || "OPPONENT" : teamName;
   $("home-score").textContent = isHome ? total.us : total.opponent;
@@ -2594,9 +2596,16 @@ async function loadSelectedGame() {
   directionSyncAvailable=typeof game.home_attacks_left_first_half==='boolean';
   if(directionSyncAvailable) applySharedDirection(game.home_attacks_left_first_half);
   await loadGameRoster();
-  const {data:team,error:teamError} = await supabaseClient.from("teams").select("mascot").eq("id",game.team_id).single();
+  const {data:team,error:teamError} = await supabaseClient.from("teams").select("mascot,primary_color,secondary_color").eq("id",game.team_id).single();
   if (teamError) console.warn("Team name loading failed",teamError);
   teamName=team?.mascot || "OUR TEAM";
+  // Quick Track visual identity only: never changes scoring or opponent data.
+  // Missing/invalid tracked-team colors use the standard navy and gold.
+  const validColor=value=>typeof value==='string' && /^#[0-9a-f]{6}$/i.test(value);
+  const quickPrimary=validColor(team?.primary_color)?team.primary_color:'#173C75';
+  const quickSecondary=validColor(team?.secondary_color)?team.secondary_color:'#FFD600';
+  document.documentElement.style.setProperty('--qt-primary',quickPrimary);
+  document.documentElement.style.setProperty('--qt-secondary',quickSecondary);
   window.dispatchEvent(new Event("scoridium-tipoff-teams-loaded"));
   await loadGameEvents();
   

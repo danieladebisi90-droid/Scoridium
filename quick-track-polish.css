@@ -1,0 +1,50 @@
+/* Quick Track visual polish — additive only; same dimensions and event handlers. */
+:root{--qt-primary:#173C75;--qt-secondary:#FFD600;--qt-opponent:#64748B;
+  --qt-make:#07853E;--qt-make-border:#056B32;--qt-miss:#D12F38;--qt-miss-border:#A82029}
+
+/* Scoreboard is still a single fixed-height component; colors follow home/away. */
+html.focus-tracker .scoreboard{
+  background:#102440;
+  border:1px solid #284465;
+  border-radius:12px;
+  overflow:hidden;
+  padding:0!important;
+  gap:0!important;
+}
+html.focus-tracker .scoreboard .score-team{height:100%;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 4px;border-top:3px solid var(--qt-opponent);background:rgba(148,163,184,.08)}
+html.focus-tracker .scoreboard[data-tracked-side="home"] .score-team:first-child,
+html.focus-tracker .scoreboard[data-tracked-side="away"] .score-team:last-child{border-color:var(--qt-secondary);background:color-mix(in srgb,var(--qt-primary) 65%,#102440)}
+html.focus-tracker .scoreboard .score-center{padding:6px 8px;align-self:stretch;justify-content:center}
+html.focus-tracker #game-status{background:#FFD600;color:#102440;border-radius:30px;font-weight:900;padding:3px 10px;align-self:center}
+html.focus-tracker .score-team h2{font-family:Arial,Helvetica,sans-serif;font-weight:850;margin:2px 0}
+html.focus-tracker .score-team output{font-variant-numeric:tabular-nums}
+
+/* Team identity stays subtle: branded heading and selection, not colored tiles. */
+html.focus-tracker .qv-layout{--qt-active:var(--qt-primary)}
+html.focus-tracker .qv-tracked{border:1px solid #cbd7e6;border-top:3px solid var(--qt-secondary);background:#fff;border-radius:12px}
+html.focus-tracker .qv-opponent{border:1px solid #d1d9e4;border-top:3px solid var(--qt-opponent);background:#fff;border-radius:12px}
+html.focus-tracker .qv-tracked.qv-highlight{border-color:var(--qt-primary);border-top-color:var(--qt-secondary);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--qt-primary) 16%,transparent)}
+html.focus-tracker .qv-opponent.qv-opponent-highlight{border-color:var(--qt-opponent);border-top-color:var(--qt-opponent)}
+html.focus-tracker .qv-team-heading strong{color:#122846}
+html.focus-tracker .qv-team-heading{padding-bottom:2px}
+html.focus-tracker .qv-team-btn{background:color-mix(in srgb,var(--qt-primary) 8%,white);border:1.5px solid var(--qt-primary);color:var(--qt-primary);font-weight:900}
+html.focus-tracker .qv-team-btn:hover:not(:disabled){background:color-mix(in srgb,var(--qt-primary) 16%,white)}
+html.focus-tracker .qv-grid .qv-tile:not(.qv-made):not(.qv-miss):not(.qv-info),
+html.focus-tracker .qv-opp-buttons .qv-button:not(.qv-made):not(.qv-miss){background:#f0f4fa;border:1px solid #bfccdd;color:#18314f}
+html.focus-tracker .qv-grid .qv-tile:not(.qv-made):not(.qv-miss):not(.qv-info):hover:not(:disabled){border-color:var(--qt-primary);background:color-mix(in srgb,var(--qt-primary) 9%,white)}
+html.focus-tracker .qv-grid .qv-tile{font-variant-numeric:tabular-nums;border-radius:9px}
+html.focus-tracker .qv-button.qv-made,
+html.focus-tracker .qv-opp-buttons .qv-button.qv-made{background:var(--qt-make);border-color:var(--qt-make-border);color:white}
+html.focus-tracker .qv-button.qv-miss,
+html.focus-tracker .qv-opp-buttons .qv-button.qv-miss{background:var(--qt-miss);border-color:var(--qt-miss-border);color:white}
+html.focus-tracker .qv-button.qv-made:hover:not(:disabled){background:#067235;color:#fff}
+html.focus-tracker .qv-button.qv-miss:hover:not(:disabled){background:#B9222B;color:#fff}
+html.focus-tracker .qv-last{border:1px solid #ccd8e8;border-left:4px solid var(--qt-secondary);background:#f0f4f9;border-radius:10px}
+html.focus-tracker .focus-game-actions button{border-radius:9px;font-weight:850}
+html.focus-tracker .focus-game-actions button[data-original="start-game"]{background:#FFD600!important;border-color:#E6C100!important;color:#102440!important}
+html.focus-tracker .focus-game-actions button[data-original="start-game"]:hover:not(:disabled){background:#EFC800!important}
+html.focus-tracker .focus-game-actions button[data-original="end-game"]{background:#FDEBED!important;border-color:#E9BEC1!important;color:#A82029!important}
+html.focus-tracker .focus-game-actions button[data-original="end-quarter"]{background:#E8EDF4!important;border-color:#D1DAE7!important;color:#17314F!important}
+html.focus-tracker .focus-game-actions button:focus-visible,
+html.focus-tracker .qv-button:focus-visible{outline:3px solid #2563EB;outline-offset:2px}
+@media(max-width:740px){html.focus-tracker .scoreboard .score-team{padding:4px 2px}}

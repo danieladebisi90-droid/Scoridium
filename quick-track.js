@@ -103,7 +103,7 @@
     const descriptive={idle:'Select a player',stats:`${label(who)} • Choose stat`,assist:'Who assisted?',steal:'Who stole the ball?',oppSteal:'Did the opponent steal?',reboundChoice:'Block or rebound?',blocker:'Who blocked?',reboundPlayer:'Who rebounded?',foul:'Classify the foul',ft:'Record each free throw',ftShooter:'Who is shooting?',ftRebound:'Final FT missed • rebound',done:'Complete'};
     const current=mode==='idle'?'':mode;
     let content='';
-    if(mode==='idle') content=roster('player',null,['teamPlayer','TEAM']);
+    if(mode==='idle') content=roster('player');
     else if(mode==='stats') content=tileGrid([
       tile('made2','+2PT','qv-made'),tile('made3','+3PT','qv-made'),
       tile('miss2','2PT MISS','qv-miss'),tile('miss3','3PT MISS','qv-miss'),
