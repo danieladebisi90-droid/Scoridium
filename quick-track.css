@@ -31,3 +31,88 @@
   .quick-track-panel .quick-shortcuts button,.quick-track-panel .quick-stats button{min-height:46px}
   .quick-track-panel .quick-opponent{margin-top:10px}
 }
+
+/* Quick Track v2 — stable layout on phone, tablet, desktop and landscape. */
+html.focus-tracker .focus-quick-slot{overflow:hidden!important;display:flex;min-height:0}
+html.focus-tracker #quick-track-panel{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;padding:3px!important;background:transparent}
+html.focus-tracker #quick-track-panel .quick-head{height:22px;min-height:22px;margin:0 0 3px;padding:0 4px}
+html.focus-tracker #quick-track-panel .quick-head h3{font-size:12px;margin:0}
+html.focus-tracker #quick-track-root{flex:1;min-height:0;display:flex;overflow:hidden}
+.qv-layout{display:grid;grid-template-rows:minmax(0,1fr) minmax(130px,33%) 51px;gap:6px;min-height:0;width:100%;height:100%;overflow:hidden}
+.qv-tracked,.qv-opponent,.qv-last{min-height:0;min-width:0;border:1px solid #cfd9e6;border-radius:10px;background:#fff;padding:8px;box-sizing:border-box;overflow:hidden}
+.qv-tracked{display:flex;flex-direction:column;border-width:2px}
+.qv-highlight{border-color:#347ce4;box-shadow:inset 0 0 0 1px #347ce430}
+.qv-opponent{display:flex;flex-direction:column}
+.qv-opponent-highlight{border:2px solid #347ce4}
+.qv-team-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;flex:none;min-height:35px;margin-bottom:5px}
+.qv-team-heading>div{min-width:0;display:flex;flex-direction:column;gap:2px}
+.qv-team-heading strong{color:#112c4b;font-weight:850;font-size:clamp(12px,1.4vw,17px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qv-team-heading small{font-size:clamp(10px,1vw,12px);color:#617187;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qv-button{touch-action:manipulation!important;min-width:0;min-height:0!important;padding:4px!important;border:1px solid #bbc9d9;border-radius:8px;background:#edf2f8;color:#17324e;font-size:clamp(10px,1.2vw,15px);font-weight:800;line-height:1.1;overflow:hidden;white-space:normal}
+.qv-button:disabled{opacity:.34;cursor:not-allowed}
+.qv-button.qv-made{background:#127547;color:#fff;border-color:#0b6139}
+.qv-button.qv-miss{background:#b0373b;color:#fff;border-color:#8e282e}
+.qv-button.qv-info{background:#174b95;color:#fff;border-color:#174b95}
+.qv-button.qv-neutral{background:#e0e7ef;color:#233d59}
+.qv-team-btn{min-height:31px!important;min-width:56px;flex:none}
+.qv-action-surface{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:center}
+.qv-grid{height:100%;min-height:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:5px}
+.qv-choices{height:100%;min-height:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(0,1fr);gap:7px}
+.qv-tile{width:100%;height:100%}
+.qv-bottom{height:31px;flex:none;display:flex;justify-content:flex-end;gap:6px;margin-top:5px}
+.qv-bottom:empty{height:0;margin:0}
+.qv-bottom .qv-button{min-width:65px}
+.qv-opp-buttons{flex:1;min-height:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:5px}
+.qv-last{display:flex;flex-direction:column;justify-content:center;gap:2px;background:#edf2f8}
+.qv-last small{font-size:9px;font-weight:850;color:#67798b;letter-spacing:.4px}
+.qv-last strong{color:#152e4c;font-size:clamp(11px,1vw,13px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qv-foul{display:flex;flex-direction:column;justify-content:center;gap:6px;height:100%;min-height:0;overflow:auto}
+.qv-line{display:flex;flex-direction:column;gap:3px;flex:none}
+.qv-line strong{font-size:clamp(10px,1vw,13px);color:#253d54}
+.qv-options{display:flex;gap:4px;flex-wrap:wrap}
+.qv-option{min-height:31px!important;flex:1;padding:4px 7px!important;font-weight:700;font-size:clamp(10px,1vw,13px);border-radius:7px;background:#edf2f8;color:#233c55;border:1px solid #cbd6e3}
+.qv-option.selected{background:#194f95!important;color:#fff;border-color:#194f95}
+.qv-foul-footer{display:flex;gap:6px;flex:none}
+.qv-foul-footer .qv-button{min-height:34px!important;flex:1}
+.qv-ft-list{height:100%;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:7px;overflow:auto}
+.qv-ft-line{display:flex;align-items:center;gap:7px;padding:6px;border:1px solid #d5dfeb;border-radius:8px;flex:1;min-height:0;max-height:75px;opacity:.45}
+.qv-ft-line.qv-current{opacity:1;border-color:#347ce4;background:#f0f5fc}
+.qv-ft-line strong{min-width:62px;font-size:clamp(10px,1.1vw,14px)}
+.qv-ft-line>div{display:flex;gap:5px;flex:1;height:100%}
+.qv-ft-line .qv-button{flex:1}
+@media(max-width:740px){
+ html.focus-tracker #quick-track-panel{padding:1px!important}
+ .qv-layout{grid-template-rows:minmax(0,1fr) minmax(115px,33%) 47px;gap:5px}
+ .qv-tracked,.qv-opponent,.qv-last{padding:6px}
+ .qv-team-heading{min-height:29px;margin-bottom:4px}
+ .qv-button{font-size:clamp(10px,2.7vw,13px)}
+ .qv-grid,.qv-opp-buttons{gap:4px}
+ .qv-bottom{height:29px}
+ .qv-line{gap:2px}
+ .qv-foul{gap:4px}
+ .qv-option{min-height:28px!important}
+}
+@media(max-height:650px){
+ html.focus-tracker .scoreboard{min-height:52px!important;padding:2px 7px!important}
+ html.focus-tracker .score-team output{font-size:25px!important}
+ html.focus-tracker .focus-game-actions{padding:0;gap:4px}
+ html.focus-tracker .focus-game-actions button{min-height:29px}
+ .qv-layout{grid-template-rows:minmax(0,1fr) minmax(94px,32%) 38px;gap:4px}
+ .qv-team-heading{min-height:25px;margin-bottom:2px}
+ .qv-team-heading strong{font-size:11px}.qv-team-heading small{font-size:9px}
+ .qv-bottom{height:25px;margin-top:3px}.qv-button{font-size:10px}
+ .qv-foul{gap:2px}.qv-option{min-height:23px!important}.qv-line strong{font-size:10px}
+}
+@media(min-width:900px){
+ .qv-layout{grid-template-columns:minmax(0,2fr) minmax(270px,1fr);grid-template-rows:minmax(0,1fr) 55px;gap:10px}
+ .qv-tracked{grid-column:1;grid-row:1;padding:14px}
+ .qv-opponent{grid-column:2;grid-row:1;padding:14px}
+ .qv-last{grid-column:1/-1;grid-row:2}
+ .qv-team-heading{min-height:45px;margin-bottom:10px}
+ .qv-grid,.qv-opp-buttons{gap:10px}
+ .qv-button{font-size:clamp(13px,1.3vw,19px)}
+ .qv-opponent .qv-opp-buttons{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+
+/* More than 12 players remain accessible within the same fixed-height panel. */
+.qv-grid{grid-auto-rows:minmax(42px,1fr);overflow-y:auto;scrollbar-width:thin}

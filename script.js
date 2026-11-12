@@ -1488,7 +1488,7 @@ function renderUnassigned() {
   const list = $("unassigned-list"); list.replaceChildren();
   const unassigned = state.events
     .filter(e => e.team === "us" && e.playerId == null &&
-      !e.linkedEventId && !String(e.type).startsWith("team_"))
+      (!e.linkedEventId || e.type === "free_throw") && !String(e.type).startsWith("team_"))
     .reverse();
   $("tab-unassigned-count").textContent =
     unassigned.length > 0 ? `(${unassigned.length})` : "";
