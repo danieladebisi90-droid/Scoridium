@@ -46,14 +46,104 @@
     }
   }
   buttons.forEach(b=>b.addEventListener('click',()=>show(b.dataset.focusView)));
+  // Shared, viewport-independent tip-off dialog. Quick Track must not depend
+  // on the landscape-only mobile overlay or the hidden legacy court.
+  const tipoffDialog=document.createElement('div');
+  tipoffDialog.className='focus-tipoff-backdrop';
+  tipoffDialog.hidden=true;
+  tipoffDialog.innerHTML=`<section class="focus-tipoff-card" role="dialog" aria-modal="true" aria-labelledby="focus-tipoff-title">
+    <div class="focus-tipoff-top"><h2 id="focus-tipoff-title">Opening Tip-Off</h2><button type="button" class="focus-tipoff-close" aria-label="Close tip-off">×</button></div>
+    <p>Who won the opening tip?</p>
+    <div class="focus-tipoff-options" data-tipoff-group="winner">
+      <button type="button" data-focus-winner="home">Home</button>
+      <button type="button" data-focus-winner="away">Away</button>
+    </div>
+    <p class="focus-tipoff-direction-label">Which basket is the tip winner attacking?</p>
+    <div class="focus-tipoff-options" data-tipoff-group="side">
+      <button type="button" data-focus-side="left">← LEFT</button>
+      <button type="button" data-focus-side="right">RIGHT →</button>
+    </div>
+    <p class="focus-tipoff-message" role="status" aria-live="polite"></p>
+    <button type="button" class="focus-tipoff-confirm">CONFIRM TIP-OFF</button>
+  </section>`;
+  document.body.append(tipoffDialog);
+  let winner='home', side='left', saving=false;
+  const api=()=>window.scoridiumTipoff;
+  const message=tipoffDialog.querySelector('.focus-tipoff-message');
+  const confirm=tipoffDialog.querySelector('.focus-tipoff-confirm');
+  let returnFocus=null;
+  function paintTipoff(){
+    const teams=api()?.getTeams()||{home:'Home',away:'Away'};
+    tipoffDialog.querySelectorAll('[data-focus-winner]').forEach(b=>{
+      b.textContent=teams[b.dataset.focusWinner]||b.dataset.focusWinner;
+      const on=b.dataset.focusWinner===winner;
+      b.classList.toggle('selected',on);b.setAttribute('aria-pressed',String(on));
+    });
+    tipoffDialog.querySelectorAll('[data-focus-side]').forEach(b=>{
+      const on=b.dataset.focusSide===side;
+      b.classList.toggle('selected',on);b.setAttribute('aria-pressed',String(on));
+    });
+    tipoffDialog.querySelector('.focus-tipoff-direction-label').textContent=
+      `Which basket is ${(teams[winner]||'the tip winner')} attacking?`;
+    confirm.disabled=saving || !api();
+    confirm.textContent=saving?'SAVING TIP-OFF…':'CONFIRM TIP-OFF';
+  }
+  function closeTipoff(){
+    if(saving)return;
+    tipoffDialog.hidden=true;
+    returnFocus?.focus?.();
+  }
+  function openTipoff(){
+    if(api()?.getStatus()!=='not_started')return;
+    returnFocus=document.activeElement;
+    message.textContent='';
+    tipoffDialog.hidden=false;
+    paintTipoff();
+    tipoffDialog.querySelector('.focus-tipoff-close').focus();
+  }
+  tipoffDialog.querySelectorAll('[data-focus-winner]').forEach(b=>b.addEventListener('click',()=>{
+    if(saving)return;winner=b.dataset.focusWinner;paintTipoff();
+  }));
+  tipoffDialog.querySelectorAll('[data-focus-side]').forEach(b=>b.addEventListener('click',()=>{
+    if(saving)return;side=b.dataset.focusSide;paintTipoff();
+  }));
+  tipoffDialog.querySelector('.focus-tipoff-close').addEventListener('click',closeTipoff);
+  tipoffDialog.addEventListener('click',e=>{if(e.target===tipoffDialog)closeTipoff();});
+  tipoffDialog.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){e.preventDefault();closeTipoff();}
+    if(e.key==='Tab'){
+      const available=[...tipoffDialog.querySelectorAll('button:not([disabled])')];
+      const first=available[0],last=available[available.length-1];
+      if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+      else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+    }
+  });
+  confirm.addEventListener('click',async()=>{
+    if(saving||!api())return;
+    saving=true;message.textContent='Saving tip-off…';paintTipoff();
+    try{
+      const result=await api().confirm(winner,side);
+      if(result?.ok){
+        message.textContent='';
+        saving=false;
+        closeTipoff();
+      }else{
+        message.textContent=result?.message||'Unable to start the game. Try again.';
+      }
+    }catch(error){
+      console.error('Tip-off confirmation failed',error);
+      message.textContent='Unable to start the game. Check your connection.';
+    }finally{saving=false;paintTipoff();}
+  });
+  window.addEventListener('scoridium-request-tipoff',openTipoff);
+  window.addEventListener('scoridium-tipoff-teams-loaded',paintTipoff);
   stage.querySelectorAll('[data-original]').forEach(button=>button.addEventListener('click',()=>{
     const target=document.getElementById(button.dataset.original);
     if(!target)return;
-    if(button.dataset.original==='start-game' && !target.disabled && document.documentElement.classList.contains('mobile-tracker-active')){
-      // Mobile opening-tip setup lives on the existing court view.
-      show('court');
-      window.dispatchEvent(new Event('scoridium-request-tipoff'));
-      return;
+    // The original Start button continues to handle resuming paused games.
+    // New games always use the shared confirmation dialog on any viewport.
+    if(button.dataset.original==='start-game' && api()?.getStatus()==='not_started'){
+      openTipoff();return;
     }
     target.click();
   }));
