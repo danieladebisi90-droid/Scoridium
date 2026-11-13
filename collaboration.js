@@ -372,6 +372,29 @@
         (r.obs.matched_event_id===r.event.id||r.status==='aligned')).length,
       ambiguous:found.filter(r=>r.status==='ambiguous'||r.status==='conflict').length};
   }
+  // Automatic linking requires one unique candidate in BOTH directions.
+  // Otherwise the two trackers must resolve it in the comparison panel.
+  const AUTO_MATCH_WINDOW_MS=45000;
+  function sameFieldGoal(event,obs){
+    return event?.type==='shot'&&obs?.kind==='shot'&&
+      event.team===obs.team&&Number(event.period)===Number(obs.period)&&
+      Number(event.points)===Number(obs.points)&&Boolean(event.made)===Boolean(obs.made);
+  }
+  function canAutoLinkShot(event,obs){
+    if(!sameFieldGoal(event,obs)||obs.retracted_at||obs.matched_event_id||unsyncedIds.has(obs.id)||
+       event.x!=null||event.y!=null||!Number.isInteger(Number(event.version))||Number(event.version)<1)return false;
+    const officialTime=Number(event.time),observedTime=Date.parse(obs.observed_at);
+    if(!Number.isFinite(officialTime)||!Number.isFinite(observedTime)||
+       Math.abs(officialTime-observedTime)>AUTO_MATCH_WINDOW_MS)return false;
+    const possibleObservations=observations.filter(o=>
+      !o.retracted_at&&!o.matched_event_id&&!unsyncedIds.has(o.id)&&sameFieldGoal(event,o)&&
+      Math.abs(officialTime-Date.parse(o.observed_at))<=AUTO_MATCH_WINDOW_MS);
+    const possibleEvents=state.events.filter(e=>
+      e.x==null&&e.y==null&&sameFieldGoal(e,obs)&&
+      Math.abs(Number(e.time)-observedTime)<=AUTO_MATCH_WINDOW_MS);
+    return possibleObservations.length===1&&possibleObservations[0].id===obs.id&&
+      possibleEvents.length===1&&possibleEvents[0].id===event.id;
+  }
   function scheduleReconcile(){clearTimeout(reconcileTimer);reconcileTimer=setTimeout(()=>void reconcile(),550);}
   async function reconcile(){
     if(linking||busy||!remoteEnabled||!sessionUser)return;
@@ -382,9 +405,8 @@
         const result=compare(period);
         for(const pair of result.found){
           if(pair.status!=='aligned'||pair.event?.type!=='shot'||pair.obs?.kind!=='shot'||pair.obs.matched_event_id||pair.event.x!=null||pair.event.y!=null)continue;
-          // Require synced, versioned official event and enough timing consistency.
-          const dt=Math.abs(Date.parse(pair.obs.observed_at)-Number(pair.event.time||0));
-          if(!Number.isInteger(Number(pair.event.version))||Number(pair.event.version)<1||dt>120000)continue;
+          // Leave repeated or late observations pending for manual review.
+          if(!canAutoLinkShot(pair.event,pair.obs))continue;
           try{
             const {data,error}=await supabaseClient.rpc('scoridium_link_shot_observation',{
               p_game_id:gameId,p_observation_id:pair.obs.id,p_event_id:pair.event.id,p_expected_version:Number(pair.event.version)});
