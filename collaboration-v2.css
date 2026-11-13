@@ -1,0 +1,94 @@
+/* Scoridium Court workspace v2 — original calibrated FIBA SVG, no redrawing. */
+html.focus-tracker .tracker-shell[data-focus-view="court"] .focus-stage{min-height:0}
+html.focus-tracker .tracker-shell[data-focus-view="court"] .focus-court.sc-court-workspace{display:flex!important;flex-direction:column;min-width:0;min-height:0;width:100%;height:100%;overflow:hidden;gap:4px}
+.sc-court-workspace .sc-court-head{flex:0 0 auto;padding:7px 10px}
+.sc-court-workspace .sc-court-main{display:flex!important;flex:1;min-height:0;min-width:0;gap:0!important;overflow:hidden;border:1px solid #d2dce9;border-radius:9px;background:#fff}
+.sc-court-workspace .sc-shot-sidebar,.sc-court-workspace .sc-tools-sidebar{box-sizing:border-box;display:flex;flex:1 1 0;min-width:0;min-height:0;max-width:none!important;padding:8px;gap:8px;flex-direction:column;background:#f6f8fb;border:0!important;border-radius:0!important}
+.sc-court-workspace .sc-shot-sidebar{align-items:stretch;border-right:1px solid #d4deea!important}
+.sc-court-workspace .sc-tools-sidebar{border-left:1px solid #d4deea!important}
+.sc-court-workspace .sc-court-body{flex:0 1 auto;min-width:0;min-height:0;padding:0!important;border:0!important;border-radius:0!important;gap:0!important;display:flex;flex-direction:column;overflow:hidden}
+.sc-court-workspace #sc-court-mount{height:100%;width:auto;max-height:100%;max-width:100%;flex:1;min-height:0;min-width:0;overflow:hidden!important;padding:0!important;align-items:center;justify-content:center}
+.sc-court-workspace #sc-court-mount #tracker-controls{padding:0!important;margin:0!important;border:0!important;border-radius:0!important;background:transparent;overflow:hidden!important;width:100%;height:100%;max-height:100%;display:flex;min-height:0}
+.sc-court-workspace #sc-court-mount .court-wrap{padding:0!important;margin:0!important;border:0!important;min-width:0;min-height:0;overflow:hidden!important;display:flex;flex:1}
+.sc-court-workspace #sc-court-mount #basketball-court{display:block;min-width:0;width:100%;height:100%;max-width:100%;max-height:100%!important;object-fit:contain;touch-action:manipulation;cursor:crosshair;user-select:none;-webkit-user-select:none}
+.sc-court-workspace #sc-court-mount .court-view-toggle{display:none!important}
+.sc-court-workspace #sc-court-mount .court-side-toggle{display:none!important}
+.sc-court-workspace #sc-court-feedback{font-size:11px;margin:0;padding:4px;border-radius:0;max-height:26px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:none;text-align:center}
+.sc-court-workspace .sc-court-view-choices,.sc-court-workspace .sc-court-modes{display:flex!important;gap:4px;flex-direction:column;grid-template-columns:none}
+.sc-court-workspace .sc-court-view-choices button,.sc-court-workspace .sc-court-modes button{min-height:31px;padding:4px!important;font-size:clamp(10px,1.6vw,14px);font-weight:800;white-space:normal}
+.sc-court-workspace .sc-court-view-choices button.active,.sc-court-workspace .sc-court-modes button.active{background:#173c75;color:#fff}
+.sc-court-workspace.sc-full-mode .sc-court-modes{display:none!important}
+.sc-court-workspace .sc-court-scope{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:750}
+.sc-court-workspace .sc-court-scope select{max-width:100%;min-width:0;padding:5px 2px;font-size:clamp(10px,1.4vw,12px);background:white;color:#193251;border:1px solid #b9c9db;border-radius:5px}
+.sc-court-workspace .sc-compact-directions{align-self:flex-start;width:35px;height:35px;padding:1px!important;font-size:23px!important;font-weight:850;line-height:1;border:1px solid #d7bf7b;background:#fff4cf;color:#5c4700;border-radius:7px}
+.sc-court-workspace .sc-shot-counts{width:100%;padding:9px 3px;background:#fff;border:1px solid #cbd7e7;border-radius:8px;color:#122b49;display:flex;flex-direction:column;gap:5px;text-align:center;font-size:clamp(10px,1.4vw,13px)}
+.sc-court-workspace .sc-shot-counts strong{font-size:clamp(13px,2vw,18px)}
+.sc-court-workspace .sc-shot-counts span:nth-child(2){color:#087343;font-weight:800}
+.sc-court-workspace .sc-ft-bar{border:1px solid #d4dfeb;border-radius:7px;background:white;display:flex;flex-direction:column;justify-content:center;gap:5px;padding:7px;flex:none;min-height:92px;max-height:92px;overflow:hidden;box-sizing:border-box}
+.sc-court-workspace .sc-ft-bar>strong{color:#173c75;font-size:13px}
+.sc-court-workspace #sc-ft-step{display:flex;align-items:stretch;gap:3px;min-height:37px;max-height:45px;overflow:hidden}
+.sc-court-workspace #sc-ft-step button{flex:1;min-width:0;min-height:32px;padding:3px 2px!important;font-size:clamp(9px,1.35vw,12px);font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:normal;line-height:1.05;border-radius:5px}
+.sc-court-workspace #sc-ft-step button.sc-make{background:#07853e;color:#fff}.sc-court-workspace #sc-ft-step button.sc-miss{background:#d12f38;color:#fff}
+.sc-court-workspace #sc-ft-step>strong,.sc-court-workspace #sc-ft-step>span{font-size:11px;align-self:center;white-space:nowrap}
+.sc-court-workspace .sc-mini-button{font-size:11px;padding:5px!important;min-height:29px;margin-top:auto}
+.sc-court-workspace .sc-checkpoint-summary{position:absolute;z-index:15;inset:8px;max-height:none!important;overflow-y:auto!important;box-shadow:0 10px 35px #10233f55;background:#fff;border:1px solid #9db6d2;border-radius:10px;padding:16px;font-size:12px}
+.sc-court-workspace{position:relative}
+.sc-review-head{display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:-16px;background:#fff;padding:5px 0}
+.sc-review-head h3{margin:0;font-size:16px}
+.sc-review-head button{width:37px;height:37px;font-size:24px;border:1px solid #c4d0dd;border-radius:8px;background:#f0f4f9;color:#14314e}
+.sc-review-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(70px,.65fr);gap:7px;padding:7px;border-bottom:1px solid #e2e8ef;overflow-wrap:anywhere}
+.sc-review-columns b{font-size:11px}.sc-review-columns span{font-size:11px}
+@media(orientation:landscape) and (max-height:750px){
+ html.focus-tracker .tracker-shell[data-focus-view="court"]{padding:0!important;gap:0!important}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .scoreboard{min-height:45px!important;max-height:48px!important;border-radius:0!important}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .score-team output{font-size:25px!important}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .focus-stage{flex:1;min-height:0}
+ .sc-court-workspace .sc-court-head{display:none!important}
+ .sc-court-workspace .sc-court-main{border-radius:0;border:0;min-height:0}
+ .sc-court-workspace .sc-shot-sidebar,.sc-court-workspace .sc-tools-sidebar{padding:5px 6px;gap:5px;flex:1 1 0;min-width:82px}
+ .sc-court-workspace .sc-court-body{height:100%;aspect-ratio:860/470;flex:0 1 auto;max-width:calc(100% - 164px)}
+ .sc-court-workspace:not(.sc-full-mode) .sc-court-body{aspect-ratio:470/440}
+ .sc-court-workspace #sc-court-mount{width:100%;height:100%}
+ .sc-court-workspace #sc-court-feedback{display:none!important}
+ .sc-court-workspace .sc-compact-directions{width:30px;height:30px;font-size:18px}
+ .sc-court-workspace .sc-ft-bar{min-height:85px;max-height:85px;padding:4px}
+ .sc-court-workspace .sc-shot-counts{padding:6px 2px;gap:4px}
+}
+@media(orientation:portrait) and (max-width:800px){
+ .sc-court-workspace .sc-court-main{display:flex!important;flex-direction:column;overflow-y:auto!important;overflow-x:hidden!important;gap:0!important}
+ .sc-court-workspace .sc-shot-sidebar{order:0;flex:none;display:flex;flex-direction:row;align-items:center;gap:5px;padding:6px;min-height:0;max-height:none!important;border-bottom:1px solid #d4deea!important;border-right:0!important}
+ .sc-court-workspace .sc-court-view-choices{display:none!important}
+ .sc-court-workspace .sc-court-modes{flex:1;flex-direction:row}
+ .sc-court-workspace .sc-court-modes button{flex:1}
+ .sc-court-workspace .sc-court-scope{flex:1}
+ .sc-court-workspace .sc-court-scope label{display:none}
+ .sc-court-workspace .sc-compact-directions{flex:none;width:32px;height:33px}
+ .sc-court-workspace .sc-tools-sidebar{order:2;flex:none;display:flex;flex-direction:column;min-height:0;max-height:none!important;padding:6px;gap:6px;border-top:1px solid #d4deea!important;border-left:0!important}
+ .sc-court-workspace .sc-shot-counts{order:-1;min-height:45px;flex-direction:row;align-items:center;justify-content:space-around;gap:5px}
+ .sc-court-workspace .sc-shot-counts strong{font-size:14px}
+ .sc-court-workspace .sc-mini-button{margin-top:0;align-self:flex-end}
+ .sc-court-workspace .sc-ft-bar{min-height:66px;max-height:66px;flex-direction:row;align-items:center;justify-content:space-between;gap:8px}
+ .sc-court-workspace .sc-ft-bar>strong{flex:0 0 auto}
+ .sc-court-workspace #sc-ft-step{flex:1}
+ .sc-court-workspace #sc-ft-step button{font-size:12px}
+ .sc-court-workspace .sc-court-body{order:1;flex:none;height:auto!important;aspect-ratio:470/440;max-height:none!important;width:100%;min-height:0}
+ .sc-court-workspace #sc-court-mount{width:100%;height:auto!important;aspect-ratio:470/440;flex:none}
+ .sc-court-workspace #sc-court-mount #tracker-controls{height:100%}
+ .sc-court-workspace #sc-court-feedback{height:auto;max-height:none;white-space:normal}
+}
+/* Phone Quick Track: bigger labels without resizing fixed action containers. */
+@media(max-width:800px){
+ html.focus-tracker .tracker-shell[data-focus-view="track"] .qv-grid .qv-tile,
+ html.focus-tracker .tracker-shell[data-focus-view="track"] .qv-opp-buttons .qv-button{font-size:clamp(14px,3.5vw,20px)!important;letter-spacing:-.01em}
+ html.focus-tracker .tracker-shell[data-focus-view="track"] .qv-team-heading strong{font-size:clamp(15px,3.9vw,19px)!important}
+ html.focus-tracker .tracker-shell[data-focus-view="track"] .qv-team-heading small{font-size:clamp(11px,2.9vw,14px)!important}
+ html.focus-tracker .tracker-shell[data-focus-view="track"] .qv-option,
+ html.focus-tracker .tracker-shell[data-focus-view="track"] .qv-bottom .qv-button{font-size:clamp(13px,3vw,17px)!important}
+ html.focus-tracker .tracker-shell[data-focus-view="track"] .qv-last strong{font-size:clamp(13px,3vw,16px)!important}
+ html.focus-tracker .tracker-shell[data-focus-view="track"] .focus-game-actions button{font-size:clamp(12px,3vw,15px)!important}
+ html.focus-tracker .tracker-shell[data-focus-view="track"] .score-team h2{font-size:clamp(12px,3.2vw,17px)!important}
+}
+@media(orientation:landscape) and (max-height:600px){
+ html.focus-tracker .tracker-shell[data-focus-view="track"] .qv-grid .qv-tile,
+ html.focus-tracker .tracker-shell[data-focus-view="track"] .qv-opp-buttons .qv-button{font-size:clamp(12px,2.6vw,16px)!important}
+}

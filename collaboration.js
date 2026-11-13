@@ -70,14 +70,16 @@
     teamStats.querySelector('.sc-team-stats-table').innerHTML=`<div class="sc-stats-columns">${compact(rows.slice(0,7))}${compact(rows.slice(7))}</div><p class="sc-stats-note">Figures use recorded events only. Untracked opponent statistics may be incomplete.</p>`;
   }
   const originalRender=window.render;
+  let lastShotCount=officialShots().length;
   let previouslyRenderedPeriod=Number(state.period)||1;
   window.render=function(){
     const prior=previouslyRenderedPeriod;
-    originalRender();refreshSummary();refreshCourtQueue();
+    originalRender();refreshSummary();refreshCourtQueue();paintObservationMarkers();
+    const shotCount=officialShots().length;if(shotCount!==lastShotCount){lastShotCount=shotCount;if(remoteEnabled)scheduleReconcile();}
     if(currentGame && state.status!=='not_started' && Number(state.period)!==prior){
       previouslyRenderedPeriod=Number(state.period);
       // A quarter boundary is a reconciliation checkpoint, not a hard lock.
-      renderCheckpoint(prior);
+      renderCheckpoint(prior);if(!scorePromptOpen&&document.querySelector('.tracker-shell')?.dataset.focusView==='court')void physicalScoreCheckpoint(prior);
     }
   };
   // Existing play-by-play tab is replaced by the combined view, with the unassigned tab intact.
@@ -89,102 +91,165 @@
   const stage=document.querySelector('.focus-stage');
   const courtPanel=byId('tracker-controls');
   const courtSection=document.createElement('section');courtSection.className='focus-court sc-court-workspace';
-  courtSection.innerHTML=`<div class="sc-court-head"><div><h2>SHOT LOCATIONS</h2><p>FIBA court · Shared game events</p></div><span id="sc-court-sync" role="status">Preparing…</span></div>
-    <div class="sc-court-main"><aside class="sc-shot-sidebar"><div class="sc-queue-top"><strong>Shot queue</strong><span id="sc-queue-count"></span></div>
-    <div class="sc-court-modes"><button type="button" id="sc-offense" class="active">OFFENSE</button><button type="button" id="sc-defense">DEFENSE</button></div>
-    <div id="sc-shot-queue" class="sc-shot-queue" aria-live="polite"></div>
-    <div class="sc-observation"><strong>Location before Quick Track?</strong><p>Choose the shooting team’s half, then tap the court to record an independent location observation. It will not change the score.</p>
-    <div class="sc-observe-buttons"><button id="sc-observe-made" type="button" class="sc-make">MADE</button><button id="sc-observe-miss" type="button" class="sc-miss">MISS</button></div>
-    <div class="sc-observe-footer"><button id="sc-observe-ft" type="button">FT checkpoint</button><button id="sc-review-checkpoint" type="button">Compare</button></div></div></aside>
-    <div class="sc-court-body"><div class="sc-court-actions"><button type="button" id="sc-swap-directions">⇄ Switch basket directions</button><span id="sc-direction-summary"></span></div><div id="sc-court-mount"></div>
-    <div id="sc-court-feedback" role="status" aria-live="polite">Choose a shot, or use MADE / MISS to capture a location first.</div></div></div>
+  courtSection.innerHTML=`<div class="sc-court-head"><div><h2>SHOT LOCATIONS</h2><p>FIBA court · independent tracking</p></div><span id="sc-court-sync" role="status">Preparing…</span></div>
+    <div class="sc-court-main">
+      <aside class="sc-shot-sidebar">
+        <div class="sc-court-modes" role="group" aria-label="Half-court shooting team"><button type="button" id="sc-offense" class="active">OFFENSE</button><button type="button" id="sc-defense">DEFENSE</button></div>
+        <div class="sc-court-scope"><label for="sc-team-scope">Observe</label><select id="sc-team-scope"><option value="us">Tracked team only</option><option value="both">Both teams</option></select></div>
+        <button type="button" class="sc-compact-directions" id="sc-swap-directions" title="Switch basket directions" aria-label="Switch basket directions">⇄</button>
+      </aside>
+      <div class="sc-court-body"><div id="sc-court-mount"></div><div id="sc-court-feedback" role="status" aria-live="polite">Tap/click = made · Double tap/click = missed</div></div>
+      <aside class="sc-tools-sidebar"><button type="button" id="sc-shot-counts" class="sc-shot-counts" aria-label="Open Tracker A and B comparison"><strong id="sc-total-shots">0 shots</strong><span id="sc-total-matched">0 matched · 0 pending</span><span>Compare A / B ›</span></button>
+        <div class="sc-ft-bar" id="sc-ft-bar"><strong>FT</strong><div id="sc-ft-step"></div></div>
+        <button type="button" id="sc-undo-court" class="sc-mini-button">Undo</button></aside>
+    </div>
     <div id="sc-checkpoint-summary" class="sc-checkpoint-summary" hidden></div>`;
   stage.append(courtSection);
-  const wrap=courtPanel.querySelector('.court-wrap');
+  const courtWrap=courtPanel.querySelector('.court-wrap');
   courtSection.querySelector('#sc-court-mount').append(courtPanel);
-  // Court control buttons stay functional; only the legacy redundant player/stat panels are hidden.
   const oldHeader=courtPanel.querySelector('.section-heading');if(oldHeader)oldHeader.hidden=true;
   const undo=byId('undo-event');if(undo)undo.hidden=true;
   const homeTeam=()=>currentGame?.location?.toLowerCase()!=='away';
   const [offBtn,defBtn]=[byId('sc-offense'),byId('sc-defense')];
-  let view='offense',selectedShotId=null,mode=null,observations=[],quickObservations=[],sessionUser=null,remoteEnabled=false,obsChannel=null,quickObsChannel=null,busy=false;
+  let view='offense',observations=[],quickObservations=[],sessionUser=null,remoteEnabled=false,obsChannel=null,quickObsChannel=null,busy=false;
+  let linking=false,scorePromptOpen=false,localScope='us',courtLastTap=null,gestureTimer=null,reconcileTimer=null;
+  let checkpointRows=[];const unsyncedIds=new Set();
+  const scoreSavedKey=period=>`scoridium-quarter-score:${gameId}:${sessionUser?.id||'none'}:${period}`;
   const observationsKey=()=>`scoridium-court-observations:${gameId||'none'}`;
   try{observations=JSON.parse(localStorage.getItem(observationsKey())||'[]')||[];}catch{observations=[];}
   function setFeedback(text){byId('sc-court-feedback').textContent=text;}
   const usIsHome=()=>homeTeam();
+  function effectiveScope(){return byId('sc-team-scope').value;}
+  function updateCourtModeUI(){
+    const full=courtView==='full';courtSection.classList.toggle('sc-full-mode',full);
+    offBtn.classList.toggle('active',view==='offense');defBtn.classList.toggle('active',view==='defense');
+    renderCourtLabels();
+  }
   function selectHalf(){
     const ourSide=usIsHome()?'home':'away';
     const side=view==='offense'?ourSide:ourSide==='home'?'away':'home';
     if(courtView!=='half')byId('half-court-btn')?.click();
     (side==='home'?byId('home-court-btn'):byId('away-court-btn'))?.click();
-    offBtn.classList.toggle('active',view==='offense');defBtn.classList.toggle('active',view==='defense');
-    byId('sc-direction-summary').textContent=`${view==='offense'?names().us:names().opponent} attacking ${getSelectedBasketSide().toUpperCase()} basket`;
+    updateCourtModeUI();paintObservationMarkers();
   }
   function setView(next){view=next;selectHalf();refreshCourtQueue();}
-  offBtn.addEventListener('click',()=>setView('offense'));defBtn.addEventListener('click',()=>setView('defense'));
+  offBtn.addEventListener('click',()=>setView('offense'));
+  defBtn.addEventListener('click',()=>setView('defense'));
   const fullBtn=byId('full-court-btn'),halfBtn=byId('half-court-btn');
-  fullBtn?.addEventListener('click',()=>{byId('sc-direction-summary').textContent='Full FIBA court · both baskets';});
-  halfBtn?.addEventListener('click',()=>selectHalf());
-  async function saveCoords(event,point){
-    if(busy)return;busy=true;
-    if(!Number.isInteger(Number(event.version))||Number(event.version)<1){setFeedback('This shot has not synchronized yet. Try again after it appears on both devices.');busy=false;return;}
-    const info=detectShot(point.x,point.y);
-    const recordedTeam=info.team===(usIsHome()?'home':'away')?'us':'opponent';
-    if(recordedTeam!==event.team||Number(event.points)!==Number(info.points)){
-      setFeedback(`Location belongs to ${recordedTeam==='us'?names().us:names().opponent} ${info.points}PT, but selected event is ${event.team==='us'?names().us:names().opponent} ${event.points}PT. Select the matching event or tap again.`);
-      busy=false;return;
-    }
-    try{
-      const dist=calculateShotDistance(point.x,point.y);
-      const {data,error}=await supabaseClient.rpc('scoridium_assign_shot_location',{
-        p_game_id:gameId,p_event_id:event.id,p_expected_version:Number(event.version),
-        p_x:point.x,p_y:point.y,p_distance_meters:dist.meters,p_distance_feet:dist.feet});
-      if(error)throw error;
-      if(!Array.isArray(data)||data.length!==1)throw new Error('Shot was changed on another device. Refresh and try again.');
-      event.x=point.x;event.y=point.y;event.distanceMeters=dist.meters;event.distanceFeet=dist.feet;event.version=Number(data[0].new_version);
-      save();renderCourt();setFeedback(`${event.team==='us'?names().us:names().opponent} ${event.points}PT location saved · ${dist.feet.toFixed(1)} ft.`);
-      selectedShotId=null;refreshCourtQueue();
-    }catch(err){console.error('Court location update',err);setFeedback(`Location not saved: ${err.message||'Check the collaboration SQL migration and permissions.'}`);}finally{busy=false;}
+  const courtChoices=document.createElement('div');courtChoices.className='sc-court-view-choices';
+  byId('sc-offense').parentElement.before(courtChoices);
+  courtChoices.append(halfBtn,fullBtn);
+
+  function enforceOrientation(){
+    const portrait=matchMedia('(orientation:portrait) and (max-width:800px)').matches;
+    const counter=byId('sc-shot-counts');
+    if(counter){const destination=portrait?courtSection.querySelector('.sc-shot-sidebar'):courtSection.querySelector('.sc-tools-sidebar');
+      if(counter.parentElement!==destination)destination.prepend(counter);}
+    if(portrait&&courtView!=='half')selectHalf();else updateCourtModeUI();paintObservationMarkers();
   }
+  fullBtn?.addEventListener('click',()=>{
+    if(matchMedia('(orientation:portrait) and (max-width:800px)').matches){selectHalf();return;}
+    updateCourtModeUI();
+  });
+  halfBtn?.addEventListener('click',()=>{selectHalf();updateCourtModeUI();});
+  window.addEventListener('resize',enforceOrientation);
+  byId('sc-team-scope').addEventListener('change',()=>{refreshCourtQueue();scheduleReconcile();});
   function saveLocalObservations(){localStorage.setItem(observationsKey(),JSON.stringify(observations));}
   async function addObservation(o){
     if(!gameId){setFeedback('Choose a real game first.');return;}
     const observation={id:crypto.randomUUID(),game_id:gameId,period:state.period,team:o.team,points:o.points??null,made:o.made??null,
       x:o.x??null,y:o.y??null,distance_meters:o.distance_meters??null,distance_feet:o.distance_feet??null,kind:o.kind||'shot',
       observed_at:new Date().toISOString(),tracker_id:sessionUser?.id||null,matched_event_id:null};
-    observations.push(observation);saveLocalObservations();refreshCourtQueue();
-    if(!remoteEnabled){setFeedback('Observation saved on this device. Cross-device sharing requires the collaboration migration.');return;}
+    observations.push(observation);saveLocalObservations();refreshCourtQueue();paintObservationMarkers();
+    if(!remoteEnabled){setFeedback('Saved locally only — matching requires successful cross-device synchronization.');return;}
     const {error}=await supabaseClient.from('tracker_observations').insert(observation);
-    if(error){console.warn('Could not sync location observation',error);setFeedback('Observation saved locally only; retry after checking permissions.');}
-    else setFeedback('Location observation shared. It will not add points until matched to an official shot.');
+    if(error){unsyncedIds.add(observation.id);console.warn('Could not sync location observation',error);setFeedback('Observation saved locally only; check permissions before continuing.');}
+    else {setFeedback('Observation shared · matching automatically. No official points added.');scheduleReconcile();}
+  }
+  // Single click/tap records MAKE; two nearby clicks/taps record one MISS.
+  // Defer the first click so double-click cannot record two makes.
+  async function undoObservation(target){
+    if(!target||target.matched_event_id){setFeedback('Matched shots need a correction review; no official shot will be deleted.');return false;}
+    if(unsyncedIds.has(target.id)||!remoteEnabled||!sessionUser){
+      observations=observations.filter(o=>o.id!==target.id);unsyncedIds.delete(target.id);
+    }else{
+      const {data,error}=await supabaseClient.rpc('scoridium_retract_own_observation',{p_id:target.id});
+      if(error||data!==true){setFeedback(`Unable to undo synced observation: ${error?.message||'Check v2 migration'}`);return false;}
+      target.retracted_at=new Date().toISOString();
+    }
+    saveLocalObservations();refreshCourtQueue();paintObservationMarkers();scheduleReconcile();
+    setFeedback('Most recent unmatched observation retracted; official scoring unchanged.');return true;
   }
   const svg=byId('basketball-court');
-  svg.addEventListener('click',async e=>{
+  svg.style.touchAction='manipulation';
+  function getCourtPoint(event){
+    const matrix=svg.getScreenCTM();if(!matrix)return null;
+    const p=new DOMPoint(event.clientX,event.clientY).matrixTransform(matrix.inverse());
+    const bounds=courtView==='half'?{maxX:460,maxY:430}:{maxX:850,maxY:460};
+    if(p.x<10||p.y<10||p.x>bounds.maxX||p.y>bounds.maxY)return null;
+    return displayToCourt(p.x,p.y);
+  }
+  async function recordCourtShot(point,made){
+    if(!point||busy)return;
+    const info=detectShot(point.x,point.y),dist=calculateShotDistance(point.x,point.y);
+    const team=info.team===(usIsHome()?'home':'away')?'us':'opponent';
+    if(effectiveScope()==='us'&&team!=='us'){
+      setFeedback('Tracked team only is active. Switch to Both teams to record opponent shots.');return;
+    }
+    await addObservation({kind:'shot',team,points:info.points,made,x:point.x,y:point.y,distance_meters:dist.meters,distance_feet:dist.feet});
+  }
+  function paintObservationMarkers(){
+    const markers=byId('shot-markers');if(!markers)return;
+    markers.querySelectorAll('.sc-provisional-marker').forEach(e=>e.remove());
+    const ids=new Set();
+    for(const obs of observations){
+      if(obs.retracted_at||obs.kind!=='shot'||obs.matched_event_id||obs.x==null||obs.y==null||Number(obs.period)!==Number(state.period))continue;
+      if(ids.has(obs.id))continue;ids.add(obs.id);
+      const position=courtToDisplay(Number(obs.x),Number(obs.y));if(!position)continue;
+      const node=document.createElementNS('http://www.w3.org/2000/svg','circle');
+      node.setAttribute('cx',position.x);node.setAttribute('cy',position.y);node.setAttribute('r','7');
+      node.setAttribute('stroke',obs.made?'#047d3b':'#c82e37');node.setAttribute('stroke-width','3');
+      node.setAttribute('stroke-dasharray','3 2');node.setAttribute('fill','none');
+      node.setAttribute('pointer-events','none');node.setAttribute('class','sc-provisional-marker');
+      markers.append(node);
+    }
+  }
+  svg.addEventListener('click',e=>{
     if(document.querySelector('.tracker-shell')?.dataset.focusView!=='court')return;
     e.stopImmediatePropagation();e.preventDefault();
-    if(busy)return;
-    const matrix=svg.getScreenCTM();if(!matrix)return;
-    const pt=new DOMPoint(e.clientX,e.clientY).matrixTransform(matrix.inverse());
-    const bounds=courtView==='half'?{maxX:460,maxY:430}:{maxX:850,maxY:460};
-    if(pt.x<10||pt.y<10||pt.x>bounds.maxX||pt.y>bounds.maxY)return;
-    const physical=displayToCourt(pt.x,pt.y),info=detectShot(physical.x,physical.y),dist=calculateShotDistance(physical.x,physical.y);
-    if(selectedShotId){const event=officialShots().find(e=>String(e.id)===String(selectedShotId));if(event){await saveCoords(event,physical);return;}}
-    if(!mode){setFeedback('Select a shot from the queue, or choose MADE / MISS before tapping a new location.');return;}
-    const team=info.team===(usIsHome()?'home':'away')?'us':'opponent';
-    await addObservation({kind:'shot',team,points:info.points,made:mode==='made',x:physical.x,y:physical.y,distance_meters:dist.meters,distance_feet:dist.feet});
-    mode=null;byId('sc-observe-made').classList.remove('active');byId('sc-observe-miss').classList.remove('active');
+    const point=getCourtPoint(e);if(!point)return;
+    const now=performance.now();
+    if(courtLastTap&&now-courtLastTap.at<340&&Math.hypot(e.clientX-courtLastTap.x,e.clientY-courtLastTap.y)<32){
+      clearTimeout(gestureTimer);courtLastTap=null;gestureTimer=null;
+      void recordCourtShot(point,false);return;
+    }
+    if(courtLastTap){clearTimeout(gestureTimer);void recordCourtShot(courtLastTap.point,true);}
+    courtLastTap={point,x:e.clientX,y:e.clientY,at:now};
+    gestureTimer=setTimeout(()=>{const tap=courtLastTap;courtLastTap=null;gestureTimer=null;if(tap)void recordCourtShot(tap.point,true);},340);
   },true);
-  for(const [id,m] of [['sc-observe-made','made'],['sc-observe-miss','miss']])byId(id).addEventListener('click',()=>{
-    selectedShotId=null;mode=m;byId('sc-observe-made').classList.toggle('active',m==='made');byId('sc-observe-miss').classList.toggle('active',m==='miss');
-    setFeedback(`Tap the ${view==='offense'?'offense':'defense'} court for the ${m} shot location.`);
-    refreshCourtQueue();
-  });
-  byId('sc-observe-ft').addEventListener('click',()=>{
-    const dialog=document.createElement('dialog');dialog.className='sc-ft-dialog';dialog.innerHTML=`<form method="dialog"><h3>FT checkpoint</h3><p>Verify the shooting team and each attempt. These entries never change the official score.</p><label>Team <select name="team"><option value="us">${safe(names().us)}</option><option value="opponent">${safe(names().opponent)}</option></select></label><div class="sc-ft-checks"><button type="button" data-ft="made" class="sc-make">FT MADE</button><button type="button" data-ft="missed" class="sc-miss">FT MISS</button></div><p id="sc-ft-sequence">No attempts yet</p><button value="cancel">CLOSE</button></form>`;
-    document.body.append(dialog);const seq=[];dialog.querySelectorAll('[data-ft]').forEach(b=>b.addEventListener('click',async()=>{
-      const made=b.dataset.ft==='made';seq.push(made?'M':'X');dialog.querySelector('#sc-ft-sequence').textContent=`FT sequence: ${seq.join(' · ')}`;
-      await addObservation({kind:'free_throw',team:dialog.querySelector('[name=team]').value,points:1,made});
-    }));dialog.addEventListener('close',()=>dialog.remove());dialog.showModal();
+  svg.addEventListener('dblclick',e=>{if(document.querySelector('.tracker-shell')?.dataset.focusView==='court'){e.stopImmediatePropagation();e.preventDefault();}},true);
+  // Fixed-size, single-row FT control: FT → Team → Attempts → outcome for each.
+  let ftStep=0,ftTeam='us',ftCount=2,ftResults=[];
+  function paintFt(){
+    const host=byId('sc-ft-step');host.replaceChildren();
+    const btn=(label,click,cls='')=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.className=cls;b.addEventListener('click',click);host.append(b);return b;};
+    if(ftStep===0){btn('Start free throws ›',()=>{ftStep=1;paintFt();});}
+    else if(ftStep===1){btn('‹',()=>{ftStep=0;paintFt();});btn(names().us,()=>{ftTeam='us';ftStep=2;paintFt();});btn(names().opponent,()=>{ftTeam='opponent';ftStep=2;paintFt();});}
+    else if(ftStep===2){btn('‹',()=>{ftStep=1;paintFt();});[1,2,3].forEach(n=>btn(`${n} FT`,()=>{ftCount=n;ftResults=[];ftStep=3;paintFt();}));}
+    else if(ftStep===3){
+      btn('‹',async()=>{if(ftResults.length){const target=[...observations].reverse().find(o=>!o.retracted_at&&o.kind==='free_throw'&&o.team===ftTeam&&Number(o.period)===Number(state.period)&&o.tracker_id===sessionUser?.id);if(target&&await undoObservation(target))ftResults.pop();}else ftStep=2;paintFt();});
+      const label=document.createElement('strong');label.textContent=`${ftResults.length+1}/${ftCount}`;host.append(label);
+      for(const [label,made,cls] of [['MADE',true,'sc-make'],['MISS',false,'sc-miss']])btn(label,async()=>{
+        await addObservation({kind:'free_throw',team:ftTeam,points:1,made});ftResults.push(made?'M':'X');
+        if(ftResults.length>=ftCount)ftStep=4;paintFt();
+      },cls);
+    }else{const label=document.createElement('span');label.textContent=`${ftResults.filter(x=>x==='M').length}/${ftCount} · saved`;host.append(label);btn('Done',()=>{ftStep=0;paintFt();});}
+  }
+  paintFt();
+  byId('sc-undo-court').addEventListener('click',async()=>{
+    const target=[...observations].reverse().find(o=>!o.retracted_at&&o.kind==='shot'&&o.tracker_id===sessionUser?.id);
+    if(!target){setFeedback('No shot from this tracker to undo.');return;}
+    await undoObservation(target);
   });
   // Explicit, shared direction change. Existing physical coordinates are never rewritten.
   byId('sc-swap-directions').addEventListener('click',async()=>{
@@ -195,21 +260,84 @@
     applySharedDirection(data[0].home_attacks_left_first_half);selectHalf();setFeedback('Basket assignments switched and synced. Previous shot coordinates were preserved.');
   });
   function eventKind(e){return `${e.team==='us'?names().us:names().opponent} · ${e.points}PT ${e.made?'MADE':'MISS'} · ${e.playerId?pName(e.playerId):'TEAM'}`;}
-  function compare(period=state.period){
-    const shots=officialShots().filter(s=>Number(s.period)===Number(period));
-    const obs=observations.filter(o=>o.kind==='shot'&&!o.matched_event_id&&Number(o.period)===Number(period));
-    const used=new Set(),found=[];
-    for(const shot of shots){
-      // A captured shot location is a stronger signal than order alone;
-      // require team, result, type, period AND close capture times.
-      const same=obs.filter(o=>!used.has(o.id)&&o.team===shot.team&&
-        Number(o.points)===Number(shot.points)&&Boolean(o.made)===Boolean(shot.made));
-      const near=same.filter(o=>Math.abs(Date.parse(o.observed_at)-Number(shot.time||0))<=30000);
-      if(near.length===1){const o=near[0];used.add(o.id);found.push({event:shot,obs:o,status:'candidate'});}
-      else found.push({event:shot,obs:null,status:near.length>1?'ambiguous':same.length?'time-uncertain':'missing'});
+  // Align the whole quarter. Team-only Court tracking filters official opponent shots.
+  // Dynamic programming tolerates insertions/deletions, and anchors on team+type+result.
+  // Ties are not auto-linked because repetitive streaks can be ambiguous.
+  function alignSequence(official,observed){
+    const n=official.length,m=observed.length;
+    const costs=Array.from({length:n+1},()=>Array(m+1).fill(0));
+    for(let i=1;i<=n;i++)costs[i][0]=i;
+    for(let j=1;j<=m;j++)costs[0][j]=j;
+    const equal=(a,b)=>a.team===b.team&&Number(a.points)===Number(b.points)&&Boolean(a.made)===Boolean(b.made)&&(a.type==='free_throw')===(b.kind==='free_throw');
+    for(let i=1;i<=n;i++)for(let j=1;j<=m;j++){
+      const same=equal(official[i-1],observed[j-1]);
+      costs[i][j]=Math.min(costs[i-1][j]+1,costs[i][j-1]+1,costs[i-1][j-1]+(same?0:2));
     }
-    return {found,unused:obs.filter(o=>!used.has(o.id)),matched:found.filter(x=>x.status==='candidate').length,
-      ambiguous:found.filter(x=>x.status==='ambiguous'||x.status==='time-uncertain').length};
+    let i=n,j=m;const rows=[];
+    while(i||j){
+      const same=i&&j&&equal(official[i-1],observed[j-1]);
+      const diagonal=i&&j&&costs[i][j]===costs[i-1][j-1]+(same?0:2);
+      const up=i&&costs[i][j]===costs[i-1][j]+1;
+      const left=j&&costs[i][j]===costs[i][j-1]+1;
+      if(same&&diagonal){
+        // Repeated identical entries without a unique nearby anchor are review-only.
+        const ambiguity=(up&&left)||
+          (i>1&&equal(official[i-2],observed[j-1]))||
+          (j>1&&equal(official[i-1],observed[j-2]));
+        rows.push({event:official[--i],obs:observed[--j],status:ambiguity?'ambiguous':'aligned'});
+      }else if(up){rows.push({event:official[--i],obs:null,status:'missing-court'});}
+      else if(left){rows.push({event:null,obs:observed[--j],status:'extra-court'});}
+      else if(diagonal){rows.push({event:official[--i],obs:observed[--j],status:'conflict'});}
+      else if(i)rows.push({event:official[--i],obs:null,status:'missing-court'});
+      else rows.push({event:null,obs:observed[--j],status:'extra-court'});
+    }
+    return rows.reverse();
+  }
+  function compare(period=state.period){
+    const scope=effectiveScope();
+    const candidates=observations.filter(o=>!o.retracted_at&&Number(o.period)===Number(period));
+    const observedFTTeams=new Set(candidates.filter(o=>o.kind==='free_throw').map(o=>o.team));
+    const official=state.events.filter(e=>
+      Number(e.period)===Number(period)&&
+      (e.type==='shot'||e.type==='free_throw')&&
+      ((e.type==='shot'&&(scope==='both'||e.team==='us'))||
+       (e.type==='free_throw'&&observedFTTeams.has(e.team))))
+      .slice().sort((a,b)=>Number(a.time||0)-Number(b.time||0));
+    const obs=candidates.filter(o=>
+      (o.kind==='shot'&&(scope==='both'||o.team==='us'))||o.kind==='free_throw')
+      .sort((a,b)=>Date.parse(a.observed_at)-Date.parse(b.observed_at));
+    const found=alignSequence(official,obs);
+    return {found,
+      unused:found.filter(r=>!r.event&&r.obs?.kind==='shot').map(r=>r.obs),
+      matched:found.filter(r=>r.obs?.kind==='shot'&&r.event?.type==='shot'&&
+        (r.obs.matched_event_id===r.event.id||r.status==='aligned')).length,
+      ambiguous:found.filter(r=>r.status==='ambiguous'||r.status==='conflict').length};
+  }
+  function scheduleReconcile(){clearTimeout(reconcileTimer);reconcileTimer=setTimeout(()=>void reconcile(),550);}
+  async function reconcile(){
+    if(linking||busy||!remoteEnabled||!sessionUser)return;
+    linking=true;
+    try{
+      const periods=new Set(observations.filter(o=>!o.retracted_at&&o.kind==='shot').map(o=>Number(o.period)));
+      for(const period of periods){
+        const result=compare(period);
+        for(const pair of result.found){
+          if(pair.status!=='aligned'||pair.event?.type!=='shot'||pair.obs?.kind!=='shot'||pair.obs.matched_event_id||pair.event.x!=null||pair.event.y!=null)continue;
+          // Require synced, versioned official event and enough timing consistency.
+          const dt=Math.abs(Date.parse(pair.obs.observed_at)-Number(pair.event.time||0));
+          if(!Number.isInteger(Number(pair.event.version))||Number(pair.event.version)<1||dt>120000)continue;
+          try{
+            const {data,error}=await supabaseClient.rpc('scoridium_link_shot_observation',{
+              p_game_id:gameId,p_observation_id:pair.obs.id,p_event_id:pair.event.id,p_expected_version:Number(pair.event.version)});
+            if(error||!Array.isArray(data)||data.length!==1)continue;
+            pair.obs.matched_event_id=pair.event.id;pair.event.x=Number(pair.obs.x);pair.event.y=Number(pair.obs.y);
+            pair.event.distanceMeters=Number(pair.obs.distance_meters);pair.event.distanceFeet=Number(pair.obs.distance_feet);
+            pair.event.version=Number(data[0].new_version);
+          }catch(e){console.warn('Auto-link skipped',e);}
+        }
+      }
+      saveLocalObservations();save();renderCourt();paintObservationMarkers();refreshCourtQueue();
+    }finally{linking=false;}
   }
   async function linkCandidate(observation,event){
     if(!remoteEnabled){setFeedback('Please apply MIGRATION_COLLABORATION.sql and sync the observation before linking.');return;}
@@ -223,7 +351,7 @@
       if(event.x==null&&event.y==null){event.x=Number(observation.x);event.y=Number(observation.y);
         event.distanceMeters=Number(observation.distance_meters);event.distanceFeet=Number(observation.distance_feet);}
       event.version=Number(data[0].new_version);
-      saveLocalObservations();save();renderCourt();refreshCourtQueue();renderCheckpoint(event.period);
+      saveLocalObservations();save();renderCourt();paintObservationMarkers();refreshCourtQueue();renderCheckpoint(event.period);
       setFeedback(`Linked observation to ${eventKind(event)}. One official field-goal attempt retained.`);
     }catch(e){console.error('Observation matching failed',e);setFeedback(`Match not saved: ${e.message||'Refresh and try again.'}`);}
     finally{busy=false;}
@@ -233,7 +361,7 @@
     return ev.reduce((n,e)=>n+(e.made===false?0:Number(e.points||0)),0);
   }
   function observedTotals(period,team){
-    const obs=observations.filter(o=>Number(o.period)===Number(period)&&o.team===team);
+    const obs=observations.filter(o=>!o.retracted_at&&Number(o.period)===Number(period)&&o.team===team);
     return obs.reduce((n,o)=>n+(o.made?Number(o.points||0):0),0);
   }
   function compareIndependent(period){
@@ -254,7 +382,7 @@
   }
   function compareFT(period){
     const official=state.events.filter(e=>e.type==='free_throw'&&Number(e.period)===Number(period));
-    const observed=observations.filter(o=>o.kind==='free_throw'&&Number(o.period)===Number(period));
+    const observed=observations.filter(o=>!o.retracted_at&&o.kind==='free_throw'&&Number(o.period)===Number(period));
     const consumed=new Set();let matches=0;
     for(const event of official){
       const options=observed.filter(o=>!consumed.has(o.id)&&o.team===event.team&&Boolean(o.made)===Boolean(event.made)&&
@@ -263,80 +391,88 @@
     }
     return {official:official.length,observed:observed.length,matches,unmatched:observed.length-matches};
   }
+  function running(rows){const totals={us:0,opponent:0};return rows.map(r=>{
+    const e=r.event,o=r.obs;
+    if(e&&e.made)totals[e.team]+=Number(e.points||0);
+    return {...r,quickScore:`${totals.us}–${totals.opponent}`};
+  });}
   function renderCheckpoint(period=state.period){
-    const r=compare(period),ind=compareIndependent(period),fts=compareFT(period),a=eventTotals(period,'us'),b=eventTotals(period,'opponent');
-    const oa=observedTotals(period,'us'),ob=observedTotals(period,'opponent');
+    const r=compare(period),ind=compareIndependent(period),fts=compareFT(period);
     const area=byId('sc-checkpoint-summary');area.hidden=false;
-    area.innerHTML=`<h3>${safe(periodName(period))} · Tracker comparison</h3>
-      <div class="sc-checkpoint-counters"><span>${r.matched} likely shot matches</span><span>${r.unused.length} unmatched Court observations</span><span>${r.ambiguous} uncertain shots</span></div>
-      <p>Quick Track scoring this period: <strong>${a}–${b}</strong>. Court's independently observed points: <strong>${oa}–${ob}</strong> (may be incomplete). Equal scores do not prove all events match.</p>
-      <p>FT checkpoint agreement: <strong>${fts.matches}/${fts.official}</strong> official attempts matched to Court observations (${fts.unmatched} unmatched Court FTs).</p>
-      <p>${ind.available?`Independent Quick: ${ind.results.filter(r=>r.status==='likely').length} likely event matches, ${ind.results.filter(r=>r.status==='missing').length} missing, ${ind.unmatched.length} extra observations. Independently recorded points ${ind.score.us}–${ind.score.opponent}.`:'No independent Quick Tracker observations for this period.'}</p>
-      <div id="sc-independent-disagreements"></div>
-      <div id="sc-match-suggestions"></div>
-      <button type="button" id="sc-confirm-score">Record physical scoreboard</button>`;
-    const disputes=area.querySelector('#sc-independent-disagreements');
-    for(const result of ind.results.filter(r=>r.status!=='likely').slice(0,8)){
-      const row=document.createElement('p');row.className='sc-discrepancy';row.textContent=`${periodName(result.event.period)} · ${result.event.team==='us'?names().us:names().opponent} · ${result.event.type} ${result.event.points||''}: ${result.status.replace('-', ' ')}`;disputes.append(row);
+    const summary=`<div class="sc-review-head"><h3>${safe(periodName(period))} · Tracker A / B</h3><button id="sc-close-review" aria-label="Close comparison" type="button">×</button></div>
+      <p>${r.matched} aligned or linked · ${r.found.filter(x=>x.status!=='aligned'&&(x.obs?.matched_event_id==null||x.obs?.matched_event_id!==x.event?.id)).length} for review · ${r.ambiguous} conflicts/ambiguous</p>
+      <div class="sc-review-columns"><b>Quick Track A</b><b>Court B</b><b>Result</b></div><div class="sc-review-rows"></div>
+      <p>Recorded scoring this quarter: Quick ${eventTotals(period,'us')}–${eventTotals(period,'opponent')} · Court observations ${observedTotals(period,'us')}–${observedTotals(period,'opponent')} (may omit opponent).</p>
+      <p>FT observations: ${fts.matches}/${fts.official} likely matching attempts; ${fts.unmatched} extra Court observations.</p>
+      <p>Score checkpoints are requested at the end of each quarter. A matching score does not prove all shots are correct.</p>`;
+    area.innerHTML=summary;
+    const rows=area.querySelector('.sc-review-rows');let scoreA={us:0,opponent:0},scoreB={us:0,opponent:0};
+    for(const row of r.found){
+      if(row.event?.made)scoreA[row.event.team]+=Number(row.event.points||0);
+      if(row.obs?.made)scoreB[row.obs.team]+=Number(row.obs.points||0);
+      const div=document.createElement('div');div.className='sc-review-columns';
+      for(const text of [row.event?`${row.event.team==='us'?'Tracked':'Opponent'} ${row.event.type==='free_throw'?'FT':row.event.points+'PT'} ${row.event.made?'M':'X'} · ${scoreA.us}–${scoreA.opponent}`:'—',row.obs?`${row.obs.team==='us'?'Tracked':'Opponent'} ${row.obs.kind==='free_throw'?'FT':row.obs.points+'PT'} ${row.obs.made?'M':'X'} · ${scoreB.us}–${scoreB.opponent}`:'—',row.obs?.matched_event_id===row.event?.id&&row.event?'Linked':row.status]){
+        const span=document.createElement('span');span.textContent=text;div.append(span);
+      }
+      rows.append(div);
     }
-    if(ind.unmatched.length){const row=document.createElement('p');row.className='sc-discrepancy';row.textContent=`${ind.unmatched.length} observation(s) exist only in Independent Quick Track.`;disputes.append(row);}
-    const container=area.querySelector('#sc-match-suggestions');
-    for(const pair of r.found.filter(f=>f.status==='candidate')){
-      const row=document.createElement('div');row.className='sc-match-suggestion';
-      const text=document.createElement('span');text.textContent=`${eventKind(pair.event)} · ${Math.round(Math.abs(Date.parse(pair.obs.observed_at)-pair.event.time)/1000)}s apart`;
-      const button=document.createElement('button');button.type='button';button.textContent='LINK';
-      button.addEventListener('click',()=>void linkCandidate(pair.obs,pair.event));
-      row.append(text,button);container.append(row);
+    const checks=checkpointRows.filter(c=>Number(c.period)===Number(period));
+    if(checks.length){
+      const check=document.createElement('p');
+      const latestByUser=new Map();for(const c of checks)latestByUser.set(c.tracker_id,c);
+      const distinct=[...latestByUser.values()];
+      const agreed=distinct.length>1&&distinct.every(c=>c.observed_home_score===distinct[0].observed_home_score&&c.observed_away_score===distinct[0].observed_away_score);
+      check.textContent=`Physical scoreboard: ${distinct.map(c=>c.observed_home_score+'–'+c.observed_away_score).join(' / ')} · ${distinct.length} independent reporter(s) · ${agreed?'agree':distinct.length>1?'DISAGREE':'awaiting second tracker'}`;
+      area.append(check);
     }
-    if(!container.children.length)container.textContent='No unique near-time matches to confirm. Other observations remain available for review.';
-    area.querySelector('#sc-confirm-score').addEventListener('click',()=>void physicalScoreCheckpoint(period));
+    area.querySelector('#sc-close-review').addEventListener('click',()=>{area.hidden=true;});
+  }
+  byId('sc-shot-counts').addEventListener('click',()=>renderCheckpoint());
+  function refreshCourtQueue(){
+    const count=byId('sc-total-shots');if(!count)return;
+    const scope=effectiveScope(),shots=observations.filter(o=>!o.retracted_at&&o.kind==='shot'&&(scope==='both'||o.team==='us'));
+    const matches=shots.filter(o=>o.matched_event_id).length;
+    count.textContent=`${shots.length} shots`;
+    byId('sc-total-matched').textContent=`${matches} matched · ${shots.length-matches} pending`;
+    const area=byId('sc-checkpoint-summary');if(area&&!area.hidden)renderCheckpoint();
   }
   async function physicalScoreCheckpoint(period){
-    const home=byId('home-score')?.textContent||'0',away=byId('away-score')?.textContent||'0';
+    if(scorePromptOpen||!gameId||localStorage.getItem(scoreSavedKey(period))==='yes')return false;scorePromptOpen=true;
     const dialog=document.createElement('dialog');dialog.className='sc-ft-dialog';
-    dialog.innerHTML=`<form method="dialog"><h3>Verify venue scoreboard</h3><p>Enter the actual scoreboard at this timeout or quarter break, not Scoridium's displayed score.</p>
-      <label>Home <input name="home" type="number" min="0" max="999" required value="${Number(home)||0}"></label>
-      <label>Away <input name="away" type="number" min="0" max="999" required value="${Number(away)||0}"></label>
-      <div class="sc-ft-checks"><button type="button" id="sc-submit-score" class="sc-make">SAVE CHECK</button><button value="cancel">CANCEL</button></div><p class="sc-check-status" role="status"></p></form>`;
-    document.body.append(dialog);
-    dialog.addEventListener('close',()=>dialog.remove());
-    dialog.querySelector('#sc-submit-score').addEventListener('click',async()=>{
-      const a=Number(dialog.querySelector('[name=home]').value),b=Number(dialog.querySelector('[name=away]').value);
-      if(!Number.isInteger(a)||!Number.isInteger(b)||a<0||b<0){dialog.querySelector('.sc-check-status').textContent='Enter valid nonnegative scores.';return;}
-      if(!sessionUser){dialog.querySelector('.sc-check-status').textContent='Sign in to save this checkpoint.';return;}
-      const result=await supabaseClient.from('tracker_checkpoints').insert({game_id:gameId,tracker_id:sessionUser.id,period,
-        checkpoint_type:'manual',observed_home_score:a,observed_away_score:b});
-      if(result.error){dialog.querySelector('.sc-check-status').textContent=`Could not sync: ${result.error.message}`;return;}
-      const gameHome=Number(byId('home-score')?.textContent)||0,gameAway=Number(byId('away-score')?.textContent)||0;
-      setFeedback(a===gameHome&&b===gameAway?'Venue score agrees with Scoridium. Event details may still require review.':
-        `Venue score ${a}–${b} differs from Scoridium ${gameHome}–${gameAway}. Review event timeline.`);
-      dialog.close();
-    });dialog.showModal();
+    dialog.innerHTML=`<form method="dialog"><h3>End of ${safe(periodName(period))} · Physical scoreboard</h3>
+      <p>Both trackers must independently enter what the venue scoreboard actually shows. Do not copy Scoridium's score.</p>
+      <label>Home <input name="home" type="number" min="0" max="999" required placeholder="Actual score"></label>
+      <label>Away <input name="away" type="number" min="0" max="999" required placeholder="Actual score"></label>
+      <div class="sc-ft-checks"><button type="button" id="sc-submit-score" class="sc-make">SAVE SCORE</button><button type="button" id="sc-cancel-score">LATER</button></div>
+      <p class="sc-check-status" role="status"></p></form>`;
+    document.body.append(dialog);dialog.showModal();
+    return new Promise(resolve=>{
+      let done=false;const finish=v=>{if(done)return;done=true;dialog.close();resolve(v);};
+      dialog.addEventListener('close',()=>{scorePromptOpen=false;dialog.remove();if(!done){done=true;resolve(false);}});
+      dialog.querySelector('#sc-cancel-score').addEventListener('click',()=>finish(false));
+      dialog.querySelector('#sc-submit-score').addEventListener('click',async()=>{
+        const home=Number(dialog.querySelector('[name=home]').value),away=Number(dialog.querySelector('[name=away]').value);
+        if(!dialog.querySelector('[name=home]').value||!dialog.querySelector('[name=away]').value||!Number.isInteger(home)||!Number.isInteger(away)||home<0||away<0){dialog.querySelector('.sc-check-status').textContent='Enter both actual scoreboard numbers.';return;}
+        if(!sessionUser){dialog.querySelector('.sc-check-status').textContent='Sign in before saving.';return;}
+        const {error}=await supabaseClient.from('tracker_checkpoints').insert({game_id:gameId,tracker_id:sessionUser.id,period,checkpoint_type:'quarter',observed_home_score:home,observed_away_score:away});
+        if(error){dialog.querySelector('.sc-check-status').textContent=`Cannot save checkpoint: ${error.message}`;return;}
+        checkpointRows.push({tracker_id:sessionUser.id,period,observed_home_score:home,observed_away_score:away});
+        localStorage.setItem(scoreSavedKey(period),'yes');finish(true);
+      });
+    });
   }
-  byId('sc-review-checkpoint').addEventListener('click',()=>renderCheckpoint());
-  function refreshCourtQueue(){
-    if(!byId('sc-shot-queue'))return;
-    const shots=officialShots();const pending=shots.filter(e=>!Number.isFinite(Number(e.x))||!Number.isFinite(Number(e.y))||e.x==null||e.y==null);
-    byId('sc-queue-count').textContent=`${pending.length} needing location`;
-    const list=byId('sc-shot-queue');list.replaceChildren();
-    const latest=shots.slice(-80).reverse();
-    if(!latest.length)list.textContent='No field-goal events yet.';
-    for(const shot of latest){
-      const located=shot.x!=null&&shot.y!=null;
-      const button=document.createElement('button');button.type='button';button.className='sc-shot-item'+(selectedShotId===shot.id?' active':'');
-      button.innerHTML=`<strong>${safe(eventKind(shot))}</strong><small>${safe(periodName(shot.period))} · ${located?`Located · ${Number(shot.distanceFeet||0).toFixed(1)} ft`:'Location needed'}</small>`;
-      button.addEventListener('click',()=>{
-        mode=null;selectedShotId=shot.id;refreshCourtQueue();
-        setFeedback(`Selected ${eventKind(shot)}. ${shot.team==='us'&&view!=='offense'||shot.team==='opponent'&&view!=='defense'?'Manually switch OFFENSE / DEFENSE before tapping.':'Tap the court to assign its location.'}`);
-      });list.append(button);
-    }
-    const unsynced=observations.filter(o=>!o.matched_event_id);
-    if(unsynced.length){const hd=document.createElement('h4');hd.textContent=`Unmatched observations (${unsynced.length})`;list.append(hd);
-      for(const o of unsynced.slice(-20).reverse()){
-        const row=document.createElement('div');row.className='sc-shot-item sc-observation-row';row.innerHTML=`<strong>${safe(o.team==='us'?names().us:names().opponent)} · ${safe(o.kind==='free_throw'?'FT':`${o.points}PT`)} ${o.made?'MADE':'MISS'}</strong><small>${safe(periodName(o.period))} · Awaiting reconciliation</small>`;list.append(row);
-      }
-    }
-  }
+  // Intercept before the legacy End Quarter handler. Record venue score first, then
+  // let the existing confirmation + network writes run untouched.
+  let quarterAuthorized=false;
+  const legacyEnd=byId('end-quarter');
+  legacyEnd?.addEventListener('click',async event=>{
+    if(quarterAuthorized){quarterAuthorized=false;return;}
+    if(state.status!=='live')return;
+    if(localStorage.getItem(scoreSavedKey(state.period))==='yes')return;
+    event.preventDefault();event.stopImmediatePropagation();
+    const ok=await physicalScoreCheckpoint(state.period);
+    if(ok){quarterAuthorized=true;legacyEnd.click();}
+  },true);
   async function initIndependentFeed(){
     if(!gameId||!sessionUser)return;
     const load=async()=>{
@@ -355,25 +491,35 @@
     const {data}=await supabaseClient.auth.getUser();sessionUser=data?.user||null;
     if(!sessionUser)return;
     void initIndependentFeed();
+    const {data:checkRows}=await supabaseClient.from('tracker_checkpoints').select('*').eq('game_id',gameId).order('observed_at',{ascending:true});
+    if(checkRows)checkpointRows=checkRows;
+    const gamePeriodChannel=supabaseClient.channel(`scoridium-quarter-prompt-${gameId}`)
+      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'games',filter:`id=eq.${gameId}`},payload=>{
+        const next=Number(payload.new?.current_period),prior=Number(state.period);
+        if(next>prior&&state.status!=='not_started'){
+          if(!localStorage.getItem(scoreSavedKey(prior)))void physicalScoreCheckpoint(prior);
+        }
+      }).subscribe();
+
     const {data:rows,error}=await supabaseClient.from('tracker_observations').select('*').eq('game_id',gameId).order('observed_at',{ascending:true});
     if(error){remoteEnabled=false;byId('sc-court-sync').textContent='Local observations';setFeedback('Collaboration database not yet configured. Run MIGRATION_COLLABORATION.sql before multi-device testing.');return;}
     remoteEnabled=true;byId('sc-court-sync').textContent='Shared observations';
     const local=observations.slice();observations=rows||[];
     // Preserve unsynced local observations, never silently delete them.
     for(const o of local)if(!observations.some(r=>r.id===o.id))observations.push(o);
-    saveLocalObservations();refreshCourtQueue();
+    saveLocalObservations();refreshCourtQueue();paintObservationMarkers();scheduleReconcile();
     if(obsChannel)await supabaseClient.removeChannel(obsChannel);
     obsChannel=supabaseClient.channel(`scoridium-court-${gameId}`).on('postgres_changes',{
       event:'*',schema:'public',table:'tracker_observations',filter:`game_id=eq.${gameId}`},async()=>{
         const {data:latest}=await supabaseClient.from('tracker_observations').select('*').eq('game_id',gameId).order('observed_at',{ascending:true});
-        if(latest){for(const o of latest){const idx=observations.findIndex(v=>v.id===o.id);if(idx===-1)observations.push(o);else observations[idx]=o;}saveLocalObservations();refreshCourtQueue();}
+        if(latest){for(const o of latest){const idx=observations.findIndex(v=>v.id===o.id);if(idx===-1)observations.push(o);else observations[idx]=o;}saveLocalObservations();refreshCourtQueue();paintObservationMarkers();scheduleReconcile();}
       }).subscribe();
   }
   // Do not auto change offense/defense when Quick Track records a shot.
   const courtTab=document.querySelector('[data-focus-view="court"]');
-  courtTab?.addEventListener('click',()=>{if(courtView==='full')selectHalf();refreshCourtQueue();});
+  courtTab?.addEventListener('click',()=>{enforceOrientation();refreshCourtQueue();});
   // Start data load after main game bootstrap finishes.
-  let startupTries=0;const initialized=()=>{if(currentGame){selectHalf();void initRemote();}else if(++startupTries<30)setTimeout(initialized,350);};
+  let startupTries=0;const initialized=()=>{if(currentGame){enforceOrientation();void initRemote();}else if(++startupTries<30)setTimeout(initialized,350);};
   setTimeout(initialized,300);
   refreshCourtQueue();
 })();
