@@ -131,9 +131,8 @@
   refreshShell().catch(err=>console.warn('Shell refresh failed:',err));
 })();
 
-// Hide mobile dock while an embedded page has an active modal (same-origin iframe).
+// The embedded page posts only its *visible* dialog state. Do not inspect
+// nested aria-modal elements: a hidden parent can contain a visible-looking child.
 (()=>{const frame=document.getElementById('page-frame'),dock=document.querySelector('.mobile-bottom-nav');if(!frame||!dock)return;
- const update=()=>{try{const d=frame.contentDocument;const isOpen=Boolean(d?.querySelector('dialog[open], .schedule-modal:not([hidden]), [role="dialog"][aria-modal="true"]:not([hidden])'));
- dock.style.visibility=isOpen?'hidden':'';dock.style.pointerEvents=isOpen?'none':'';}catch(e){}};
- frame.addEventListener('load',()=>{update();try{new MutationObserver(update).observe(frame.contentDocument.documentElement,{subtree:true,attributes:true,attributeFilter:['open','hidden','aria-modal','class']});}catch(e){}});
+ frame.addEventListener('load',()=>{dock.style.removeProperty('visibility');dock.style.removeProperty('pointer-events');});
 })();

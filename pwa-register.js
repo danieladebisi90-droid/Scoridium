@@ -1,7 +1,7 @@
 /* Scoridium PWA: check for updates, never force reload during gameplay. */
 (() => {
   if (window !== window.top || !('serviceWorker' in navigator)) return;
-  let registration, banner, applying=false;
+  let registration, banner, applying=false, refreshOnController=false;
   const onTracker=()=>/\/(?:game|quick-track)\.html$/i.test(location.pathname);
   const hasLiveSession=()=>onTracker() || document.body.dataset.gameStatus==='live' || window.scoridiumTrackingActive===true;
   function showUpdate() {

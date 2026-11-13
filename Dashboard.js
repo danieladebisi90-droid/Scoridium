@@ -13,7 +13,6 @@
 // });
 const selectedTeamId = sessionStorage.getItem("selectedTeamId");
 async function loadTeamDashboard() {
-    const { data: team, error } =   await supabaseClient.from("teams").select("*").eq("id", selectedTeamId).single()
     if(!selectedTeamId){
         window.location.href = "myTeams.html"
     }
@@ -44,7 +43,13 @@ if (activeSeasonId) {
     gamesQuery = gamesQuery.eq("seasons_id", activeSeasonId);
 }
 
-const { data: teamGames, error: gamesError } = await gamesQuery;
+// Fetch independent team metadata and season games concurrently.
+const [teamResult, gamesResult] = await Promise.all([
+  supabaseClient.from('teams').select('id,school_name,club_name,mascot,team_type,primary_color,secondary_color').eq('id',selectedTeamId).single(),
+  gamesQuery
+]);
+const {data:team,error}=teamResult;
+const {data:teamGames,error:gamesError}=gamesResult;
 
 if (gamesError) {
     console.error("Dashboard games error:", gamesError);
@@ -53,14 +58,13 @@ if (gamesError) {
 
     const record = calculateTeamRecord(teamGames)
     displayRecentGames(teamGames);
-    showDashboardLiveGame(teamGames);
     // Only poll the small active-game record while the dashboard is visible.
     // This does not reload the roster or the entire page.
     if(!window.__scoridiumLiveScoreRefresh){
       window.__scoridiumLiveScoreRefresh=setInterval(async()=>{
         if(document.hidden)return;
         const {data,error}=await supabaseClient.from('games')
-          .select('id,opponent,team_score,opponent_score,status,date')
+          .select('id,opponent,team_score,opponent_score,status,date,period')
           .eq('team_id',selectedTeamId).eq('status','live').limit(5);
         if(!error)showDashboardLiveGame(data||[]);
       },7000);
@@ -72,6 +76,7 @@ if (gamesError) {
     document.querySelector(".school-name").textContent = team.team_type === "club" ? (team.club_name || team.school_name || "") : (team.school_name || "")
     document.querySelector(".mascot").textContent = team.team_type === "club" ? (team.club_name || team.mascot || "Team") : (team.mascot || "Team")
     window.ScoridiumTheme?.apply(team)
+    showDashboardLiveGame(teamGames);
     if(document.querySelector(".team-logo"))document.querySelector(".team-logo").style.color = team.secondary_color || "#9299A5"
     if(document.querySelector(".team-logo"))document.querySelector(".team-logo").textContent = (team.team_type === "club" ? (team.club_name || team.mascot || "T") : (team.mascot || "T")).charAt(0).toUpperCase()
     const navButtons = document.querySelectorAll("#navigation-container button")
@@ -241,6 +246,11 @@ function showDashboardLiveGame(games){
   const live=[...(games||[])].filter(g=>g.status==='live')
     .sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')))[0];
   if(!live){
+    const mobile=document.querySelector('.mobile-dashboard-next-event');
+    if(mobile?.classList.contains('sc-is-live') && mobile.dataset.scOriginalHtml){
+      mobile.innerHTML=mobile.dataset.scOriginalHtml;
+      mobile.classList.remove('sc-is-live');
+    }
     document.getElementById('dashboard-recent-heading')?.replaceChildren('Recent Games');
     const action=document.getElementById('dashboard-games-action');
     if(action){action.textContent='View All Games';action.onclick=()=>location.href='gamehub.html';}
@@ -275,12 +285,24 @@ function showDashboardLiveGame(games){
   }
   const mobile=document.querySelector('.mobile-dashboard-next-event');
   if(mobile){
+    if(!mobile.dataset.scOriginalHtml)mobile.dataset.scOriginalHtml=mobile.innerHTML;
+    mobile.classList.add('sc-is-live');
     mobile.setAttribute('aria-label','Live game score');
-    mobile.querySelector('.mobile-dashboard-eyebrow').textContent='LIVE GAME';
-    const mobileScore=mobile.querySelector('h2');
-    if(mobileScore)mobileScore.textContent=`${document.querySelector('.mascot')?.textContent?.trim()||'Our Team'} ${live.team_score??0} VS ${live.opponent_score??0} ${live.opponent||'Opponent'}`;
-    mobile.querySelector('p:not(.mobile-dashboard-eyebrow)').textContent=`${live.period||live.quarter?`Q${live.period||live.quarter}`:'In progress'} · LIVE`;
-    const link=mobile.querySelector('a');if(link){link.textContent='View Game ›';link.href=`watch-game.html?gameId=${encodeURIComponent(live.id)}`;}
+    mobile.replaceChildren();
+    const build=(tag,cls,value)=>{const el=document.createElement(tag);el.className=cls;el.textContent=String(value);return el;};
+    const header=build('div','mobile-dashboard-eyebrow','LIVE GAME');
+    const action=document.createElement('a');action.className='sc-live-view-link';action.href=`watch-game.html?gameId=${encodeURIComponent(live.id)}`;action.textContent='View Game';
+    const top=document.createElement('div');top.className='sc-mobile-live-header';top.append(header,action);
+    const teams=build('div','sc-dashboard-live-teams','');
+    const ours=build('div','sc-dashboard-live-team','');
+    ours.append(build('span','sc-dashboard-live-label',document.querySelector('.mascot')?.textContent?.trim()||'Our Team'),build('strong','sc-dashboard-live-points',live.team_score??0));
+    const center=build('div','sc-dashboard-live-center','');
+    const period=live.period||live.quarter;
+    center.append(build('span','sc-dashboard-live-badge','LIVE'),build('strong','sc-dashboard-live-vs','VS'),build('span','sc-dashboard-live-period',period?`Q${period}`:'In progress'));
+    const theirs=build('div','sc-dashboard-live-team','');
+    theirs.append(build('span','sc-dashboard-live-label',live.opponent||'Opponent'),build('strong','sc-dashboard-live-points',live.opponent_score??0));
+    teams.append(ours,center,theirs);
+    mobile.append(top,teams);
   }
 }
 

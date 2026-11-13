@@ -45,3 +45,26 @@
 #panel-statistics #player-zone-preview{min-height:240px!important;max-height:none!important;overflow:visible!important}
 #panel-statistics #player-zone-preview svg{max-height:420px!important;height:auto!important;width:100%!important}
 .team-badge,.team-emblem,#team-emblem,.team-logo,.team-logo-circle,.header-team-logo,.team-logo-image,.team-crest{display:none!important}
+
+/* V44.1: two actual overview counters, not four reserved columns. */
+.team-banner{display:flex!important;flex-wrap:wrap!important;align-items:center!important;gap:16px!important;padding:22px!important;min-height:0!important;}
+.team-banner .team-title{flex:1 1 250px!important;min-width:0!important;overflow-wrap:anywhere;}
+.team-banner .team-title h2{font-size:clamp(19px,3.5vw,32px)!important;line-height:1.12!important;overflow-wrap:anywhere!important;}
+.team-banner .team-title p{font-size:clamp(11px,1.4vw,14px)!important;overflow-wrap:normal!important;line-height:1.35!important;}
+.team-banner .team-highlights{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important;flex:0 1 320px!important;width:auto!important;min-width:0!important;max-width:100%!important;}
+.team-banner .team-highlights>div{min-width:0!important;padding:13px 7px!important;}
+.team-banner .team-highlights strong{font-size:clamp(24px,6vw,38px)!important;white-space:nowrap;}
+@media(max-width:700px){.team-banner{display:flex!important;flex-direction:column!important;align-items:stretch!important;padding:18px!important;gap:12px!important;}.team-banner .team-title{flex:none!important;}.team-banner .team-highlights{flex:none!important;width:100%!important;max-width:100%!important;}.team-banner .team-title p .gold-bar{padding:0 3px!important;}}
+/* Dashboard live score card, shared desktop/mobile presentation. */
+.mobile-dashboard-next-event.sc-is-live{padding:20px 14px!important;min-height:230px!important;}
+.mobile-dashboard-next-event.sc-is-live .sc-dashboard-live-teams{display:grid!important;grid-template-columns:minmax(0,1fr) 48px minmax(0,1fr)!important;align-items:center!important;gap:5px!important;width:100%!important;max-width:none!important;margin:16px auto!important;}
+.mobile-dashboard-next-event.sc-is-live .sc-dashboard-live-team{display:flex!important;align-items:center!important;flex-direction:column!important;gap:9px!important;min-width:0!important;text-align:center!important;}
+.mobile-dashboard-next-event.sc-is-live .sc-dashboard-live-label{font-size:clamp(14px,4vw,19px)!important;overflow-wrap:anywhere!important;}
+.mobile-dashboard-next-event.sc-is-live .sc-dashboard-live-points{font-size:clamp(42px,13vw,64px)!important;line-height:1!important;}
+.mobile-dashboard-next-event.sc-is-live .sc-dashboard-live-center{display:flex!important;flex-direction:column!important;align-items:center!important;gap:8px!important;min-width:0!important;}
+.mobile-dashboard-next-event.sc-is-live .sc-dashboard-live-vs{font-size:16px!important;font-weight:900!important;}
+.mobile-dashboard-next-event.sc-is-live .sc-dashboard-live-period{font-size:12px!important;white-space:nowrap!important;}
+.mobile-dashboard-next-event.sc-is-live .sc-dashboard-live-badge{background:var(--team-secondary,#ffd600)!important;color:#10233f!important;}
+.mobile-dashboard-next-event.sc-is-live .sc-live-view-link{display:inline-block!important;margin:0!important;padding:10px 15px!important;border-radius:10px!important;background:var(--team-secondary,#ffd600)!important;color:#10233f!important;font-weight:800!important;text-decoration:none!important;}
+
+.sc-mobile-live-header{display:flex;align-items:center;justify-content:space-between;gap:8px;}.sc-mobile-live-header .mobile-dashboard-eyebrow{margin:0!important;min-width:0!important;}
