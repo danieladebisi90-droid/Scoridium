@@ -7,9 +7,18 @@
  const mode=localStorage.getItem(id)==='independent'?'independent':'primary';
  const nav=document.querySelector('.focus-nav');if(!nav)return;
  const container=document.createElement('label');container.className='sc-tracker-role';
- container.innerHTML='<span>STAT TRACKING STREAM</span><select id="sc-tracker-mode" aria-label="Tracking responsibility"><option value="primary">Stat Tracker</option><option value="independent">Independent Stat Tracker</option></select>';
+ container.innerHTML='<span>TRACKER ROLE</span><select id="sc-tracker-mode" aria-label="Tracking responsibility"><option value="primary">Stat Tracker</option><option value="independent">Shot Tracker</option></select>';
  const tabs=nav.querySelector('.focus-tabs');tabs?.before(container);
  const selector=container.querySelector('select');selector.value=mode;
+ // Official Stat Trackers work in Quick Track and Play-by-Play only.
+ // Shot Trackers can independently record locations AND Quick Track observations.
+ // Database authorization remains mandatory; this is an interaction boundary,
+ // not a substitute for RLS.
+ const courtTab=document.querySelector('.focus-tabs [data-focus-view="court"]');
+ if(mode==='primary'){
+   if(courtTab)courtTab.hidden=true;
+ } else if(courtTab)courtTab.hidden=false;
+
  const deviceKey='scoridium-device-id';
  let deviceId=localStorage.getItem(deviceKey);
  if(!deviceId){deviceId=crypto.randomUUID();localStorage.setItem(deviceKey,deviceId);}
@@ -36,12 +45,12 @@
      if(!Array.isArray(data)||data.length!==1)throw new Error('Stat Tracker claim unavailable');
      permitPrimary(Boolean(data[0].is_owner));
      if(!ownsPrimary){
-       status.textContent='Primary occupied';
+       status.textContent='Stat Tracker slot occupied';
        const takeover=document.createElement('button');takeover.className='sc-takeover';takeover.type='button';takeover.textContent='Take over';
        takeover.title='Head coach only: take control from another device';
        status.append(takeover);
        takeover.addEventListener('click',async()=>{
-         if(!confirm('Force this device to become primary? Only do this after the other scorekeeper stops tracking.'))return;
+         if(!confirm('Take over official Stat Tracker duties? Only do this after the other Stat Tracker has stopped.'))return;
          const r=await supabaseClient.rpc('scoridium_takeover_primary_tracker',{p_game_id:game,p_device_id:deviceId});
          if(r.error){alert(r.error.message);return;}permitPrimary(true);status.textContent='Stat Tracker active';
        });
@@ -53,12 +62,12 @@
  }
  selector.addEventListener('change',async()=>{
    const next=selector.value;
-   if(!confirm(next==='independent'?'Independent Stat Tracker mode saves events separately for verification, without changing official scores. Switch and reload?':'Stat Tracker mode writes official game events. Only one device may own it. Switch and reload?')){
+   if(!confirm(next==='independent'?'Shot Tracker mode saves events separately for verification, without changing official scores. Switch and reload?':'Stat Tracker mode writes official game events. Only one device may own it. Switch and reload?')){
      selector.value=mode;return;
    }
    if(mode==='primary'&&ownsPrimary&&game){
      const r=await supabaseClient.rpc('scoridium_release_primary_tracker',{p_game_id:game,p_device_id:deviceId});
-     if(r.error){alert('Unable to release primary tracking: '+r.error.message);selector.value=mode;return;}
+     if(r.error){alert('Unable to release Stat Tracker slot: '+r.error.message);selector.value=mode;return;}
    }
    localStorage.setItem(id,next);window.location.reload();
  });
@@ -71,7 +80,7 @@
  document.querySelectorAll('.focus-game-actions [data-original]').forEach(b=>{
    b.disabled=true;b.title='Only the active Stat Tracker controls game status.';
  });
- status.textContent='Independent observations';
+ status.textContent='Shot Tracker observations';
  const originalAdd=window.addEvent,originalStat=window.recordStat;
  if(typeof originalAdd!=='function')return;
  let user=null,ready=false;
@@ -82,8 +91,8 @@
  async function postObservation(obs){
   if(!ready||!user){status.textContent='Local only — sign in/apply migration';return;}
   const {error}=await supabaseClient.from('tracker_event_observations').insert(obs);
-  if(error){status.textContent='Independent tracking sync failed — saved locally';console.error('Independent observer write',error);return;}
-  saved.add(obs.id);status.textContent='Independent observations synced';
+  if(error){status.textContent='Independent tracking sync failed — saved locally';console.error('Shot Tracker observation write',error);return;}
+  saved.add(obs.id);status.textContent='Shot Tracker observations synced';
  }
  function capture(ev){
   if(state.status!=='live')return;
@@ -101,9 +110,9 @@
      linkedEventId:eventId,playerId:team==='opponent'?selectedPlayerId:null});}
  };
  async function init(){
-   if(!game){status.textContent='Observer requires a selected game';return;}
+   if(!game){status.textContent='Shot Tracker requires a selected game';return;}
    const auth=await supabaseClient.auth.getUser();user=auth.data?.user||null;
-   if(!user){status.textContent='Observer not signed in';return;}
+   if(!user){status.textContent='Shot Tracker not signed in';return;}
    const {data:existing,error}=await supabaseClient.from('tracker_event_observations').select('id')
       .eq('game_id',game).eq('tracker_id',user.id).order('observed_at',{ascending:false}).limit(1000);
    if(error){status.textContent='Run collaboration SQL migration';return;}
@@ -111,7 +120,7 @@
    ready=true;
    const pending=backlog.filter(o=>!saved.has(o.id));
    for(const o of pending){o.tracker_id=user.id;await postObservation(o);}
-   if(pending.length===0)status.textContent='Independent Stat Tracker ready';
+   if(pending.length===0)status.textContent='Shot Tracker ready';
  }
  // Existing local observations may already exist remotely after a reload.
  // De-duplicate insert attempts using server IDs, never silently discard them.

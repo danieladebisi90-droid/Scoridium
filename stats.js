@@ -831,47 +831,68 @@ function renderDetails(){
   const made=shots.filter(s=>s.made).length;
   $('detail-content').innerHTML=`<div class="detail-layout"><article class="panel"><h2>FILTER SHOTS</h2><label>Team</label>${teamFilter}<label>Player</label>${playerFilter}<label>Shot Type</label>${typeFilter}<h2>SHOOTING SUMMARY</h2><div class="detail-metric"><span>Shots</span><strong>${shots.length}</strong></div><div class="detail-metric"><span>Made</span><strong>${made}</strong></div><div class="detail-metric"><span>FG%</span><strong>${fmt(pct(made,shots.length))}%</strong></div></article><article class="panel"><div class="panel-heading"><h2>SHOT CHART</h2><div><button class="inline-btn ${state.courtMode==='full'?'active':''}" data-court="full">Full Court</button> <button class="inline-btn ${state.courtMode==='half'?'active':''}" data-court="half">Half Court</button></div></div>${courtSVG(shots,state.courtMode)}<div class="shot-legend"><span class="made-marker">●</span> Made <span class="miss-marker">✕</span> Missed</div></article><article class="panel"><h2>SHOT BREAKDOWN</h2>${shootingHTML(g)}<h2 style="margin-top:20px">SHOT TYPES</h2>${[[2,'2PT'],[3,'3PT']].map(([points,label])=>{const subset=shots.filter(s=>number(s.points)===points);return `<div class="detail-metric"><span>${label}</span><strong>${subset.filter(s=>s.made).length}/${subset.length}</strong></div>`;}).join('')}</article></div>`;
 }
-let activeOpponent = '';
+let activeOpponent = 'all';
+let activeOpponentGame = 'all';
 function renderOpponents(){
-  const select=$('opponent-select'),host=$('opponent-analysis');if(!select||!host)return;
-  // `state.games` comes only from completed Supabase games in the selected season.
-  const normalize=name=>String(name||'').trim().replace(/\s+/g,' ').toLocaleLowerCase();
+  const select=$('opponent-select'),gameSelect=$('opponent-game-select'),host=$('opponent-analysis');
+  if(!select||!host)return;
+  const normalize=name=>String(name||'').trim().replace(/\s+/g,' ').toLowerCase();
+  const completed=filteredGames();
   const groups=new Map();
-  for(const game of filteredGames()){
-    const key=normalize(game.opponent);if(!key)continue;
-    if(!groups.has(key))groups.set(key,{name:game.opponent,games:[]});
-    groups.get(key).games.push(game);
+  for(const g of completed){
+    const key=normalize(g.opponent);if(!key)continue;
+    if(!groups.has(key))groups.set(key,{name:g.opponent,games:[]});
+    groups.get(key).games.push(g);
   }
-  const sorted=[...groups].sort((a,b)=>a[1].name.localeCompare(b[1].name));
-  if(!groups.has(activeOpponent))activeOpponent=sorted[0]?.[0]||'';
-  select.replaceChildren();
-  for(const [key,group] of sorted)select.add(new Option(`${group.name} (${group.games.length} games)`,key));
+  const options=[...groups].sort((a,b)=>a[1].name.localeCompare(b[1].name));
+  if(activeOpponent!=='all'&&!groups.has(activeOpponent))activeOpponent='all';
+  select.replaceChildren(new Option(`All Opponents (${completed.length} games)`,'all'));
+  for(const [key,g] of options)select.add(new Option(`${g.name} (${g.games.length})`,key));
   select.value=activeOpponent;
-  const group=groups.get(activeOpponent);
-  if(!group){host.innerHTML='<p class="muted">No completed games against opponents in this season yet.</p>';return;}
-  const games=group.games;
+  const opponentGames=activeOpponent==='all'?completed:(groups.get(activeOpponent)?.games||[]);
+  if(gameSelect){
+    if(activeOpponentGame!=='all'&&!opponentGames.some(g=>String(g.id)===activeOpponentGame))activeOpponentGame='all';
+    gameSelect.replaceChildren(new Option('All games combined','all'));
+    for(const game of [...opponentGames].sort((a,b)=>String(b.date).localeCompare(String(a.date)))){
+      gameSelect.add(new Option(`${game.date} · vs ${game.opponent} (${game.ourScore}–${game.opponentScore})`,String(game.id)));
+    }
+    gameSelect.value=activeOpponentGame;
+  }
+  const games=activeOpponentGame==='all'?opponentGames:opponentGames.filter(g=>String(g.id)===activeOpponentGame);
+  if(!games.length){host.innerHTML='<p class="muted">No completed games in this selection.</p>';return;}
   const totals=teamTotals(games);
+  const our=games.flatMap(g=>(g.shots||[]).filter(s=>s.team==='us'));
+  const opp=games.flatMap(g=>(g.shots||[]).filter(s=>s.team==='opponent'));
+  const allShots=[...our,...opp].filter(s=>Number.isFinite(Number(s.x))&&Number.isFinite(Number(s.y))&&s.x!=null&&s.y!=null);
   const wins=games.filter(g=>g.ourScore>g.opponentScore).length;
   const losses=games.filter(g=>g.ourScore<g.opponentScore).length;
-  const attempts=games.flatMap(g=>g.shots||[]).filter(sh=>sh.team==='opponent'&&sh.x!=null&&sh.y!=null);
-  const made=attempts.filter(sh=>sh.made).length;
-  const three=attempts.filter(sh=>Number(sh.points)===3);
-  const own=games.flatMap(g=>g.shots||[]).filter(sh=>sh.team==='us');
-  const avg=(n)=>fmt(n/games.length);
-  const tr=(k,a,b)=>`<tr><th>${k}</th><td>${a}</td><td>${b}</td></tr>`;
-  host.innerHTML=`<div class="opponents-summary"><div><strong>${wins}–${losses}</strong><small>Head-to-head record</small></div><div><strong>${avg(totals.pts)}</strong><small>Our points / game</small></div><div><strong>${avg(totals.allowed)}</strong><small>Opponent points / game</small></div><div><strong>${games.length}</strong><small>Meetings this season</small></div></div>
-   <h3>Head-to-head performance</h3><div class="table-scroll"><table><thead><tr><th>Metric</th><th>Our team</th><th>${escapeHTML(group.name)}</th></tr></thead><tbody>
-   ${tr('Avg points',avg(totals.pts),avg(totals.allowed))}
-   ${tr('Field goals',`${own.filter(sh=>sh.made).length}/${own.length}`,`${made}/${attempts.length}`)}
-   ${tr('FG%',`${fmt(pct(own.filter(sh=>sh.made).length,own.length))}%`,`${fmt(pct(made,attempts.length))}%`)}
-   ${tr('3PT%',`${fmt(pct(own.filter(sh=>sh.made&&Number(sh.points)===3).length,own.filter(sh=>Number(sh.points)===3).length))}%`,`${fmt(pct(three.filter(sh=>sh.made).length,three.length))}%`)}
-   ${tr('Rebounds',avg(totals.reb),'Not tracked at player level')}
-   ${tr('Assists',avg(totals.ast),'Not tracked at player level')}
-   ${tr('Turnovers',avg(totals.tov),'See game records')}
+  const fmtAvg=n=>games.length?(n/games.length).toFixed(1):'—';
+  const tr=(label,ours,theirs)=>`<tr><th>${label}</th><td>${ours}</td><td>${theirs}</td></tr>`;
+  const percent=s=>s.length?`${(100*s.filter(x=>x.made).length/s.length).toFixed(1)}%`:'—';
+  const scoped=activeOpponent==='all'?'All opponents':groups.get(activeOpponent)?.name||'Opponent';
+  host.innerHTML=`<div class="opponents-summary">
+   <div><strong>${wins}–${losses}</strong><small>Wins / Losses</small></div>
+   <div><strong>${games.length}</strong><small>Completed games</small></div>
+   <div><strong>${fmtAvg(totals.pts)}</strong><small>Our PPG</small></div>
+   <div><strong>${fmtAvg(totals.allowed)}</strong><small>Opponent PPG</small></div></div>
+   <h3>${escapeHTML(scoped)} · ${activeOpponentGame==='all'?'Combined games':'Single game'}</h3>
+   <div class="table-scroll"><table><thead><tr><th>Statistic</th><th>Our team</th><th>Opponent</th></tr></thead><tbody>
+   ${tr('Field goals',`${our.filter(x=>x.made).length}/${our.length}`,`${opp.filter(x=>x.made).length}/${opp.length}`)}
+   ${tr('FG%',percent(our),percent(opp))}
+   ${tr('3PT%',percent(our.filter(x=>Number(x.points)===3)),percent(opp.filter(x=>Number(x.points)===3)))}
+   ${tr('Our rebounds',fmtAvg(totals.reb),'Only when recorded')}
+   ${tr('Our assists',fmtAvg(totals.ast),'Only when recorded')}
+   ${tr('Our turnovers',fmtAvg(totals.tov),'Only when recorded')}
    </tbody></table></div>
-   <h3>Opponent shot locations</h3>${attempts.length?courtSVG(attempts,'full'):'<p class="muted">No opponent shot locations recorded for these meetings.</p>'}
-   <h3>Previous meetings</h3><div class="table-scroll"><table><thead><tr><th>Date</th><th>Result</th><th>Our score</th><th>Opponent score</th></tr></thead><tbody>${games.map(g=>`<tr><td>${escapeHTML(g.date)}</td><td>${g.ourScore>g.opponentScore?'W':g.ourScore<g.opponentScore?'L':'T'}</td><td>${g.ourScore}</td><td>${g.opponentScore}</td></tr>`).join('')}</tbody></table></div>
-   <p class="muted">Comparisons only include available recorded data; incomplete opponent tracking does not imply zero attempts or events.</p>`;
+   <h3>Shot locations & shooting zones</h3>
+   <div class="opponent-courts-row">
+    <section><h4>Full Court</h4>${allShots.length?courtSVG(allShots,'full'):'<p class="muted">No shot locations available.</p>'}</section>
+    <section><h4>Offensive Zones</h4>${buildZoneCourt(opp,'offence')}</section>
+    <section><h4>Defensive Zones</h4>${buildZoneCourt(our,'defence')}</section>
+   </div>
+   <p class="muted">Offensive zones = selected opponents shooting; defensive zones = our team's shooting against them. Zones use only recorded attempts. Missing stats are not zeros.</p>
+   <h3>Games in selection</h3><div class="table-scroll"><table><thead><tr><th>Date</th><th>Opponent</th><th>Our score</th><th>Opponent score</th></tr></thead><tbody>
+   ${games.map(g=>`<tr><td>${escapeHTML(g.date)}</td><td>${escapeHTML(g.opponent)}</td><td>${g.ourScore}</td><td>${g.opponentScore}</td></tr>`).join('')}</tbody></table></div>`;
 }
 function render(){if(state.view==='team')renderTeam();if(state.view==='players')renderPlayerTable();if(state.view==='games')renderGames();if(state.view==='details')renderDetails();if(state.view==='opponents')renderOpponents();}
 
@@ -1234,7 +1255,8 @@ function renderTeamShotProfile() {
 function init(){
   fillGameOptions('player-game-filter');fillGameOptions('shot-game-filter');
   document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
-  $('opponent-select')?.addEventListener('change',e=>{activeOpponent=e.target.value;renderOpponents();});
+  $('opponent-select')?.addEventListener('change',e=>{activeOpponent=e.target.value;activeOpponentGame='all';renderOpponents();});
+  $('opponent-game-select')?.addEventListener('change',e=>{activeOpponentGame=e.target.value;renderOpponents();});
   $('player-game-filter').addEventListener('change',e=>{state.playerGame=e.target.value;renderPlayerTable();});
   $('player-unit-filter').addEventListener('change',e=>{state.unit=e.target.value;renderPlayerTable();});
   $('player-search').addEventListener('input',e=>{state.search=e.target.value;renderPlayerTable();});

@@ -30,6 +30,10 @@
     <link rel="stylesheet" href="stats.css">
   <link rel="stylesheet" href="navigation-smooth.css">
   <link rel="stylesheet" href="universal-ui.css?v=1">
+<link rel="stylesheet" href="revision43.css?v=2">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
 </head>
 <body>
   <div id="shared-header"><header id="app-header"><nav id="main-navigation" aria-label="Main navigation">
@@ -195,8 +199,8 @@
     <section id="opponents-view" class="view" aria-label="Opponent statistics">
       <article class="panel" style="max-width:1100px;margin:auto">
         <div class="panel-heading"><h2>OPPONENT SCOUTING</h2><span class="muted">Completed games · Selected season</span></div>
-        <label for="opponent-select">Opponent</label>
-        <select id="opponent-select" style="width:100%;max-width:460px;padding:10px;border-radius:8px;margin:10px 0"></select>
+        <div class="opponent-filter-row"><label for="opponent-select">Opponent</label>
+        <select id="opponent-select" aria-label="Select opponent"></select><label for="opponent-game-select">Games</label><select id="opponent-game-select" aria-label="All games or individual game"><option value="all">All games combined</option></select></div>
         <div id="opponent-analysis"></div>
       </article>
     </section>

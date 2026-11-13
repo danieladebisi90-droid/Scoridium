@@ -91,7 +91,7 @@
   const stage=document.querySelector('.focus-stage');
   const courtPanel=byId('tracker-controls');
   const courtSection=document.createElement('section');courtSection.className='focus-court sc-court-workspace';
-  courtSection.innerHTML=`<div class="sc-court-head"><div><h2>SHOT LOCATIONS</h2><p>FIBA court · independent tracking</p></div><span id="sc-court-sync" role="status">Preparing…</span></div>
+  courtSection.innerHTML=`<div class="sc-court-head"><div><h2>SHOT LOCATIONS</h2><p>FIBA court · shot observation tracking</p></div><span id="sc-court-sync" role="status">Preparing…</span></div>
     <div class="sc-court-main">
       <aside class="sc-shot-sidebar">
         <div class="sc-court-modes" role="group" aria-label="Half-court shooting team"><button type="button" id="sc-offense" class="active">OFFENSE</button><button type="button" id="sc-defense">DEFENSE</button></div>
@@ -265,21 +265,29 @@
   }
   function paintObservationMarkers(){
     const markers=byId('shot-markers');if(!markers)return;
-    markers.querySelectorAll('.sc-provisional-marker').forEach(e=>e.remove());
+    // Retain/update existing provisional marker nodes to avoid full SVG churn.
+    const existing=new Map([...markers.querySelectorAll('.sc-provisional-marker')]
+      .map(node=>[node.dataset.observationId,node]));
+    const liveIds=new Set();
     const ids=new Set();
     for(const obs of observations){
       if(obs.retracted_at||obs.kind!=='shot'||obs.matched_event_id||obs.x==null||obs.y==null||Number(obs.period)!==Number(state.period))continue;
       if(ids.has(obs.id))continue;ids.add(obs.id);
       const position=courtToDisplay(Number(obs.x),Number(obs.y));if(!position)continue;
-      const node=document.createElementNS('http://www.w3.org/2000/svg','circle');
+      liveIds.add(obs.id);
+      const node=existing.get(obs.id)||document.createElementNS('http://www.w3.org/2000/svg','circle');
+      node.dataset.observationId=obs.id;
       node.setAttribute('cx',position.x);node.setAttribute('cy',position.y);node.setAttribute('r','7');
       node.setAttribute('stroke',obs.made?'#047d3b':'#c82e37');node.setAttribute('stroke-width','3');
       node.setAttribute('stroke-dasharray','3 2');node.setAttribute('fill','none');
       node.setAttribute('pointer-events','none');node.setAttribute('class','sc-provisional-marker');
-      markers.append(node);
+      if(!node.isConnected)markers.append(node);
     }
+    for(const [id,node] of existing)if(!liveIds.has(id))node.remove();
   }
   svg.addEventListener('click',e=>{
+    const role=localStorage.getItem(`scoridium-independent-role:${gameId||'demo'}`);
+    if(role!=='independent')return;
     if(document.querySelector('.tracker-shell')?.dataset.focusView!=='court')return;
     e.stopImmediatePropagation();e.preventDefault();
     const point=getCourtPoint(e);if(!point)return;

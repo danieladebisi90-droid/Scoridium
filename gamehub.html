@@ -26,6 +26,10 @@
     <link rel="stylesheet" href="tournaments.css">
   <link rel="stylesheet" href="navigation-smooth.css">
   <link rel="stylesheet" href="universal-ui.css?v=1">
+<link rel="stylesheet" href="revision43.css?v=2">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
 </head>
 
 <body>
@@ -96,8 +100,8 @@
                     </section>
                     <div class="games-list" id="gamehub-context-container">
                         <div class="games-list-header">
-                            <h2 id="context-panel-heading">OPPONENT HEAD-TO-HEAD</h2>
-                            <button type="button" id="add-tournament" class="manage-schedule-btn" hidden>Add Tournament</button>
+                            <h2 id="context-panel-heading"></h2>
+                            <button type="button" id="add-tournament" hidden aria-hidden="true" tabindex="-1">Add Tournament</button>
                         </div>
                         <div id="gamehub-dynamic-context" class="gamehub-dynamic-context" aria-live="polite">
                             <p class="context-muted">Select a game or tournament date on the calendar.</p>
@@ -197,17 +201,6 @@
             </section>
         </main>
 
-<!-- Tournament forms are separate from game scheduling and may start with zero games. -->
-<div id="tournament-editor" class="tournament-backdrop" hidden>
-  <form id="tournament-form" class="tournament-dialog" aria-label="Create tournament">
-    <div class="tournament-dialog-head"><h2>Create Tournament</h2><button type="button" id="tournament-cancel" aria-label="Close">×</button></div>
-    <label for="tournament-name">Name (optional)</label><input id="tournament-name" maxlength="120" placeholder="Tournament">
-    <div class="tournament-dates"><label>Start date<input id="tournament-start" type="date" required></label><label>End date<input id="tournament-end" type="date" required></label></div>
-    <p class="context-muted">You can add games and results later. No opponent or bracket is required.</p>
-    <p id="tournament-form-status" role="status"></p>
-    <div class="tournament-dialog-actions"><button type="button" id="tournament-dismiss">Cancel</button><button type="submit">Create Tournament</button></div>
-  </form>
-</div>
 <!-- MANAGE SCHEDULE MODAL -->
 <div id="schedule-modal" class="schedule-modal" hidden>
     <div class="schedule-modal-backdrop"></div>
@@ -385,32 +378,7 @@
 
 </div>
 
-<!-- GAME-SPECIFIC FIELDS -->
-<div id="schedule-game-fields" hidden>
-
-    <label for="schedule-game-location">
-        Home or Away
-    </label>
-
-    <select id="schedule-game-location">
-        <option value="home">Home Game</option>
-        <option value="away">Away Game</option>
-    </select>
-
-    <label for="schedule-game-venue">
-        Venue / Gymnasium
-    </label>
-
-    <input
-        type="text"
-        id="schedule-game-venue"
-        placeholder="Enter gym or arena"
-    >
-
-</div>
-
-
-    <!-- FORM MESSAGE -->
+<!-- FORM MESSAGE -->
     <p id="schedule-form-message" role="status"></p>
 
     <!-- ACTION BUTTONS -->
@@ -430,6 +398,20 @@
     </div>
 
 </form>
+<!-- Tournament forms are separate from game scheduling and may start with zero games. -->
+<div id="tournament-editor" class="tournament-backdrop schedule-embedded-tournament" hidden>
+  <form id="tournament-form" class="tournament-dialog" aria-label="Create tournament">
+    <div class="tournament-dialog-head"><h2>Create Tournament</h2><button type="button" id="tournament-cancel" aria-label="Close">×</button></div>
+    <label for="tournament-name">Name (optional)</label><input id="tournament-name" maxlength="120" placeholder="Tournament">
+    <div class="tournament-dates"><label>Start date<input id="tournament-start" type="date" required></label><label>End date<input id="tournament-end" type="date" required></label></div>
+    <button type="button" id="tournament-plan-game">+ Add Tournament Game</button>
+    <div id="tournament-planned-games" role="status"></div>
+    <p class="context-muted">You can add games and results later. No opponent or bracket is required.</p>
+    <p id="tournament-form-status" role="status"></p>
+    <div class="tournament-dialog-actions"><button type="button" id="tournament-dismiss">Cancel</button><button type="submit">Create Tournament</button></div>
+  </form>
+</div>
+
 
     </section>
 </div>

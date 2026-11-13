@@ -99,10 +99,16 @@
       renderTournament(root,tournament);
       return;
     }
-    if(h) h.textContent='OPPONENT HEAD-TO-HEAD';
+    if(h) h.textContent='';
     const games = typeof gameHubGames !== 'undefined' ? gameHubGames : [];
     const onDate=games.filter(g => String(g.date).slice(0,10)===key);
-    if(!key){root.append(muted('Select a game or tournament date to see its details.'));return;}
+    if(!key){
+      const latest=games.filter(g=>g.status==='completed')
+        .sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')))[0];
+      if(latest){root.append(el('h3','',`vs. ${latest.opponent||'TBD'}`));renderHeadToHead(root,latest);}
+      else root.append(muted('No completed games this season yet.'));
+      return;
+    }
     if(!onDate.length){root.append(muted('No game scheduled on this date.'));return;}
     // Select a game on this date without affecting the immutable Next Game card.
     const game=onDate[0];
@@ -163,23 +169,21 @@
       const playersResponse=await supabaseClient.from('players').select('id,first_name,last_name,number').eq('team_id',teamId);
       const roster=new Map((playersResponse.data||[]).map(p=>[String(p.id),`${p.first_name||''} ${p.last_name||''}`.trim()||`#${p.number||'?'}`]));
       if(requestId!==headToHeadRequest)return;
-      const fresh={events,roster};statCache.set(cacheKey,fresh);
+      const fresh={events,roster,scoreHome:games.reduce((n,g)=>n+Number(g.team_score||0),0),scoreAway:games.reduce((n,g)=>n+Number(g.opponent_score||0),0),wins:games.filter(g=>Number(g.team_score)>Number(g.opponent_score)).length,losses:games.filter(g=>Number(g.team_score)<Number(g.opponent_score)).length};statCache.set(cacheKey,fresh);
       displayHeadToHeadStats(container,fresh);
     } catch(e){container.replaceChildren(muted('Detailed event data is unavailable: '+e.message));}
   }
-  function displayHeadToHeadStats(container,{events,roster}){
+  function displayHeadToHeadStats(container,{events,roster,wins=0,losses=0,scoreHome=0,scoreAway=0}){
     container.replaceChildren();
-    if(!events.length){container.append(muted('No recorded event statistics for these meetings.'));return;}
+    // Final scores are sourced from the game records even if event details are incomplete.
     const makeTotals=()=>({pts:0,fgm:0,fga:0,threeM:0,threeA:0,ftm:0,fta:0,reb:0,ast:0,to:0,stl:0,blk:0,pf:0});
-    const home=makeTotals(),op=makeTotals(),players=new Map();
+    const home=makeTotals(),op=makeTotals();
     for(const e of events){
       const side=String(e.team||'').toLowerCase();
       const ours=['us','our','ours'].includes(side);
       const total=ours?home:op;
       const type=String(e.type||'').toLowerCase();
-      const person=ours&&e.player_id!=null?String(e.player_id):null;
-      if(person&&!players.has(person))players.set(person,makeTotals());
-      const targets=person?[total,players.get(person)]:[total];
+      const targets=[total];
       for(const t of targets){
         if(type==='shot'){
           t.fga++;if(Number(e.points)===3)t.threeA++;
@@ -195,24 +199,25 @@
       }
     }
     const pct=(m,a)=>a?`${(m/a*100).toFixed(1)}%`:'—';
-    const stats=[['Points',home.pts,op.pts],['FG',`${home.fgm}/${home.fga}`,`${op.fgm}/${op.fga}`],
-      ['FG%',pct(home.fgm,home.fga),pct(op.fgm,op.fga)],['3PT',`${home.threeM}/${home.threeA}`,`${op.threeM}/${op.threeA}`],
-      ['3PT%',pct(home.threeM,home.threeA),pct(op.threeM,op.threeA)],['FT',`${home.ftm}/${home.fta}`,`${op.ftm}/${op.fta}`],
-      ['FT%',pct(home.ftm,home.fta),pct(op.ftm,op.fta)],['Rebounds',home.reb,op.reb],
-      ['Assists',home.ast,op.ast],['Turnovers',home.to,op.to],['Steals',home.stl,op.stl],['Blocks',home.blk,op.blk],['Fouls',home.pf,op.pf]];
-    const table=el('table','h2h-detail-table');const head=el('tr');
-    for(const x of ['Statistic','Our team','Opponent'])head.append(el('th','',x));table.append(head);
-    for(const [name,a,b] of stats){const tr=el('tr');for(const v of [name,a,b])tr.append(el('td','',v));table.append(tr);}
-    container.append(el('h4','','Team statistics across previous meetings'),table);
-    if(players.size){
-      const playerTable=el('table','h2h-detail-table'),headRow=el('tr');
-      for(const name of ['Player','PTS','REB','AST','FGM/FGA'])headRow.append(el('th','',name));playerTable.append(headRow);
-      for(const [id,s] of [...players.entries()].sort((a,b)=>b[1].pts-a[1].pts)){
-        const tr=el('tr');for(const v of [roster.get(id)||'Unassigned',s.pts,s.reb,s.ast,`${s.fgm}/${s.fga}`])tr.append(el('td','',v));playerTable.append(tr);
+    const stats=[['Wins',wins,losses],
+      ['Total Points',scoreHome,scoreAway],['Rebounds',home.reb,op.reb],['Assists',home.ast,op.ast],
+      ['Steals',home.stl,op.stl],['Blocks',home.blk,op.blk],['Turnovers',home.to,op.to],['Fouls',home.pf,op.pf]];
+    const bars=el('div','sc-h2h-bars');
+    for(const [name,a,b] of stats){
+      const maximum=Math.max(a,b,1);
+      const item=el('div','sc-h2h-metric');
+      const header=el('div','sc-h2h-values');
+      header.append(el('strong','',a),el('span','',name),el('strong','',b));
+      const track=el('div','sc-h2h-track');
+      for(const [value,klass] of [[a,'home'],[b,'away']]){
+        const half=el('div','sc-h2h-half '+klass),fill=el('span','sc-h2h-fill');
+        fill.style.width=`${100*value/maximum}%`;half.append(fill);track.append(half);
       }
-      container.append(el('h4','','Player statistics'),playerTable);
+      item.append(header,track);bars.append(item);
     }
-    container.append(muted('Statistics reflect recorded events only; missing opponent/player events are not inferred.'));
+    container.append(bars);
+    if(!events.length)container.append(muted('Additional statistics are unavailable for these games. The points and record above come from final scores.'));
+    else container.append(muted('Other statistics reflect recorded events only; missing opponent events are not inferred.'));
   }
   function renderTournament(root,tournament) {
     selectedTournament=tournament;
@@ -325,6 +330,14 @@
     start.addEventListener('change',()=>{end.min=start.value;if(end.value<start.value)end.value=start.value;});
     for(const id of ['tournament-cancel','tournament-dismiss'])document.getElementById(id)?.addEventListener('click',close);
     backdrop.addEventListener('click',e=>{if(e.target===backdrop)close();});
+    // Optional planning placeholders in the editor. A tournament may be created
+    // without any matches. Persist planned TBD matches after the tournament insert.
+    const planned=[];
+    document.getElementById('tournament-plan-game')?.addEventListener('click',()=>{
+      planned.push({team_a:'Our team',team_b:'TBD',result_status:'unconfirmed'});
+      document.getElementById('tournament-planned-games').textContent=`${planned.length} planned game(s) · Opponent TBD`;
+    });
+
     form.addEventListener('submit',async e=>{
       e.preventDefault();
       const team=sessionStorage.getItem('selectedTeamId'),season=sessionStorage.getItem('selectedSeasonId');
@@ -332,10 +345,16 @@
       if(!uid||!team||!season){status.textContent='Sign in and select a team and season.';return;}
       if(!start.value||!end.value||end.value<start.value){status.textContent='Choose a valid start and end date.';return;}
       const raw=document.getElementById('tournament-name').value.trim();
-      const {error}=await supabaseClient.from('scoridium_tournaments').insert({team_id:team,season_id:season,
-        name:raw||'Tournament',starts_on:start.value,ends_on:end.value,created_by:uid});
+      const {data:created,error}=await supabaseClient.from('scoridium_tournaments').insert({team_id:team,season_id:season,
+        name:raw||'Tournament',starts_on:start.value,ends_on:end.value,created_by:uid}).select('id').single();
       if(error){status.textContent=error.message;return;}
-      close();await reload();
+      if(planned.length){
+        const entries=planned.map(m=>({...m,tournament_id:created.id,updated_by:uid}));
+        const result=await supabaseClient.from('scoridium_tournament_matches').insert(entries);
+        if(result.error){status.textContent='Tournament created; could not add planned games: '+result.error.message;await reload();return;}
+      }
+      planned.length=0;document.getElementById('tournament-planned-games').textContent='';
+      close();document.getElementById('schedule-modal').hidden=true;await reload();
     });
   }
   document.addEventListener('DOMContentLoaded',configureCreate);

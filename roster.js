@@ -154,7 +154,7 @@ function jerseySVG(player) {
     grid.replaceChildren();
     grid.style.setProperty('--grid-columns', columnsFor(filtered.length));
     $('player-count').textContent = shownPlayers.length;
-    $('active-count').textContent = shownPlayers.filter(p => p.active !== false && p.status !== 'inactive').length;
+
     $('roster-summary').textContent = `${shownPlayers.length} player${shownPlayers.length === 1 ? '' : 's'} on the roster`;
     if (!filtered.length) {
       setStatus(shownPlayers.length ? 'No players match your search.' : 'No players on this roster yet.');

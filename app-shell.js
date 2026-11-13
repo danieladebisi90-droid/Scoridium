@@ -2,7 +2,7 @@
    The iframe intentionally isolates existing page JS/CSS to prevent breakage. */
 (() => {
   'use strict';
-  const allowed=new Set(['dashboard.html','gamehub.html','roster.html','stats.html','player.html','game.html']);
+  const allowed=new Set(['dashboard.html','gamehub.html','roster.html','stats.html','player.html','game.html','watch-game.html']);
   const home='dashboard.html';
   const frame=document.getElementById('page-frame');
   const container=document.getElementById('shell-main');

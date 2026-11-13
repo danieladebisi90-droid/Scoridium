@@ -249,6 +249,7 @@ async function loadGameHubGames() {
     gameHubGames = games;
     displayPreviousGame(games);
     displayNextGame(games);
+    void showLiveGameHubAccess(games);
     renderGameCalendar();
     console.log("Game Hub games:", games);
     displayGameHubGames(games);
@@ -720,6 +721,44 @@ function renderPreviousGameLeaders(events, players) {
 }
 
 
+// Check game-specific or season-scoped tracking grants before showing edit entry points.
+// This only selects the link label; Supabase RLS must still enforce all writes.
+const scTrackingGrants=new Map();
+async function scMayTrack(game){
+  const key=String(game.id);if(scTrackingGrants.has(key))return scTrackingGrants.get(key);
+  const promise=(async()=>{
+    try{
+      const user=(await supabaseClient.auth.getUser()).data.user;if(!user)return false;
+      const team=sessionStorage.getItem('selectedTeamId');
+      const [membership,permission]=await Promise.all([
+        supabaseClient.from('team_members').select('role').eq('team_id',team).eq('user_id',user.id),
+        supabaseClient.from('game_tracking_permissions').select('game_id,season_id').eq('user_id',user.id)
+      ]);
+      const coach=(membership.data||[]).some(x=>['head_coach','coach','assistant_coach','manager'].includes(x.role));
+      return coach||(permission.data||[]).some(x=>x.game_id===game.id||Boolean(x.season_id&&x.season_id===game.seasons_id));
+    }catch(e){return false;}
+  })();
+  scTrackingGrants.set(key,promise);return promise;
+}
+
+async function showLiveGameHubAccess(games){
+  let banner=document.getElementById('sc-live-game-room');
+  const live=(games||[]).filter(g=>g.status==='live')
+    .sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')))[0];
+  if(!live){banner?.remove();return;}
+  if(!banner){
+    banner=document.createElement('section');banner.id='sc-live-game-room';
+    banner.className='sc-live-game-room';banner.setAttribute('aria-label','Live game');
+    document.querySelector('.next-game')?.before(banner);
+  }
+  banner.replaceChildren();
+  const title=document.createElement('strong');title.textContent=`LIVE · ${gameHubTeamName} vs ${live.opponent||'Opponent'}`;
+  const score=document.createElement('span');score.textContent=`${live.team_score??0} — ${live.opponent_score??0}`;
+  const action=document.createElement('a');action.href=`watch-game.html?gameId=${encodeURIComponent(live.id)}`;action.textContent='View Game';
+  banner.append(title,score,action);
+  if(await scMayTrack(live)){action.textContent='Resume Tracking';action.href=`game.html?gameId=${encodeURIComponent(live.id)}`;}
+}
+
 function displayNextGame(games) {
     const today = new Date();
     const todayKey = [
@@ -740,12 +779,13 @@ function displayNextGame(games) {
 
     openGameButton.disabled = !nextGame;
 
-    openGameButton.onclick = function () {
-        if (!nextGame) return;
-
-        window.location.href =
-            `game.html?gameId=${encodeURIComponent(nextGame.id)}`;
-    };
+    openGameButton.textContent=nextGame?'View Game':'No Game';
+    openGameButton.onclick=()=>{if(nextGame)location.href=`watch-game.html?gameId=${encodeURIComponent(nextGame.id)}`;};
+    if(nextGame)void scMayTrack(nextGame).then(canTrack=>{
+      if(!openGameButton.isConnected)return;
+      openGameButton.textContent=canTrack?'Open Game Tracker':'View Game';
+      openGameButton.onclick=()=>location.href=`${canTrack?'game':'watch-game'}.html?gameId=${encodeURIComponent(nextGame.id)}`;
+    });
 
     if (!nextGame) {
         document.getElementById("next-game-date").textContent =
@@ -1794,12 +1834,22 @@ function updateScheduleLayout() {
     const gameVenue =
         document.getElementById("schedule-game-venue");
 
-    if (isTournament) {
-        const tournamentButton = document.getElementById('add-tournament');
-        if (tournamentButton && !tournamentButton.hidden) tournamentButton.click();
-        eventTypeSelect.value = 'practice';
-        return updateScheduleLayout();
+    const form=document.getElementById('schedule-event-form');
+    const tournamentForm=document.getElementById('tournament-editor');
+    form?.classList.toggle('tournament-selected',isTournament);
+    if(tournamentForm){
+      tournamentForm.hidden=!isTournament;
+      if(isTournament){
+        const chosen=document.getElementById('schedule-event-date')?.value;
+        const start=document.getElementById('tournament-start');
+        const end=document.getElementById('tournament-end');
+        if(start&&!start.value)start.value=chosen||new Date().toISOString().slice(0,10);
+        if(end&&!end.value)end.value=start?.value||'';
+      }
     }
+    // Tournament date range editor sits inside Manage Schedule; the ordinary
+    // game/practice form fields are hidden but its event type picker remains.
+    if(isTournament)return;
     opponentField.hidden = !isGame;
     opponentInput.required = isGame;
 
@@ -2167,12 +2217,17 @@ function renderMobileGameCard() {
             ? `FINAL · ${game.team_score} – ${game.opponent_score}` : 'FINAL')
         : `${String(game.location || 'Location TBD').toUpperCase()} · ${game.status === 'scheduled' ? 'UPCOMING' : game.status.toUpperCase()}`) : '';
     action.disabled = !game;
-    action.textContent = completed ? 'VIEW BOX SCORE' : 'OPEN GAME TRACKER';
+    action.textContent = completed ? 'VIEW BOX SCORE' : 'VIEW GAME';
     action.onclick = () => {
         if (!game) return;
         const destination = completed
             ? `stats.html?gameId=${encodeURIComponent(game.id)}`
-            : `game.html?gameId=${encodeURIComponent(game.id)}`;
+            : `watch-game.html?gameId=${encodeURIComponent(game.id)}`;
         window.location.href = destination;
     };
+    if(game&&!completed)void scMayTrack(game).then(canTrack=>{
+      if(!action.isConnected)return;
+      action.textContent=canTrack?'OPEN GAME TRACKER':'VIEW GAME';
+      action.onclick=()=>location.href=`${canTrack?'game':'watch-game'}.html?gameId=${encodeURIComponent(game.id)}`;
+    });
 }

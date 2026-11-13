@@ -53,6 +53,19 @@ if (gamesError) {
 
     const record = calculateTeamRecord(teamGames)
     displayRecentGames(teamGames);
+    showDashboardLiveGame(teamGames);
+    // Only poll the small active-game record while the dashboard is visible.
+    // This does not reload the roster or the entire page.
+    if(!window.__scoridiumLiveScoreRefresh){
+      window.__scoridiumLiveScoreRefresh=setInterval(async()=>{
+        if(document.hidden)return;
+        const {data,error}=await supabaseClient.from('games')
+          .select('id,opponent,team_score,opponent_score,status,date')
+          .eq('team_id',selectedTeamId).eq('status','live').limit(5);
+        if(!error)showDashboardLiveGame(data||[]);
+      },7000);
+    }
+
     
     document.getElementById("team-record-value").textContent = record.wins + " - "+ record.losses
     console.log(record)
@@ -220,6 +233,43 @@ function displayRecentGames(games) {
             dashboardRecentObserver.observe(panel);
         }
     }
+}
+
+// Live games take priority over completed games on the dashboard.
+// Read-only page deliberately has no event-writing controls.
+function showDashboardLiveGame(games){
+  const live=[...(games||[])].filter(g=>g.status==='live')
+    .sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')))[0];
+  if(!live){
+    document.getElementById('dashboard-recent-heading')?.replaceChildren('Recent Games');
+    const action=document.getElementById('dashboard-games-action');
+    if(action){action.textContent='View All Games';action.onclick=()=>location.href='gamehub.html';}
+    const panel=document.querySelector('.recent-games');
+    const table=panel?.querySelector('.games-table');if(table)table.hidden=false;
+    panel?.querySelector('.dashboard-live-score')?.remove();
+    return;
+  }
+  const heading=document.getElementById('dashboard-recent-heading');
+  const button=document.getElementById('dashboard-games-action');
+  const panel=document.querySelector('.recent-games');
+  if(heading)heading.textContent='LIVE GAME';
+  if(button){button.textContent='View Game';button.onclick=()=>location.href=`watch-game.html?gameId=${encodeURIComponent(live.id)}`;}
+  const table=panel?.querySelector('.games-table');
+  if(table){
+    table.hidden=true;
+    let score=panel.querySelector('.dashboard-live-score');
+    if(!score){score=document.createElement('a');score.className='dashboard-live-score';panel.append(score);}
+    score.href=`watch-game.html?gameId=${encodeURIComponent(live.id)}`;
+    score.textContent=`${(live.team_score??0)} — ${(live.opponent_score??0)} · ${live.opponent||'Opponent'} · LIVE`;
+  }
+  const mobile=document.querySelector('.mobile-dashboard-next-event');
+  if(mobile){
+    mobile.setAttribute('aria-label','Live game score');
+    mobile.querySelector('.mobile-dashboard-eyebrow').textContent='LIVE GAME';
+    mobile.querySelector('h2').textContent=`${live.team_score??0} — ${live.opponent_score??0}`;
+    mobile.querySelector('p:not(.mobile-dashboard-eyebrow)').textContent=live.opponent||'Opponent';
+    const link=mobile.querySelector('a');if(link){link.textContent='View Game ›';link.href=`watch-game.html?gameId=${encodeURIComponent(live.id)}`;}
+  }
 }
 
 function calculateAverage(statTotal, gamesPlayed){

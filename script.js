@@ -1167,6 +1167,7 @@ function totalAt(index) { return scores(state.events.slice(0, index + 1)); }
 function renderScoreboard() {
   const total = scores();
   const isHome = currentGame?.location?.toLowerCase() !== "away";
+  document.querySelector('.scoreboard')?.setAttribute('data-tracked-side',isHome?'home':'away');
   $("home-name").textContent = isHome ? teamName : currentGame?.opponent || "OPPONENT";
   $("away-name").textContent = isHome ? currentGame?.opponent || "OPPONENT" : teamName;
   $("home-score").textContent = isHome ? total.us : total.opponent;

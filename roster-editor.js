@@ -31,16 +31,24 @@
     $('roster-edit-archive').hidden=!player;
     $('roster-edit-status').textContent='';dialog.showModal();
   }
-  function addEditControls(){
+  // One management panel; never decorate individual player jerseys with edit controls.
+  let manager=null;
+  function openManager(){
     if(!canEdit)return;
-    const links=Array.from(document.querySelectorAll('#jersey-grid .jersey-card'));
-    links.forEach((link,i)=>{
-      const pid=new URL(link.href).searchParams.get('playerId');const p=roster.find(row=>String(row.id)===String(pid));if(!p||link.nextElementSibling?.classList.contains('roster-edit-trigger'))return;
-      const b=document.createElement('button');b.type='button';b.className='roster-edit-trigger';b.textContent='Edit';b.setAttribute('aria-label',`Edit ${p.first_name||''} ${p.last_name||''}`);
-      b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();openEditor(p);});link.after(b);
+    if(manager){manager.remove();manager=null;return;}
+    manager=document.createElement('section');manager.className='roster-manager-list';
+    manager.setAttribute('aria-label','Edit roster player list');
+    const heading=document.createElement('h3');heading.textContent='Manage Players';manager.append(heading);
+    [...roster].sort((a,b)=>Number(a.number??999)-Number(b.number??999)).forEach(player=>{
+      const b=document.createElement('button');b.type='button';
+      b.textContent=`#${player.number??'—'} · ${player.first_name||''} ${player.last_name||''}`;
+      b.addEventListener('click',()=>openEditor(player));manager.append(b);
     });
+    const add=document.createElement('button');add.type='button';add.className='roster-add-player';add.textContent='+ Add Player';
+    add.addEventListener('click',()=>openEditor(null));manager.append(add);
+    btn.closest('.roster-toolbar')?.after(manager);
   }
-  btn.addEventListener('click',()=>openEditor(null));
+  btn.addEventListener('click',openManager);
   $('roster-edit-cancel').addEventListener('click',()=>dialog.close());
   async function submit(action){
     if(!canEdit||!teamId)return;
@@ -57,6 +65,6 @@
   }
   $('roster-player-form').addEventListener('submit',e=>{e.preventDefault();void submit('save');});
   $('roster-edit-archive').addEventListener('click',()=>{if(confirm('Remove this player from the active roster? Historical game stats will remain.'))void submit('archive');});
-  document.addEventListener('scoridium-roster-loaded',async e=>{teamId=e.detail.teamId;roster=e.detail.players||[];await Promise.all([permissions(),loadStaff()]);addEditControls();});
-  document.addEventListener('scoridium-roster-rendered',()=>{document.querySelectorAll('.roster-edit-trigger').forEach(b=>b.remove());addEditControls();});
+  document.addEventListener('scoridium-roster-loaded',async e=>{teamId=e.detail.teamId;roster=e.detail.players||[];await Promise.all([permissions(),loadStaff()]);});
+
 })();
