@@ -25,6 +25,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="modal-safety.css">
+<script src="modal-safety.js" defer></script>
+<link rel="stylesheet" href="major-update.css">
+<link rel="stylesheet" href="revision44.css?v=1">
+<script src="sc-date-display.js" defer></script>
 </head>
 <body>
   <!-- Your shared pageLayout.html header can be inserted into this element. -->
@@ -39,7 +44,6 @@
 </script></div>
   <main class="roster-page" id="roster-page">
     <section class="team-banner" aria-label="Current team">
-      <div class="team-emblem" id="team-emblem" aria-hidden="true"></div>
       <div class="team-title">
         <h2 id="team-name"></h2>
         
@@ -84,6 +88,7 @@
         <label>First name<input id="roster-edit-first" required maxlength="100" autocomplete="off"></label>
         <label>Last name<input id="roster-edit-last" required maxlength="100" autocomplete="off"></label>
         <label>Jersey number<input id="roster-edit-number" type="number" min="0" max="999" required></label>
+        <label>Grade (high school)<select id="roster-edit-grade"><option value="">Not set</option><option value="9">9 — Freshman</option><option value="10">10 — Sophomore</option><option value="11">11 — Junior</option><option value="12">12 — Senior</option></select></label>
         <p id="roster-edit-status" role="status"></p>
         <div class="roster-edit-actions"><button type="button" id="roster-edit-cancel">Cancel</button><button id="roster-edit-save" type="submit">Save Player</button><button id="roster-edit-archive" type="button" hidden>Remove from roster</button></div>
       </form>

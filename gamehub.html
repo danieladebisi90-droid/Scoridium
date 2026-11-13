@@ -30,6 +30,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="modal-safety.css">
+<script src="modal-safety.js" defer></script>
+<link rel="stylesheet" href="major-update.css">
+<link rel="stylesheet" href="revision44.css?v=1">
+<script src="sc-date-display.js" defer></script>
 </head>
 
 <body>
@@ -177,17 +182,17 @@
                     </div>
                     <div class="next-game">
                         <div class="next-game-header">
-                            <h2>NEXT GAME</h2>
-                            <span id="next-game-date">—</span>
+                            <h2 id="next-game-heading">NEXT GAME</h2>
+                            <span id="next-game-date">—</span><span id="next-game-live" hidden>● LIVE</span>
                         </div>
                         <div class="next-game-matchup">
                             <div class="next-home">
-                                <h3 id="next-home-name">HOME</h3>
+                                <h3 id="next-home-name">HOME</h3><strong id="next-home-score" class="sc-live-score" hidden></strong>
                                 <p>HOME</p>
                             </div>
                             <span class="next-vs">VS</span>
                             <div class="next-away">
-                                <h3 id="next-away-name">AWAY</h3>
+                                <h3 id="next-away-name">AWAY</h3><strong id="next-away-score" class="sc-live-score" hidden></strong>
                                 <p>AWAY</p>
                             </div>
                         </div>

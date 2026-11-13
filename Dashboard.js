@@ -72,8 +72,8 @@ if (gamesError) {
     document.querySelector(".school-name").textContent = team.team_type === "club" ? (team.club_name || team.school_name || "") : (team.school_name || "")
     document.querySelector(".mascot").textContent = team.team_type === "club" ? (team.club_name || team.mascot || "Team") : (team.mascot || "Team")
     window.ScoridiumTheme?.apply(team)
-    document.querySelector(".team-logo").style.color = team.secondary_color || "#9299A5"
-    document.querySelector(".team-logo").textContent = (team.team_type === "club" ? (team.club_name || team.mascot || "T") : (team.mascot || "T")).charAt(0).toUpperCase()
+    if(document.querySelector(".team-logo"))document.querySelector(".team-logo").style.color = team.secondary_color || "#9299A5"
+    if(document.querySelector(".team-logo"))document.querySelector(".team-logo").textContent = (team.team_type === "club" ? (team.club_name || team.mascot || "T") : (team.mascot || "T")).charAt(0).toUpperCase()
     const navButtons = document.querySelectorAll("#navigation-container button")
     navButtons.forEach(function(button){
         button.style.color = team.primary_color
@@ -268,7 +268,7 @@ function showDashboardLiveGame(games){
     const ours=build('div','sc-dashboard-live-team','');
     ours.append(build('span','sc-dashboard-live-label',ourName),build('strong','sc-dashboard-live-points',live.team_score??0));
     const center=build('div','sc-dashboard-live-center','');
-    center.append(build('span','sc-dashboard-live-badge','LIVE'),build('span','sc-dashboard-live-period',live.period||live.quarter?`Q${live.period||live.quarter}`:'In progress'));
+    center.append(build('span','sc-dashboard-live-badge','LIVE'),build('span','sc-dashboard-live-vs','VS'),build('span','sc-dashboard-live-period',live.period||live.quarter?`Q${live.period||live.quarter}`:'In progress'));
     const theirs=build('div','sc-dashboard-live-team','');
     theirs.append(build('span','sc-dashboard-live-label',live.opponent||'Opponent'),build('strong','sc-dashboard-live-points',live.opponent_score??0));
     teams.append(ours,center,theirs);score.append(teams);
@@ -277,8 +277,9 @@ function showDashboardLiveGame(games){
   if(mobile){
     mobile.setAttribute('aria-label','Live game score');
     mobile.querySelector('.mobile-dashboard-eyebrow').textContent='LIVE GAME';
-    mobile.querySelector('h2').textContent=`${live.team_score??0} — ${live.opponent_score??0}`;
-    mobile.querySelector('p:not(.mobile-dashboard-eyebrow)').textContent=live.opponent||'Opponent';
+    const mobileScore=mobile.querySelector('h2');
+    if(mobileScore)mobileScore.textContent=`${document.querySelector('.mascot')?.textContent?.trim()||'Our Team'} ${live.team_score??0} VS ${live.opponent_score??0} ${live.opponent||'Opponent'}`;
+    mobile.querySelector('p:not(.mobile-dashboard-eyebrow)').textContent=`${live.period||live.quarter?`Q${live.period||live.quarter}`:'In progress'} · LIVE`;
     const link=mobile.querySelector('a');if(link){link.textContent='View Game ›';link.href=`watch-game.html?gameId=${encodeURIComponent(live.id)}`;}
   }
 }

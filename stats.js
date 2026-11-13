@@ -588,7 +588,7 @@ function renderTeam() {
 }
 function fillGameOptions(id, allText='All Games') {
   const select=$(id),old=select.value;
-  select.innerHTML=`<option value="all">${allText}</option>`+filteredGames().map(g=>`<option value="${escapeHTML(g.id)}">${escapeHTML(g.date)} · ${escapeHTML(g.opponent)}</option>`).join('');
+  select.innerHTML=`<option value="all">${allText}</option>`+filteredGames().map(g=>`<option value="${escapeHTML(g.id)}">${escapeHTML(window.scoridiumFullDate?.(g.date)||g.date)} · ${escapeHTML(g.opponent)}</option>`).join('');
   select.value=[...select.options].some(x=>x.value===old)?old:'all';
 }
 function renderPlayerTable() {
@@ -781,19 +781,37 @@ ${dots}
     </svg>`;
 }
 
+let scPlayerZoneMode='traditional';
 function renderPlayerShots() {
   const games=filteredGames().filter(g=>$('shot-game-filter').value==='all'||g.id===$('shot-game-filter').value);
   const shots=shotsFor(games,$('shot-player-filter').value);
-  $('player-shot-court').innerHTML=courtSVG(shots,'full');
-  // Zones are approximate display-space bins until actual shot zone definitions are mapped.
-  const zones=Array.from({length:6},()=>({m:0,a:0}));
-  for(const s of shots){const x=Math.max(0,Math.min(939,number(s.x)));const y=Math.max(0,Math.min(499,number(s.y)));const index=(y<250?0:3)+Math.min(2,Math.floor(x/314));zones[index].a++;if(s.made)zones[index].m++;}
-  $('player-zones').innerHTML=zones.map((z,i)=>`<div class="zone"><small>Zone ${i+1}</small><strong>${fmt(pct(z.m,z.a),0)}%</strong><small>${z.m}/${z.a}</small></div>`).join('');
+  $('player-shot-court').innerHTML=courtSVG(shots,'half');
+  const host=$('player-zones');
+  if(!host)return;
+  const controls=document.createElement('div');controls.className='sc-player-zone-controls';
+  const surface=document.createElement('div');surface.className='sc-player-zone-surface';
+  for(const [key,label] of [['traditional','Traditional Zones'],['distance','Distance Zones'],['spots','Shot Spots']]){
+    const b=document.createElement('button');b.type='button';b.textContent=label;
+    b.setAttribute('aria-pressed',String(scPlayerZoneMode===key));
+    b.addEventListener('click',()=>{scPlayerZoneMode=key;renderPlayerShots();});
+    controls.append(b);
+  }
+  // These visualizations are shared with the existing team-zone engine.
+  try {
+    if(scPlayerZoneMode==='traditional')surface.innerHTML=buildZoneCourt(shots,'offence');
+    else if(scPlayerZoneMode==='distance')surface.innerHTML=buildDistanceZoneCourt(shots);
+    else surface.innerHTML=courtSVG(shots,'half');
+  }catch(e){console.warn('Player zone chart unavailable',e);surface.innerHTML=courtSVG(shots,'half');}
+  host.replaceChildren(controls,surface);
+  if(!shots.some(x=>x.x!=null&&x.y!=null)){
+    const note=document.createElement('p');note.className='muted';note.textContent='No shot locations available for this selection.';host.append(note);
+  }
 }
+
 function scoreHTML(g) {
   if(!g)return '<div class="empty">No games selected</div>';
   const abbr=name=>name.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();
-  return `<div class="score-side"><div class="team-badge">${escapeHTML(abbr(g.team))}</div><strong>${escapeHTML(g.team)}</strong></div><div><div class="score">${g.ourScore} – ${g.opponentScore}</div><div class="score-label">FINAL · ${escapeHTML(g.date)}</div></div><div class="score-side"><div class="team-badge">${escapeHTML(abbr(g.opponent))}</div><strong>${escapeHTML(g.opponent)}</strong></div>`;
+  return `<div class="score-side"><div class="team-badge">${escapeHTML(abbr(g.team))}</div><strong>${escapeHTML(g.team)}</strong></div><div><div class="score">${g.ourScore} – ${g.opponentScore}</div><div class="score-label">FINAL · ${escapeHTML(window.scoridiumFullDate?.(g.date)||g.date)}</div></div><div class="score-side"><div class="team-badge">${escapeHTML(abbr(g.opponent))}</div><strong>${escapeHTML(g.opponent)}</strong></div>`;
 }
 function boxHTML(g) {
   if(!g)return '<div class="empty">No game</div>';
@@ -811,7 +829,7 @@ function renderGames(){
   const games=filteredGames().slice().sort((a,b)=>b.date.localeCompare(a.date));
   $('game-count').textContent=`${games.length} games`;
   if(!games.some(g=>g.id===state.selectedGame)) state.selectedGame=games[0]?.id ?? null;
-  $('games-body').innerHTML=games.map(g=>`<tr data-game-id="${escapeHTML(g.id)}" class="${g.id===state.selectedGame?'selected':''}"><td>${escapeHTML(g.date)}</td><td>${escapeHTML(g.opponent)}</td><td>${escapeHTML(g.location)}</td><td><span class="${g.ourScore>g.opponentScore?'win':'loss'}">${g.ourScore>g.opponentScore?'W':g.ourScore<g.opponentScore?'L':'T'}</span></td><td>${g.ourScore} - ${g.opponentScore}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">No games available</td></tr>';
+  $('games-body').innerHTML=games.map(g=>`<tr data-game-id="${escapeHTML(g.id)}" class="${g.id===state.selectedGame?'selected':''}"><td>${escapeHTML(window.scoridiumFullDate?.(g.date)||g.date)}</td><td>${escapeHTML(g.opponent)}</td><td>${escapeHTML(g.location)}</td><td><span class="${g.ourScore>g.opponentScore?'win':'loss'}">${g.ourScore>g.opponentScore?'W':g.ourScore<g.opponentScore?'L':'T'}</span></td><td>${g.ourScore} - ${g.opponentScore}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">No games available</td></tr>';
   const g=selectedGame();$('selected-game-date').textContent=g?.date??'';$('game-score').innerHTML=scoreHTML(g);
   document.querySelectorAll('[data-summary]').forEach(b=>b.classList.toggle('active',b.dataset.summary===state.summary));
   $('game-summary-content').innerHTML=summaryHTML(g,state.summary);
@@ -854,7 +872,7 @@ function renderOpponents(){
     if(activeOpponentGame!=='all'&&!opponentGames.some(g=>String(g.id)===activeOpponentGame))activeOpponentGame='all';
     gameSelect.replaceChildren(new Option('All games combined','all'));
     for(const game of [...opponentGames].sort((a,b)=>String(b.date).localeCompare(String(a.date)))){
-      gameSelect.add(new Option(`${game.date} · vs ${game.opponent} (${game.ourScore}–${game.opponentScore})`,String(game.id)));
+      gameSelect.add(new Option(`${window.scoridiumFullDate?.(game.date)||game.date} · vs ${game.opponent} (${game.ourScore}–${game.opponentScore})`,String(game.id)));
     }
     gameSelect.value=activeOpponentGame;
   }
@@ -867,32 +885,46 @@ function renderOpponents(){
   const wins=games.filter(g=>g.ourScore>g.opponentScore).length;
   const losses=games.filter(g=>g.ourScore<g.opponentScore).length;
   const fmtAvg=n=>games.length?(n/games.length).toFixed(1):'—';
-  const tr=(label,ours,theirs)=>`<tr><th>${label}</th><td>${ours}</td><td>${theirs}</td></tr>`;
-  const percent=s=>s.length?`${(100*s.filter(x=>x.made).length/s.length).toFixed(1)}%`:'—';
   const scoped=activeOpponent==='all'?'All opponents':groups.get(activeOpponent)?.name||'Opponent';
-  host.innerHTML=`<div class="opponents-summary">
+  const single=activeOpponentGame!=='all';
+  const selected=single?games[0]:null;
+  const fullDate=value=>window.scoridiumFullDate?.(value,true)||value;
+  const heading=single
+    ? `<h3>${escapeHTML(selected.opponent)}</h3><p class="muted">${escapeHTML(fullDate(selected.date))} · ${escapeHTML(selected.team)} ${selected.ourScore} – ${selected.opponentScore} ${escapeHTML(selected.opponent)}</p>`
+    : `<h3>${escapeHTML(scoped)} · Combined games</h3>`;
+  const opponentColor=getComputedStyle(document.documentElement).getPropertyValue('--team-secondary').trim()||'#ffd600';
+  const contrastData=[
+    ...(!single?[['Wins',wins,losses]]:[]),
+    ['Total Points',totals.pts,totals.allowed],
+    ['Rebounds',totals.reb,null],['Assists',totals.ast,null],
+    ['Steals',totals.stl,null],['Blocks',totals.blk,null],
+    ['Turnovers',totals.tov,null],['Fouls',totals.pf,null]
+  ];
+  const bars=`<div class="sc-comparison" style="--opponent-color:${escapeHTML(opponentColor)}">
+    <div class="sc-comparison-label"><strong>${escapeHTML(games[0]?.team||'Our team')}</strong><strong>${escapeHTML(scoped)}</strong></div>
+    ${contrastData.map(([name,a,b])=>{
+      const known=b!==null&&b!==undefined&&Number.isFinite(Number(b));
+      const left=Math.max(0,Number(a)||0),right=known?Math.max(0,Number(b)||0):0;
+      const leftWidth=known?(left+right?left/(left+right)*100:50):50;
+      return `<div class="sc-comparison-row">
+        <div class="sc-comparison-label"><strong>${Number.isFinite(Number(a))?left:'—'}</strong><small>${name}</small><strong>${known?right:'—'}</strong></div>
+        <div class="sc-comparison-track"><div class="sc-comparison-left" style="width:${leftWidth}%"></div><div class="sc-comparison-right" style="width:${100-leftWidth}%"></div></div>
+      </div>`;
+    }).join('')}</div>`;
+  const courtOrOverlay=allShots.length?courtSVG(allShots,'full'):`<div class="sc-no-shot-overlay">${courtSVG([],'full')}<span class="sc-no-shot-message">No shot locations available</span></div>`;
+  host.innerHTML=`${single?'':`<div class="opponents-summary">
    <div><strong>${wins}–${losses}</strong><small>Wins / Losses</small></div>
    <div><strong>${games.length}</strong><small>Completed games</small></div>
    <div><strong>${fmtAvg(totals.pts)}</strong><small>Our PPG</small></div>
-   <div><strong>${fmtAvg(totals.allowed)}</strong><small>Opponent PPG</small></div></div>
-   <h3>${escapeHTML(scoped)} · ${activeOpponentGame==='all'?'Combined games':'Single game'}</h3>
-   <div class="table-scroll"><table><thead><tr><th>Statistic</th><th>Our team</th><th>Opponent</th></tr></thead><tbody>
-   ${tr('Field goals',`${our.filter(x=>x.made).length}/${our.length}`,`${opp.filter(x=>x.made).length}/${opp.length}`)}
-   ${tr('FG%',percent(our),percent(opp))}
-   ${tr('3PT%',percent(our.filter(x=>Number(x.points)===3)),percent(opp.filter(x=>Number(x.points)===3)))}
-   ${tr('Our rebounds',fmtAvg(totals.reb),'Only when recorded')}
-   ${tr('Our assists',fmtAvg(totals.ast),'Only when recorded')}
-   ${tr('Our turnovers',fmtAvg(totals.tov),'Only when recorded')}
-   </tbody></table></div>
+   <div><strong>${fmtAvg(totals.allowed)}</strong><small>Opponent PPG</small></div></div>`}
+   ${heading}${bars}
    <h3>Shot locations & shooting zones</h3>
    <div class="opponent-courts-row">
-    <section><h4>Full Court</h4>${allShots.length?courtSVG(allShots,'full'):'<p class="muted">No shot locations available.</p>'}</section>
+    <section><h4>Full Court</h4>${courtOrOverlay}</section>
     <section><h4>Offensive Zones</h4>${buildZoneCourt(opp,'offence')}</section>
     <section><h4>Defensive Zones</h4>${buildZoneCourt(our,'defence')}</section>
    </div>
-   <p class="muted">Offensive zones = selected opponents shooting; defensive zones = our team's shooting against them. Zones use only recorded attempts. Missing stats are not zeros.</p>
-   <h3>Games in selection</h3><div class="table-scroll"><table><thead><tr><th>Date</th><th>Opponent</th><th>Our score</th><th>Opponent score</th></tr></thead><tbody>
-   ${games.map(g=>`<tr><td>${escapeHTML(g.date)}</td><td>${escapeHTML(g.opponent)}</td><td>${g.ourScore}</td><td>${g.opponentScore}</td></tr>`).join('')}</tbody></table></div>`;
+   <p class="muted">Swipe horizontally to view all courts. Offensive zones show opponent shooting; defensive zones show our shooting against them. Unrecorded statistics are not zero.</p>`;
 }
 function render(){if(state.view==='team')renderTeam();if(state.view==='players')renderPlayerTable();if(state.view==='games')renderGames();if(state.view==='details')renderDetails();if(state.view==='opponents')renderOpponents();}
 

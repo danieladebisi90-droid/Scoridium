@@ -205,7 +205,7 @@ function jerseySVG(player) {
         details.appendChild(row);
       });
     }
-    $('team-emblem').textContent = String(mascot || school).charAt(0).toUpperCase();
+    // Team monogram removed from the Roster header.
     window.ScoridiumTheme?.apply(team);
   }
   function demo() {
@@ -232,6 +232,46 @@ function jerseySVG(player) {
     if ($('record-count')) $('record-count').textContent = '5–1';
     setCount(12);
   }
+  // Match the Dashboard's selected-season wins/losses definition exactly.
+  async function refreshRosterRecord(client) {
+    if (!teamId) return;
+    const el=$('record-count'); if(!el)return;
+    const cacheKey=`scoridium:record:${teamId}:${seasonId||'all'}`;
+    const prior=sessionStorage.getItem(cacheKey);
+    if(prior)el.textContent=prior;
+    let q=client.from('games').select('status,team_score,opponent_score').eq('team_id',teamId);
+    if(seasonId)q=q.eq('seasons_id',seasonId);
+    const {data,error}=await q;
+    if(error){console.warn('Roster record could not load',error);if(!prior)el.textContent='—';return;}
+    let wins=0,losses=0;
+    for(const g of data||[]){
+      if(g.status!=='completed'||g.team_score==null||g.opponent_score==null)continue;
+      if(Number(g.team_score)>Number(g.opponent_score))wins++;
+      else if(Number(g.team_score)<Number(g.opponent_score))losses++;
+    }
+    const value=`${wins}–${losses}`;el.textContent=value;sessionStorage.setItem(cacheKey,value);
+  }
+  function rosterCacheKey(){return `scoridium:roster:${teamId}:${seasonId||'all'}`;}
+  async function loadTeamRecord(client){
+    const host=$('record-count');if(!host||!teamId)return;
+    let query=client.from('games').select('status,team_score,opponent_score').eq('team_id',teamId);
+    if(seasonId)query=query.eq('seasons_id',seasonId);
+    const {data,error}=await query;
+    if(error){console.warn('Roster team record unavailable:',error);host.textContent='—';return;}
+    let wins=0,losses=0;
+    for(const g of data||[]){if(g.status!=='completed'||g.team_score==null||g.opponent_score==null)continue;
+      if(Number(g.team_score)>Number(g.opponent_score))wins++;
+      else if(Number(g.team_score)<Number(g.opponent_score))losses++;
+    }
+    host.textContent=`${wins}–${losses}`;
+  }
+  function rosterCacheKey(){return `scoridium:roster:v2:${teamId}:${seasonId||'all'}`;}
+  function showCachedRoster(){
+    try {const cached=JSON.parse(sessionStorage.getItem(rosterCacheKey())||'null');
+      if(!cached||!Array.isArray(cached.players))return;
+      shownPlayers=cached.players;displayRoster();
+    }catch(e){}
+  }
   async function loadRoster() {
     const client = getClient();
     teamId = currentTeamId();
@@ -254,6 +294,16 @@ seasonId =
       $('roster-summary').textContent = 'Team not selected';
       return;
     }
+    // Stale-while-revalidate: draw the most recent roster immediately.
+    try {
+      const cached=JSON.parse(sessionStorage.getItem(rosterCacheKey())||'null');
+      if(cached && Array.isArray(cached.players)){
+        if(cached.team)setTeam(cached.team);
+        shownPlayers=cached.players;
+        displayRoster();
+      }
+    } catch(e){console.warn('Roster cache unavailable',e);}
+    showCachedRoster();
     const [teamResponse, playersResponse] = await Promise.all([
       client.from('teams').select('*').eq('id', teamId).maybeSingle(),
       client.from('players').select('*').eq('team_id', teamId).order('number', {ascending:true})
@@ -266,8 +316,10 @@ seasonId =
     }
     if (teamResponse.data) setTeam(teamResponse.data);
     if ($('staff-count')) $('staff-count').textContent = '—';
-    if ($('record-count')) $('record-count').textContent = '—';
+    void refreshRosterRecord(client);
     shownPlayers = (playersResponse.data || []).filter(player=>player.active !== false);
+    try { sessionStorage.setItem(rosterCacheKey(),JSON.stringify({players:shownPlayers,updated:Date.now()})); } catch(e){}
+    try {sessionStorage.setItem(rosterCacheKey(),JSON.stringify({team:teamResponse.data,players:shownPlayers}));}catch(e){}
     document.dispatchEvent(new CustomEvent('scoridium-roster-loaded',{detail:{players:shownPlayers,teamId}}));
     // This page intentionally loads the complete team roster. If you later add a
     // season-to-player membership table, filter memberships here instead.

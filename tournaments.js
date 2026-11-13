@@ -147,9 +147,6 @@
     const draws=completed.length-wins-losses;
     const own=completed.reduce((n,g)=>n+Number(g.team_score),0);
     const opp=completed.reduce((n,g)=>n+Number(g.opponent_score),0);
-    const grid=el('div','gamehub-context-grid');
-    grid.append(card('MEETINGS',completed.length),card('RECORD',`${wins}–${losses}${draws?`–${draws}`:''}`));
-    wrap.append(grid);
     const details = el('div','gamehub-detailed-h2h');
     wrap.append(details);
     const requestId = ++headToHeadRequest;
@@ -216,15 +213,15 @@
       const isObservedMetric=!['Wins','Total Points'].includes(name);
       const a=isObservedMetric && !trackedEvents.length ? null : rawA;
       const b=isObservedMetric && !opponentEvents.length ? null : rawB;
-      const maximum=Math.max(Number(a)||0,Number(b)||0,1);
+      const denom=Math.max(0,Number(a)||0)+Math.max(0,Number(b)||0);
+      const left=a===null||b===null?50:(denom?Math.max(0,Number(a))/denom*100:50);
       const item=el('div','sc-h2h-metric');
       const header=el('div','sc-h2h-values');
       header.append(el('strong','',a===null?'—':a),el('span','',name),el('strong','',b===null?'—':b));
-      const track=el('div','sc-h2h-track');
-      for(const [value,klass] of [[a,'home'],[b,'away']]){
-        const half=el('div','sc-h2h-half '+klass),fill=el('span','sc-h2h-fill');
-        fill.style.width=`${100*(Number(value)||0)/maximum}%`;half.append(fill);track.append(half);
-      }
+      const track=el('div','sc-h2h-track sc-h2h-full-track');
+      const ours=el('span','sc-h2h-full-home'),theirs=el('span','sc-h2h-full-away');
+      ours.style.width=`${left}%`;theirs.style.width=`${100-left}%`;
+      track.append(ours,theirs);
       item.append(header,track);bars.append(item);
     }
     container.append(legend,bars);
@@ -232,7 +229,7 @@
   function renderTournament(root,tournament) {
     selectedTournament=tournament;
     const header=row();
-    header.append(el('h3','',tournament.name || 'Tournament'),el('small','',`${tournament.starts_on} – ${tournament.ends_on}`));
+    header.append(el('h3','',tournament.name || 'Tournament'),el('small','',`${window.scoridiumFullDate?.(tournament.starts_on)||tournament.starts_on} – ${window.scoridiumFullDate?.(tournament.ends_on)||tournament.ends_on}`));
     root.append(header);
     const tm=matches.filter(m=>m.tournament_id===tournament.id);
     // Scheduled team games are always the real game records, not external result rows.
@@ -241,7 +238,7 @@
     if(scheduled.length){
       root.append(el('h4','','Our scheduled games'));
       for(const game of scheduled){
-        const r=row(); r.append(el('span','',`${game.date} · vs ${game.opponent||'TBD'}`));
+        const r=row(); r.append(el('span','',`${window.scoridiumFullDate?.(game.date)||game.date} · vs ${game.opponent||'TBD'}`));
         const open=button(game.status==='completed'?'Box Score':'Open Game',()=>{
           location.href=game.status==='completed'?`stats.html?gameId=${encodeURIComponent(game.id)}`:`game.html?gameId=${encodeURIComponent(game.id)}`;
         });
@@ -340,13 +337,50 @@
     start.addEventListener('change',()=>{end.min=start.value;if(end.value<start.value)end.value=start.value;});
     for(const id of ['tournament-cancel','tournament-dismiss'])document.getElementById(id)?.addEventListener('click',close);
     backdrop.addEventListener('click',e=>{if(e.target===backdrop)close();});
-    // Optional planning placeholders in the editor. A tournament may be created
-    // without any matches. Persist planned TBD matches after the tournament insert.
+    // Each planned match is editable before tournament creation; unknown details are optional.
     const planned=[];
+    const list=document.getElementById('tournament-planned-games');
+    const editor=document.createElement('div');editor.className='sc-tournament-match-editor';editor.hidden=true;
+    const input=(label,type='text',placeholder='')=>{
+      const wrapper=document.createElement('label');wrapper.textContent=label;
+      const field=document.createElement('input');field.type=type;field.placeholder=placeholder;wrapper.append(field);editor.append(wrapper);return field;
+    };
+    const opponent=input('Opponent (optional)','text','TBD');
+    const matchDay=input('Game date (optional)','date');
+    const matchTime=input('Game time (optional)','time');
+    const matchRound=input('Round / game type (optional)','text','Pool play, semifinal…');
+    const matchCourt=input('Gym / court (optional)','text','Main Gym, Court 2…');
+    const controls=document.createElement('div');controls.className='tournament-dialog-actions';
+    const saveGame=document.createElement('button');saveGame.type='button';saveGame.textContent='Save Game';
+    const cancelGame=document.createElement('button');cancelGame.type='button';cancelGame.textContent='Cancel';
+    controls.append(cancelGame,saveGame);editor.append(controls);list.before(editor);
+    let editingIndex=null;
+    const renderPlanned=()=>{
+      list.replaceChildren();
+      planned.forEach((m,i)=>{
+        const item=document.createElement('div');item.className='sc-planned-match';
+        const label=document.createElement('span');label.textContent=`${m.team_b||'TBD'} · ${m.scheduled_on?(window.scoridiumFullDate?.(m.scheduled_on)||m.scheduled_on):'Date TBD'} · ${m.round_name||'Round TBD'}`;
+        const edit=document.createElement('button');edit.type='button';edit.textContent='Edit';
+        edit.onclick=()=>{editingIndex=i;opponent.value=m.team_b==='TBD'?'':m.team_b;matchRound.value=m.round_name||'';matchCourt.value=m.venue||'';matchDay.value=m.scheduled_on||'';matchTime.value=m.scheduled_at?new Date(m.scheduled_at).toTimeString().slice(0,5):'';editor.hidden=false;};
+        const del=document.createElement('button');del.type='button';del.textContent='Remove';del.onclick=()=>{planned.splice(i,1);renderPlanned();};
+        item.append(label,edit,del);list.append(item);
+      });
+    };
     document.getElementById('tournament-plan-game')?.addEventListener('click',()=>{
-      planned.push({team_a:'Our team',team_b:'TBD',result_status:'unconfirmed'});
-      document.getElementById('tournament-planned-games').textContent=`${planned.length} planned game(s) · Opponent TBD`;
+      editingIndex=null;opponent.value='';matchDay.value='';matchTime.value='';matchRound.value='';matchCourt.value='';
+      matchDay.min=start.value||'';matchDay.max=end.value||'';editor.hidden=false;opponent.focus();
     });
+    cancelGame.onclick=()=>{editor.hidden=true;};
+    saveGame.onclick=()=>{
+      if(matchDay.value && ((start.value&&matchDay.value<start.value)||(end.value&&matchDay.value>end.value))){status.textContent='Game date must be within the tournament dates.';return;}
+      if(matchTime.value&&!matchDay.value){status.textContent='Choose a date before setting a game time.';return;}
+      const m={team_a:'Our team',team_b:opponent.value.trim()||'TBD',round_name:matchRound.value.trim()||null,
+        scheduled_on:matchDay.value||null,
+        scheduled_at:matchDay.value&&matchTime.value?new Date(`${matchDay.value}T${matchTime.value}:00`).toISOString():null,
+        venue:matchCourt.value.trim()||null,result_status:'unconfirmed'};
+      if(editingIndex===null)planned.push(m);else planned[editingIndex]=m;
+      editor.hidden=true;status.textContent='';renderPlanned();
+    };
 
     form.addEventListener('submit',async e=>{
       e.preventDefault();
@@ -363,7 +397,7 @@
         const result=await supabaseClient.from('scoridium_tournament_matches').insert(entries);
         if(result.error){status.textContent='Tournament created; could not add planned games: '+result.error.message;await reload();return;}
       }
-      planned.length=0;document.getElementById('tournament-planned-games').textContent='';
+      planned.length=0;list.replaceChildren();editor.hidden=true;
       close();document.getElementById('schedule-modal').hidden=true;await reload();
     });
   }

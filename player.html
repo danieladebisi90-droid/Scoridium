@@ -25,6 +25,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="modal-safety.css">
+<script src="modal-safety.js" defer></script>
+<link rel="stylesheet" href="major-update.css">
+<link rel="stylesheet" href="revision44.css?v=1">
+<script src="sc-date-display.js" defer></script>
 </head>
 <body>
 <div id="shared-header"><header id="app-header"><nav id="main-navigation" aria-label="Main navigation">
@@ -166,6 +171,11 @@
   <div class="breakdown" id="shot-breakdown" hidden></div>
 
     <div id="zone-preview-slot">
+        <div class="sc-player-zone-inline-tabs" role="group" aria-label="Player shot zone view">
+          <button type="button" data-inline-player-zone="basic" aria-pressed="true">Basic Zones</button>
+          <button type="button" data-inline-player-zone="traditional" aria-pressed="false">Traditional Zones</button>
+          <button type="button" data-inline-player-zone="distance" aria-pressed="false">Distance Zones</button>
+        </div>
         <article class="panel player-shooting-panel">
             <button
                 aria-controls="player-analysis-modal"

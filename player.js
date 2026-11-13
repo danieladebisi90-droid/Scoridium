@@ -249,7 +249,7 @@ tile.append(value, name, details);
         .toUpperCase()
         .slice(0, 13);
     $('player-position').textContent=position;
-    $('player-grade').textContent=`GRADE ${p.grade??'—'}`;
+    $('player-grade').textContent=({9:'Freshman',10:'Sophomore',11:'Junior',12:'Senior'})[Number(p.grade)]||'Class year —';
     $('player-school').textContent=(team.school_name||'Team').toUpperCase();
     $('player-mascot').textContent=(team.mascot||'').toUpperCase();
     // Team-initial ornament removed from Player Overview.
@@ -649,6 +649,16 @@ const playerZoneState = {
 };
 
 let playerZoneColors = {};
+
+document.addEventListener('click',event=>{
+ const btn=event.target.closest('[data-inline-player-zone]');if(!btn)return;
+ const mode=btn.dataset.inlinePlayerZone;
+ if(!['basic','traditional','distance'].includes(mode))return;
+ playerZoneState.mode=mode;playerZoneState.selected.clear();
+ document.querySelectorAll('[data-inline-player-zone]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.inlinePlayerZone===mode)));
+ document.querySelectorAll('[data-analysis-mode]').forEach(b=>b.classList.toggle('active',b.dataset.analysisMode===mode));
+ if(typeof renderPlayerZoneAnalysis==='function')renderPlayerZoneAnalysis();
+});
 
 const playerZoneDefinitions = {
     basic: {
