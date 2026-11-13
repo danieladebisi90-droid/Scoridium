@@ -145,28 +145,14 @@
   // old updateCourtView() during ResizeObserver callbacks.
   let pendingCourtLayout=false;
   function sizeCourtWorkspace(){
-    const main=courtSection.querySelector('.sc-court-main');
+    // CSS owns all viewport-dependent sizes. Never write inline dimensions to
+    // the court on orientation/resize: stale measured dimensions can collapse
+    // the SVG when mobile browser chrome or orientation changes.
     const body=courtSection.querySelector('.sc-court-body');
     const rail=courtSection.querySelector('.sc-tools-sidebar');
-    if(!courtSection.isConnected)return;
-    const isLandscape=matchMedia('(orientation:landscape)').matches;
-    if(!isLandscape){
-      for(const prop of ['width','flex-basis','max-width','height']) body.style.removeProperty(prop);
-      for(const prop of ['width','flex-basis']) rail.style.removeProperty(prop);
-      return;
+    for(const el of [body,rail]){
+      for(const prop of ['width','flex-basis','max-width','height'])el.style.removeProperty(prop);
     }
-    const width=main.clientWidth,height=main.clientHeight;
-    if(width<200||height<100)return;
-    // Full FIBA 860x470, half 470x440. Keep true viewBox aspect ratio.
-    const aspect=courtView==='full'?860/470:470/440;
-    const minRail=Math.min(260,Math.max(180,width*.23));
-    const courtWidth=Math.floor(Math.max(120,Math.min(height*aspect,width-minRail)));
-    const railWidth=Math.max(0,width-courtWidth);
-    body.style.setProperty('width',courtWidth+'px','important');
-    body.style.setProperty('flex-basis',courtWidth+'px','important');
-    body.style.setProperty('max-width',courtWidth+'px','important');
-    rail.style.setProperty('width',railWidth+'px','important');
-    rail.style.setProperty('flex-basis',railWidth+'px','important');
   }
   function queueCourtLayout(){
     if(pendingCourtLayout)return;

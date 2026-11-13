@@ -1,8 +1,41 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#10233f"><title>Watch Game · Scoridium</title><link rel="stylesheet" href="revision43.css?v=2"><style>body{margin:0;background:#f2f5fa;color:#12345b}header{background:#10233f;color:#fff;padding:18px;display:flex;justify-content:space-between;align-items:center}a{color:inherit}.wrap{max-width:900px;margin:26px auto;padding:15px}.watch-card{border:1px solid #d6e0eb;border-radius:16px;background:#fff;padding:25px}.watch-score{display:flex;align-items:center;justify-content:space-around;text-align:center;gap:15px}.watch-score strong{font-size:clamp(38px,8vw,84px);font-variant-numeric:tabular-nums}.watch-score span{display:block;margin-top:8px}.watch-status{margin:18px 0;text-align:center;font-weight:700}.watch-note{text-align:center;color:#64748b}</style><link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
-<link rel="stylesheet" href="major-update.css">
-<link rel="stylesheet" href="revision44.css?v=1">
-</head><body><header><strong>SCORIDIUM · WATCH</strong><a href="gamehub.html">Back to Games</a></header><main class="wrap"><div class="watch-card"><div class="watch-score"><div><strong id="watch-home">—</strong><span id="watch-team">Tracked Team</span></div><div><strong id="watch-away">—</strong><span id="watch-opponent">Opponent</span></div></div><p class="watch-status" id="watch-status">Loading game…</p><p class="watch-note">Read-only game scoreboard · refreshed while this page is open</p></div></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script>
-(async()=>{const id=new URLSearchParams(location.search).get('gameId');const text=(x,v)=>document.getElementById(x).textContent=v;if(!id){text('watch-status','No game selected');return;}async function refresh(){if(document.hidden)return;try{const {data,error}=await supabaseClient.from('games').select('id,opponent,team_score,opponent_score,status').eq('id',id).single();if(error)throw error;text('watch-home',data.team_score??'0');text('watch-away',data.opponent_score??'0');text('watch-opponent',data.opponent||'Opponent');text('watch-status',String(data.status||'Game').toUpperCase());}catch(e){text('watch-status','Game unavailable or viewing access not granted');}}await refresh();const tick=setInterval(refresh,5000);window.addEventListener('pagehide',()=>clearInterval(tick),{once:true});})();
-</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#173b78">
+  <title>View Game | Scoridium</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+  <link rel="stylesheet" href="watch-game.css?v=45">
+</head>
+<body>
+  <div class="viewer-shell">
+    <header class="viewer-header">
+      <div><a class="back-link" href="gamehub.html" id="viewer-back">← Back to Games</a><p class="eyebrow">SCORIDIUM · GAME CENTER</p></div>
+      <span class="read-only" title="This page cannot change game events">VIEW ONLY</span>
+    </header>
+    <main>
+      <section class="scoreboard card" aria-labelledby="game-heading">
+        <div class="score-top"><div><h1 id="game-heading">GAME CENTER</h1><p class="game-date" id="game-date">Loading game…</p></div><div class="status-wrap"><span id="game-status" class="status">LOADING</span><span id="game-period" class="period">—</span></div></div>
+        <div class="score-matchup">
+          <div class="score-team"><p class="place">HOME</p><h2 id="home-name">Home Team</h2><strong class="score" id="home-score">—</strong></div>
+          <span class="versus">VS</span>
+          <div class="score-team"><p class="place">AWAY</p><h2 id="away-name">Away Team</h2><strong class="score" id="away-score">—</strong></div>
+        </div>
+        <div class="score-bottom"><span id="game-location">Game details</span><span id="connection" role="status">Connecting…</span></div>
+      </section>
+      <div id="watch-error" class="error" role="alert" hidden></div>
+      <section class="quarters card" aria-labelledby="quarters-heading"><h2 id="quarters-heading">Scoring by Quarter</h2><div class="table-scroll"><table><thead id="quarters-head"><tr><th>TEAM</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th></tr></thead><tbody id="quarters-body"><tr><td colspan="5" class="empty">Loading scoring data…</td></tr></tbody></table></div><p class="note" id="quarters-note"></p></section>
+      <section class="details card"><div class="details-top"><h2>Game Details</h2><div class="tabs" role="tablist" aria-label="Game details"><button type="button" role="tab" aria-selected="true" id="tab-plays" data-tab="plays">Play-by-Play</button><button type="button" role="tab" aria-selected="false" id="tab-stats" data-tab="stats">Box Score</button></div></div>
+        <div id="panel-plays" role="tabpanel" aria-labelledby="tab-plays"><div id="plays-list" class="plays"><p class="empty">Loading plays…</p></div></div>
+        <div id="panel-stats" role="tabpanel" aria-labelledby="tab-stats" hidden><div class="table-scroll"><table class="stats-table"><thead><tr><th>PLAYER</th><th>PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th><th>PF</th></tr></thead><tbody id="stats-body"><tr><td colspan="8" class="empty">Loading box score…</td></tr></tbody></table></div><p class="note">Only recorded events are counted. An incomplete tracker log may not represent the official box score.</p></div>
+      </section>
+    </main>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="watch-game.js?v=45"></script>
+</body>
+</html>

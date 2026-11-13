@@ -1,8 +1,8 @@
 /* Scoridium PWA — intentionally conservative.
    Only the offline fallback and icons are cached. Game data, HTML, CSS,
    JS, auth and Supabase responses are never cached by this service worker. */
-const CACHE = 'scoridium-pwa-shell-v44-1';
-const STATIC = 'scoridium-pwa-static-v44-1';
+const CACHE = 'scoridium-pwa-shell-v45';
+const STATIC = 'scoridium-pwa-static-v45';
 const SHELL = ['./offline.html', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 self.addEventListener('install', event => {
   event.waitUntil(Promise.all([caches.open(CACHE).then(cache => cache.addAll(SHELL)),caches.open(STATIC)]));

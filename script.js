@@ -1653,7 +1653,11 @@ function renderPlayByPlay() {
     }
 
     matching
-        .filter(({ event }) => !event.linkedEventId)
+        // Related assists/rebounds can be hidden as supporting events, but
+        // each free-throw attempt is a scoring play in its own right.
+        // Quick Track links FTs to the shooting foul, so filtering all
+        // linked events accidentally removed made AND missed FTs from PBP.
+        .filter(({ event }) => !event.linkedEventId || event.type === "free_throw")
         .reverse()
         .forEach(({ event, index }) => {
             const row = document.createElement("div");
