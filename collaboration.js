@@ -233,11 +233,11 @@
   function paintFt(){
     const host=byId('sc-ft-step');host.replaceChildren();
     const btn=(label,click,cls='')=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.className=cls;b.addEventListener('click',click);host.append(b);return b;};
-    if(ftStep===0){btn('Start free throws ›',()=>{ftStep=1;paintFt();});}
-    else if(ftStep===1){btn('‹',()=>{ftStep=0;paintFt();});btn(names().us,()=>{ftTeam='us';ftStep=2;paintFt();});btn(names().opponent,()=>{ftTeam='opponent';ftStep=2;paintFt();});}
-    else if(ftStep===2){btn('‹',()=>{ftStep=1;paintFt();});[1,2,3].forEach(n=>btn(`${n} FT`,()=>{ftCount=n;ftResults=[];ftStep=3;paintFt();}));}
+    if(ftStep===0){btn('FT',()=>{ftStep=1;paintFt();});}
+    else if(ftStep===1){btn('‹',()=>{ftStep=0;paintFt();},'sc-ft-back');btn(names().us,()=>{ftTeam='us';ftStep=2;paintFt();});btn(names().opponent,()=>{ftTeam='opponent';ftStep=2;paintFt();});}
+    else if(ftStep===2){btn('‹',()=>{ftStep=1;paintFt();},'sc-ft-back');[1,2,3].forEach(n=>btn(`${n} FT`,()=>{ftCount=n;ftResults=[];ftStep=3;paintFt();}));}
     else if(ftStep===3){
-      btn('‹',async()=>{if(ftResults.length){const target=[...observations].reverse().find(o=>!o.retracted_at&&o.kind==='free_throw'&&o.team===ftTeam&&Number(o.period)===Number(state.period)&&o.tracker_id===sessionUser?.id);if(target&&await undoObservation(target))ftResults.pop();}else ftStep=2;paintFt();});
+      btn('‹',async()=>{if(ftResults.length){const target=[...observations].reverse().find(o=>!o.retracted_at&&o.kind==='free_throw'&&o.team===ftTeam&&Number(o.period)===Number(state.period)&&o.tracker_id===sessionUser?.id);if(target&&await undoObservation(target))ftResults.pop();}else ftStep=2;paintFt();},'sc-ft-back');
       const label=document.createElement('strong');label.textContent=`${ftResults.length+1}/${ftCount}`;host.append(label);
       for(const [label,made,cls] of [['MADE',true,'sc-make'],['MISS',false,'sc-miss']])btn(label,async()=>{
         await addObservation({kind:'free_throw',team:ftTeam,points:1,made});ftResults.push(made?'M':'X');

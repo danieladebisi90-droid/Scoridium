@@ -92,3 +92,94 @@ html.focus-tracker .tracker-shell[data-focus-view="court"] .focus-court.sc-court
  html.focus-tracker .tracker-shell[data-focus-view="track"] .qv-grid .qv-tile,
  html.focus-tracker .tracker-shell[data-focus-view="track"] .qv-opp-buttons .qv-button{font-size:clamp(12px,2.6vw,16px)!important}
 }
+
+/* Court layout fix: retain the dedicated workspace, never re-expose legacy controls. */
+html.focus-tracker .tracker-shell[data-focus-view="court"] .tracker-grid,
+html.focus-tracker.mobile-tracker-active .tracker-shell[data-focus-view="court"] .tracker-grid,
+html.focus-tracker.mobile-tracker-active .tracker-shell[data-focus-view="court"] #mobile-tracker,
+html.focus-tracker .tracker-shell[data-focus-view="court"] #mobile-tracker {
+  display:none!important;
+}
+html.focus-tracker .tracker-shell[data-focus-view="court"] .focus-stage {
+  flex:1 1 auto; width:100%; overflow:hidden; min-width:0; min-height:0;
+}
+html.focus-tracker .tracker-shell[data-focus-view="court"] .focus-court.sc-court-workspace {
+  flex:1 1 auto; min-width:0; min-height:0; width:100%;
+}
+/* Keep the court SVG proportional, and let control rails consume leftover width. */
+@media (orientation:landscape) and (max-height:750px) {
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-main {display:flex!important; flex-direction:row!important; height:100%; width:100%; min-width:0; align-items:stretch;}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-body {
+   order:1; height:100%; width:auto; flex:0 1 auto; min-width:0;
+   aspect-ratio:860/470; max-width:calc(100% - 160px);
+ }
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace:not(.sc-full-mode) .sc-court-body {aspect-ratio:470/440;}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-shot-sidebar {
+   order:0;flex:1 1 0;min-width:80px;max-width:none;overflow-y:auto;
+ }
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-tools-sidebar {
+   order:2;flex:1 1 0;min-width:80px;max-width:none;overflow-y:auto;
+ }
+ html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount,
+ html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount #tracker-controls,
+ html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount .court-wrap {
+   height:100%!important;max-height:100%!important;min-height:0!important;
+ }
+ html.focus-tracker .tracker-shell[data-focus-view="court"] #basketball-court {width:100%;height:100%;object-fit:contain;}
+}
+/* Portrait: full-width comparison, one compact controls row, court, then FT + undo. */
+@media (orientation:portrait) and (max-width:800px) {
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace .sc-shot-sidebar {
+   display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.4fr) 36px;
+   grid-template-rows:auto auto;gap:6px;align-items:center;width:100%;
+   padding:7px;flex:0 0 auto;
+ }
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace .sc-shot-counts {
+   grid-column:1/-1;grid-row:1;width:100%;min-height:60px;padding:8px;
+   display:flex;flex-direction:column;justify-content:center;gap:2px;text-align:center;
+ }
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace .sc-shot-counts strong {font-size:19px;line-height:1.1;}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace .sc-shot-counts span {font-size:13px;line-height:1.25;}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace .sc-court-modes {
+   grid-column:1/3;grid-row:2;display:flex!important;flex-direction:row;min-width:0;gap:4px;
+ }
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace .sc-court-modes button {
+   flex:1 1 0;min-width:0;min-height:38px;padding:4px 2px!important;font-size:clamp(11px,3vw,14px);
+ }
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace .sc-court-scope {
+   grid-column:3;grid-row:2;min-width:0;width:100%;
+ }
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace .sc-court-scope select {
+   width:100%;min-width:0;height:38px;font-size:clamp(10px,2.7vw,13px);
+ }
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace .sc-compact-directions {
+   grid-column:4;grid-row:2;width:36px;height:38px;min-width:0;padding:0!important;
+ }
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace .sc-tools-sidebar {
+   display:grid!important;grid-template-columns:minmax(0,1fr) 84px;
+   gap:7px;align-items:stretch;padding:7px;
+ }
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace .sc-ft-bar {
+   grid-column:1;min-width:0;height:66px;min-height:66px;max-height:66px;
+   padding:5px;gap:6px;
+ }
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace .sc-ft-bar>strong {font-size:15px;}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace #sc-ft-step {flex:1;min-width:0;}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace #sc-ft-step button {font-size:clamp(11px,3vw,14px);}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace #sc-undo-court {
+   grid-column:2;width:100%;height:66px;min-height:66px;margin:0;
+   font-size:15px;font-weight:800;border-radius:8px;
+ }
+}
+/* FT back buttons should never take the same width as team/attempt choices. */
+.sc-court-workspace #sc-ft-step button.sc-ft-back {
+  flex:0 0 35px!important; width:35px!important; min-width:35px!important;
+  font-size:19px!important; padding:2px!important;
+}
+/* Let the FT action itself carry the label; no duplicated FT heading. */
+.sc-court-workspace .sc-ft-bar>strong{display:none!important}
+.sc-court-workspace .sc-ft-bar #sc-ft-step{width:100%;flex:1 1 auto;align-items:center}
+/* Neutralize the original landscape player and stats panels even when
+   older responsive rules try to show them again. */
+html.focus-tracker .tracker-shell[data-focus-view="court"] .tracker-grid .player-panel,
+html.focus-tracker .tracker-shell[data-focus-view="court"] .tracker-grid .stats-panel{display:none!important}
