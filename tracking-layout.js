@@ -155,7 +155,7 @@
   let touch=null;
   stage.addEventListener('touchstart',event=>{
     const target=event.target;
-    if(target.closest('button,select,input,table,.table-scroll,.event-list')){touch=null;return;}
+    if(target.closest('button,select,input,table,svg,.sc-court-workspace,.table-scroll,.event-list')){touch=null;return;}
     if(event.touches.length!==1)return;
     touch={x:event.touches[0].clientX,y:event.touches[0].clientY};
   },{passive:true});

@@ -1,0 +1,115 @@
+/* Scoridium collaboration — additive, keeps previous Quick Track fixed geometry. */
+html.focus-tracker .focus-court{display:none!important}
+html.focus-tracker .tracker-shell[data-focus-view="court"] .focus-court{display:flex!important;flex:1;min-height:0;min-width:0;flex-direction:column;gap:8px}
+html.focus-tracker .tracker-shell[data-focus-view="court"] .tracker-grid{display:none!important}
+html.focus-tracker .tracker-shell[data-focus-view="court"] #mobile-tracker{display:none!important}
+.sc-court-workspace{font-family:Arial,Helvetica,sans-serif;color:#142840}
+.sc-court-head{flex:none;display:flex;justify-content:space-between;gap:10px;align-items:center;background:#fff;border:1px solid #d9e1ec;border-radius:11px;padding:10px 14px}
+.sc-court-head h2{font-size:17px;margin:0;color:#173C75}
+.sc-court-head p{font-size:11px;margin:3px 0 0;color:#64748b}
+#sc-court-sync{font-size:11px;font-weight:750;border:1px solid #d0dceb;background:#f1f5f9;border-radius:20px;padding:5px 9px}
+.sc-court-main{display:grid;grid-template-columns:minmax(225px,30%) minmax(0,1fr);gap:9px;flex:1;min-height:0;min-width:0}
+.sc-shot-sidebar,.sc-court-body{display:flex;flex-direction:column;min-height:0;min-width:0;padding:12px;border:1px solid #d4deea;border-radius:12px;background:#fff;gap:9px}
+.sc-queue-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex:0 0 auto;font-size:13px}
+#sc-queue-count{font-size:10px;font-weight:700;color:#6b7585}
+.sc-court-modes{display:grid;grid-template-columns:1fr 1fr;gap:6px;flex:0 0 auto}
+.sc-court-modes button{min-height:40px;font-weight:850;background:#edf2f8;color:#1b3859}
+.sc-court-modes .active{background:var(--qt-primary,#123b78);color:white;border-color:var(--qt-primary,#123b78)}
+.sc-shot-queue{overflow-y:auto;min-height:70px;flex:1;border-radius:8px;display:flex;flex-direction:column;gap:5px;overscroll-behavior:contain}
+.sc-shot-item{display:flex;flex-direction:column;gap:5px;align-items:stretch;text-align:left;padding:10px 9px;border:1px solid #d4dce6;background:#f8fafc;border-radius:8px;color:#183453;flex:none;white-space:normal}
+.sc-shot-item strong{font-size:12px}.sc-shot-item small{font-size:10px;color:#66788c}
+.sc-shot-item.active{border:2px solid #376acb;background:#eaf1fc;padding:9px 8px}
+.sc-observation-row{background:#fffaf1;border:1px dashed #d4af5a}
+.sc-shot-queue h4{font-size:11px;color:#75643e;margin:5px 0 0}
+.sc-observation{border-top:1px solid #e3e8f1;padding-top:9px;display:flex;flex-direction:column;gap:6px;flex:0 0 auto}
+.sc-observation strong{font-size:12px}.sc-observation p{font-size:11px;line-height:1.4;color:#637185;margin:0}
+.sc-observe-buttons{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.sc-observe-buttons button{color:#fff;font-weight:850;min-height:42px}
+.sc-court-workspace .sc-make{background:#07853E;color:#fff;border-color:#07853E}
+.sc-court-workspace .sc-miss{background:#D12F38;color:#fff;border-color:#D12F38}
+.sc-observe-buttons button.active{outline:3px solid #fbbf24;outline-offset:2px}
+#sc-observe-ft,#sc-review-checkpoint{padding:8px;font-size:11px;background:#f1f5f9}
+.sc-court-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px;justify-content:space-between;flex:0 0 auto}
+#sc-swap-directions{min-height:35px;font-size:11px;background:#fff4cf;border-color:#e6c45d;color:#624800}
+#sc-direction-summary{font-size:11px;color:#566982}
+#sc-court-mount{flex:1;display:flex;min-height:0;min-width:0;overflow:auto;align-items:center;justify-content:center}
+#sc-court-mount #tracker-controls{padding:5px;display:flex;flex-direction:column;width:100%;height:auto;max-height:100%;min-height:0;min-width:0;overflow:auto;box-shadow:none;border:0}
+#sc-court-mount .court-wrap{max-width:none;width:100%;margin:0;min-width:0}
+#sc-court-mount #basketball-court{width:100%;max-height:calc(100dvh - 280px);object-fit:contain;cursor:crosshair;pointer-events:auto!important}
+#sc-court-mount .court-view-toggle{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:7px}
+#sc-court-mount #full-court-btn,#sc-court-mount #half-court-btn{font-size:11px;padding:7px 12px}
+#sc-court-mount .court-side-toggle{display:none!important}
+#sc-court-mount #shot-dialog{display:none!important}
+#sc-court-feedback{font-size:12px;color:#425d79;border:1px solid #d8e4f0;background:#f0f5fa;border-radius:8px;padding:8px;flex:0 0 auto;line-height:1.4}
+.sc-checkpoint-summary{border:1px solid #d8c58b;border-radius:9px;background:#fff9e8;padding:11px;flex:none;max-height:150px;overflow:auto;font-size:12px}
+.sc-checkpoint-summary[hidden]{display:none!important}.sc-checkpoint-summary h3{font-size:13px;margin:0 0 8px}
+.sc-checkpoint-counters{display:flex;flex-wrap:wrap;gap:7px}.sc-checkpoint-counters span{padding:5px 7px;background:#fff;border-radius:6px;border:1px solid #e6d8b6}
+.sc-checkpoint-summary p{font-size:11px;margin:8px 0 0}
+.sc-ft-dialog{border:0;border-radius:13px;box-shadow:0 20px 80px #07162a70;color:#142840;width:min(370px,95vw);padding:20px}
+.sc-ft-dialog::backdrop{background:#06162a99}
+.sc-ft-dialog form{display:grid;gap:13px}.sc-ft-dialog h3{margin:0}.sc-ft-dialog p{font-size:12px;margin:0;line-height:1.5}
+.sc-ft-dialog label{display:flex;gap:10px;justify-content:space-between}.sc-ft-dialog select{max-width:200px}
+.sc-ft-checks{display:grid;grid-template-columns:1fr 1fr;gap:8px}.sc-ft-checks button{min-height:45px}
+/* Combined Play-by-Play page: Team, Player, Event timeline */
+#game-info-panel .game-info-tabs [hidden]{display:none!important}
+.sc-team-stats h3,.sc-player-title{font-size:13px;color:#173C75;font-weight:850;letter-spacing:.04em;margin:3px 0 9px}
+.sc-team-stats{background:#f8fafc;border:1px solid #e0e7ef;border-radius:9px;padding:10px;margin-bottom:14px}
+.sc-team-stats table{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
+.sc-team-stats th,.sc-team-stats td{padding:6px 8px;border-bottom:1px solid #e3e8ef;text-align:center}
+.sc-team-stats thead th{background:#e9f0f7;color:#173C75;font-size:12px}
+.sc-team-stats tbody th{color:#62728a;font-size:11px;letter-spacing:.04em}
+.sc-stats-note{font-size:10px;color:#69788c;line-height:1.45;margin:8px 0 0}
+#info-box .sc-embedded-plays{display:block!important;margin-top:14px;border-top:1px solid #d8e2ec;padding-top:12px}
+#info-box .sc-embedded-plays .section-heading{margin:0 0 8px}
+#info-box #play-by-play{height:clamp(145px,32vh,360px);max-height:none!important;overflow-y:auto;display:block;overscroll-behavior:contain;border:1px solid #e1e8ef;border-radius:7px;padding:5px 10px;background:#fcfdff}
+#info-box #player-box{min-width:665px}
+@media(max-width:800px){
+ .sc-court-main{grid-template-columns:1fr;grid-template-rows:minmax(185px,33%) minmax(0,1fr)}
+ .sc-shot-sidebar{padding:9px}.sc-shot-queue{min-height:0}
+ .sc-observation{display:flex;gap:5px}.sc-observation p{display:none}
+ .sc-observe-buttons button{min-height:35px}
+ #sc-court-mount #basketball-court{max-height:calc(100dvh - 490px)}
+}
+@media(orientation:landscape) and (min-width:550px){
+ .sc-court-main{grid-template-columns:minmax(205px,30%) minmax(0,1fr);grid-template-rows:1fr}
+ #sc-court-mount #basketball-court{max-height:calc(100dvh - 200px)}
+}
+@media(max-height:580px){.sc-court-head{padding:5px 9px}.sc-court-head h2{font-size:13px}.sc-court-main{gap:5px}.sc-shot-sidebar,.sc-court-body{padding:6px;gap:5px}.sc-observation p{display:none}}
+.sc-match-suggestion{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:5px 0;border-bottom:1px solid #e5d9b8;font-size:11px}
+.sc-match-suggestion button,#sc-confirm-score{border:1px solid #b3c7db;background:#fff;color:#173C75;padding:5px 8px;font-size:11px;min-height:32px}
+#sc-match-suggestions{margin:6px 0;display:grid;gap:5px;max-height:100px;overflow:auto}
+.sc-ft-dialog input{width:120px;max-width:50%;padding:8px;border:1px solid #d1d9e4;border-radius:6px}
+.sc-tracker-role{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:750;color:#d9e4f3}
+.sc-tracker-role select{max-width:180px;font-size:11px;padding:6px;border-radius:7px;background:#f1f5f9;color:#142840;border:1px solid #64748b}
+.sc-observer-status{font-size:10px;color:#facc15;white-space:nowrap}
+@media(max-width:750px){.sc-tracker-role{font-size:0;gap:0}.sc-tracker-role select{font-size:9px;max-width:115px;padding:5px 2px}.sc-observer-status{display:none}}
+@media(max-width:640px){.sc-tracker-role select{max-width:82px;font-size:9px;padding:4px 1px}.focus-nav .focus-tabs button{padding-left:5px!important;padding-right:5px!important}}
+.sc-stats-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.sc-observe-footer{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.sc-court-workspace #tracker-controls>.section-heading[hidden]{display:none!important}
+#sc-court-mount{align-items:stretch;justify-content:center}
+#sc-court-mount #tracker-controls{height:100%;max-height:100%;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+#sc-court-mount .court-wrap{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+#sc-court-mount .court-view-toggle{flex:none}
+#sc-court-mount #basketball-court{flex:1;min-height:0;height:100%;max-height:100%!important;width:100%;object-fit:contain}
+@media(max-width:800px){
+ .sc-court-main{display:flex;flex-direction:column;overflow-y:auto;overscroll-behavior:contain}
+ .sc-shot-sidebar{flex:none;min-height:235px;max-height:250px;overflow:hidden;gap:6px}
+ .sc-shot-queue{min-height:70px;max-height:105px;flex:1}
+ .sc-observation{gap:5px}
+ .sc-court-body{flex:1;min-height:275px;overflow:hidden;gap:6px}
+ .sc-observe-footer button{padding:6px 3px;font-size:11px;min-height:30px}
+ .sc-observe-buttons button{min-height:34px}
+ .sc-stats-columns{grid-template-columns:1fr;gap:8px}
+ .sc-team-stats th,.sc-team-stats td{padding:4px}
+}
+@media(orientation:landscape) and (min-width:550px){
+ .sc-court-main{display:grid;grid-template-columns:minmax(220px,30%) minmax(0,1fr);grid-template-rows:minmax(0,1fr);overflow:hidden}
+ .sc-shot-sidebar{min-height:0;max-height:none}
+ .sc-court-body{min-height:0}
+ .sc-shot-queue{max-height:none}
+}
+@media(max-width:800px){.sc-shot-sidebar{min-height:265px;max-height:275px}.sc-observation{padding-top:6px}.sc-observe-footer button{min-height:28px}}
+.sc-court-workspace #tracker-controls .hint{display:none!important}
+/* Dynamic row count keeps the team container fixed for rosters of 12+ players. */
+html.focus-tracker .qv-grid{grid-template-rows:repeat(var(--qv-rows,3),minmax(43px,1fr));overflow-y:auto;overscroll-behavior:contain}
