@@ -228,8 +228,8 @@ function jerseySVG(player) {
     }
     $('demo-control').hidden = false;
     $('roster-preview-nav').hidden = false;
-    $('staff-count').textContent = '3';
-    $('record-count').textContent = '5–1';
+    if ($('staff-count')) $('staff-count').textContent = '3';
+    if ($('record-count')) $('record-count').textContent = '5–1';
     setCount(12);
   }
   async function loadRoster() {
@@ -265,8 +265,8 @@ seasonId =
       return;
     }
     if (teamResponse.data) setTeam(teamResponse.data);
-    $('staff-count').textContent = '—';
-    $('record-count').textContent = '—';
+    if ($('staff-count')) $('staff-count').textContent = '—';
+    if ($('record-count')) $('record-count').textContent = '—';
     shownPlayers = (playersResponse.data || []).filter(player=>player.active !== false);
     document.dispatchEvent(new CustomEvent('scoridium-roster-loaded',{detail:{players:shownPlayers,teamId}}));
     // This page intentionally loads the complete team roster. If you later add a

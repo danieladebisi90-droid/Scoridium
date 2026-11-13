@@ -93,3 +93,36 @@ html.focus-tracker .focus-tabs [data-focus-view="court"][hidden]{display:none!im
  body.scoridium-shell.tracker-page .mobile-bottom-nav{display:none!important}
  html.scoridium-framed:not(.focus-tracker) body{padding-bottom:calc(88px + env(safe-area-inset-bottom))!important}
 }
+
+/* Game Hub: streamlined head-to-head comparison. */
+#gamehub-dynamic-context .headtohead-details{gap:12px;display:grid;min-width:0;}
+#gamehub-dynamic-context .gamehub-context-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:4px 0;}
+#gamehub-dynamic-context .gamehub-context-card{background:#eef3fa;border:1px solid #dce5f1;border-radius:12px;padding:13px 16px;}
+#gamehub-dynamic-context .gamehub-context-card small{font-family:Inter,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.09em;font-weight:800;font-size:10px;color:#657893;}
+#gamehub-dynamic-context .gamehub-context-card strong{font-size:clamp(20px,2.5vw,30px);font-weight:900;color:var(--team-primary,#173c75)}
+#gamehub-dynamic-context .sc-h2h-legend{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 2px;color:#52637a;font-size:11px;font-weight:850;letter-spacing:.04em;}
+#gamehub-dynamic-context .sc-h2h-team{display:flex;gap:6px;align-items:center;}
+#gamehub-dynamic-context .sc-h2h-team::before{content:'';width:9px;height:9px;border-radius:3px;background:var(--team-primary,#173c75)}
+#gamehub-dynamic-context .sc-h2h-team-away::before{background:var(--team-secondary,#ffd600)}
+#gamehub-dynamic-context .sc-h2h-bars{display:grid;gap:9px;margin:0;}
+#gamehub-dynamic-context .sc-h2h-metric{background:#fff;border:1px solid #e8edf5;border-radius:10px;padding:9px 11px;min-width:0;}
+#gamehub-dynamic-context .sc-h2h-values{display:grid;grid-template-columns:minmax(40px,1fr) minmax(100px,1.6fr) minmax(40px,1fr);align-items:center;gap:7px;font-family:Inter,system-ui,sans-serif;font-size:12px;line-height:1.4;}
+#gamehub-dynamic-context .sc-h2h-values strong{font-size:clamp(13px,1.5vw,17px);color:#153458;font-variant-numeric:tabular-nums;}
+#gamehub-dynamic-context .sc-h2h-values strong:last-child{text-align:right;}
+#gamehub-dynamic-context .sc-h2h-values span{text-align:center;color:#607086;font-weight:750;}
+#gamehub-dynamic-context .sc-h2h-track{height:9px;gap:4px;margin-top:6px;}
+#gamehub-dynamic-context .sc-h2h-half{background:#edf1f6;border-radius:4px;overflow:hidden;}
+#gamehub-dynamic-context .sc-h2h-half .sc-h2h-fill{border-radius:4px;background:var(--team-primary,#173c75)}
+#gamehub-dynamic-context .sc-h2h-half.away .sc-h2h-fill{background:var(--team-secondary,#ffd600)}
+@media(max-width:650px){#gamehub-dynamic-context .sc-h2h-metric{padding:8px;}#gamehub-dynamic-context .sc-h2h-values{grid-template-columns:minmax(25px,1fr) minmax(94px,1.5fr) minmax(25px,1fr);font-size:11px;}}
+
+/* Dashboard: readable live scoreboard instead of one giant score sentence. */
+.recent-games .dashboard-live-score{display:flex!important;align-items:center;justify-content:center;min-height:170px;flex:1;padding:16px 10px!important;text-decoration:none;color:var(--team-primary,#173c75);font-family:Inter,system-ui,sans-serif;}
+.sc-dashboard-live-teams{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:clamp(10px,2.5vw,26px);width:100%;max-width:700px;}
+.sc-dashboard-live-team{display:flex;flex-direction:column;align-items:center;min-width:0;gap:7px;text-align:center;}
+.sc-dashboard-live-label{font-size:clamp(13px,1.4vw,18px);font-weight:800;line-height:1.2;overflow-wrap:anywhere;}
+.sc-dashboard-live-points{font-size:clamp(38px,5vw,64px);font-weight:900;font-variant-numeric:tabular-nums;line-height:1;}
+.sc-dashboard-live-center{display:flex;align-items:center;flex-direction:column;gap:8px;color:#5b6d84;}
+.sc-dashboard-live-badge{background:#b91c1c;color:white;border-radius:99px;padding:5px 10px;font-size:11px;font-weight:900;letter-spacing:.07em;}
+.sc-dashboard-live-period{font-size:13px;font-weight:750;}
+@media(max-width:700px){.recent-games .dashboard-live-score{min-height:140px;padding:12px 4px!important}.sc-dashboard-live-teams{gap:8px}.sc-dashboard-live-points{font-size:36px}}

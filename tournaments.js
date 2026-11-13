@@ -8,6 +8,8 @@
   let selectedTournament = null;
   let headToHeadRequest = 0;
   const statCache = new Map();
+  let tournamentSchemaMissing = false;
+  let tournamentSchemaNoticeShown = false;
 
   const el = (tag, cls, content) => {
     const node = document.createElement(tag);
@@ -54,10 +56,17 @@
     const team = sessionStorage.getItem('selectedTeamId');
     const season = sessionStorage.getItem('selectedSeasonId');
     if (!team || !season || typeof supabaseClient === 'undefined') return;
+    if (tournamentSchemaMissing) { tournaments=[];matches=[];return; }
     const response = await supabaseClient.from('scoridium_tournaments').select('*')
       .eq('team_id',team).eq('season_id',season).order('starts_on');
     if (response.error) {
-      console.warn('Tournaments unavailable; apply MIGRATION_TOURNAMENTS.sql:',response.error.message);
+      if (response.error.code === 'PGRST205' || response.error.code === '42P01' || /schema cache|could not find the table/i.test(response.error.message || '')) {
+        tournamentSchemaMissing = true;
+        if (!tournamentSchemaNoticeShown) {
+          console.warn('Scoridium tournaments are disabled until MIGRATION_TOURNAMENTS.sql has been applied in Supabase.');
+          tournamentSchemaNoticeShown = true;
+        }
+      } else console.warn('Tournament load failed:',response.error.message);
       tournaments = [];
     } else {
       tournaments = response.data || [];
@@ -139,17 +148,13 @@
     const own=completed.reduce((n,g)=>n+Number(g.team_score),0);
     const opp=completed.reduce((n,g)=>n+Number(g.opponent_score),0);
     const grid=el('div','gamehub-context-grid');
-    grid.append(card('Previous games',completed.length),card('Record',`${wins}–${losses}${draws?`–${draws}`:''}`),
-      card('Avg points',(own/completed.length).toFixed(1)),card('Avg allowed',(opp/completed.length).toFixed(1)));
-    wrap.append(grid,muted('Same-season completed meetings only. Detailed statistics include all available events from those games.'));
+    grid.append(card('MEETINGS',completed.length),card('RECORD',`${wins}–${losses}${draws?`–${draws}`:''}`));
+    wrap.append(grid);
     const details = el('div','gamehub-detailed-h2h');
     wrap.append(details);
     const requestId = ++headToHeadRequest;
     loadHeadToHeadStats(completed,details,requestId);
-    for(const g of completed.sort((a,b)=>String(b.date).localeCompare(String(a.date)))) {
-      const r=row();r.append(el('span','',`${g.date} · ${g.location || 'Game'}`),el('strong','',`${g.team_score}–${g.opponent_score}`));wrap.append(r);
-    }
-    const link=el('a','', 'View Opponent Stats');link.href='stats.html';wrap.append(link);
+
   }
   async function loadHeadToHeadStats(games,container,requestId) {
     const ids=games.map(g=>g.id);
@@ -166,8 +171,8 @@
         if((data||[]).length<500)break;
       }
       const teamId=sessionStorage.getItem('selectedTeamId');
-      const playersResponse=await supabaseClient.from('players').select('id,first_name,last_name,number').eq('team_id',teamId);
-      const roster=new Map((playersResponse.data||[]).map(p=>[String(p.id),`${p.first_name||''} ${p.last_name||''}`.trim()||`#${p.number||'?'}`]));
+      // No player statistics are displayed in the Game Hub head-to-head panel.
+      const roster=new Map();
       if(requestId!==headToHeadRequest)return;
       const fresh={events,roster,scoreHome:games.reduce((n,g)=>n+Number(g.team_score||0),0),scoreAway:games.reduce((n,g)=>n+Number(g.opponent_score||0),0),wins:games.filter(g=>Number(g.team_score)>Number(g.opponent_score)).length,losses:games.filter(g=>Number(g.team_score)<Number(g.opponent_score)).length};statCache.set(cacheKey,fresh);
       displayHeadToHeadStats(container,fresh);
@@ -202,22 +207,27 @@
     const stats=[['Wins',wins,losses],
       ['Total Points',scoreHome,scoreAway],['Rebounds',home.reb,op.reb],['Assists',home.ast,op.ast],
       ['Steals',home.stl,op.stl],['Blocks',home.blk,op.blk],['Turnovers',home.to,op.to],['Fouls',home.pf,op.pf]];
+    const legend=el('div','sc-h2h-legend');
+    legend.append(el('span','sc-h2h-team sc-h2h-team-home','OUR TEAM'),el('span','sc-h2h-team sc-h2h-team-away','OPPONENT'));
     const bars=el('div','sc-h2h-bars');
-    for(const [name,a,b] of stats){
-      const maximum=Math.max(a,b,1);
+    const opponentEvents=events.filter(e=>!['us','our','ours'].includes(String(e.team||'').toLowerCase()));
+    const trackedEvents=events.filter(e=>['us','our','ours'].includes(String(e.team||'').toLowerCase()));
+    for(const [name,rawA,rawB] of stats){
+      const isObservedMetric=!['Wins','Total Points'].includes(name);
+      const a=isObservedMetric && !trackedEvents.length ? null : rawA;
+      const b=isObservedMetric && !opponentEvents.length ? null : rawB;
+      const maximum=Math.max(Number(a)||0,Number(b)||0,1);
       const item=el('div','sc-h2h-metric');
       const header=el('div','sc-h2h-values');
-      header.append(el('strong','',a),el('span','',name),el('strong','',b));
+      header.append(el('strong','',a===null?'—':a),el('span','',name),el('strong','',b===null?'—':b));
       const track=el('div','sc-h2h-track');
       for(const [value,klass] of [[a,'home'],[b,'away']]){
         const half=el('div','sc-h2h-half '+klass),fill=el('span','sc-h2h-fill');
-        fill.style.width=`${100*value/maximum}%`;half.append(fill);track.append(half);
+        fill.style.width=`${100*(Number(value)||0)/maximum}%`;half.append(fill);track.append(half);
       }
       item.append(header,track);bars.append(item);
     }
-    container.append(bars);
-    if(!events.length)container.append(muted('Additional statistics are unavailable for these games. The points and record above come from final scores.'));
-    else container.append(muted('Other statistics reflect recorded events only; missing opponent events are not inferred.'));
+    container.append(legend,bars);
   }
   function renderTournament(root,tournament) {
     selectedTournament=tournament;

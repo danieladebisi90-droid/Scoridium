@@ -260,7 +260,18 @@ function showDashboardLiveGame(games){
     let score=panel.querySelector('.dashboard-live-score');
     if(!score){score=document.createElement('a');score.className='dashboard-live-score';panel.append(score);}
     score.href=`watch-game.html?gameId=${encodeURIComponent(live.id)}`;
-    score.textContent=`${(live.team_score??0)} — ${(live.opponent_score??0)} · ${live.opponent||'Opponent'} · LIVE`;
+    score.setAttribute('aria-label',`Watch live game against ${live.opponent||'opponent'}`);
+    score.replaceChildren();
+    const build=(tag,cls,value)=>{const node=document.createElement(tag);node.className=cls;node.textContent=String(value);return node;};
+    const ourName=document.querySelector('.mascot')?.textContent?.trim()||'Our Team';
+    const teams=build('div','sc-dashboard-live-teams','');
+    const ours=build('div','sc-dashboard-live-team','');
+    ours.append(build('span','sc-dashboard-live-label',ourName),build('strong','sc-dashboard-live-points',live.team_score??0));
+    const center=build('div','sc-dashboard-live-center','');
+    center.append(build('span','sc-dashboard-live-badge','LIVE'),build('span','sc-dashboard-live-period',live.period||live.quarter?`Q${live.period||live.quarter}`:'In progress'));
+    const theirs=build('div','sc-dashboard-live-team','');
+    theirs.append(build('span','sc-dashboard-live-label',live.opponent||'Opponent'),build('strong','sc-dashboard-live-points',live.opponent_score??0));
+    teams.append(ours,center,theirs);score.append(teams);
   }
   const mobile=document.querySelector('.mobile-dashboard-next-event');
   if(mobile){
