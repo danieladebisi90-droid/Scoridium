@@ -1661,7 +1661,11 @@ function renderPlayByPlay() {
     }
 
     matching
-        .filter(({ event }) => !event.linkedEventId)
+        .filter(({ event }) =>
+            !event.linkedEventId ||
+            (event.type === "assist" &&
+             !state.events.some(parent => parent.id === event.linkedEventId))
+        )
         .reverse()
         .forEach(({ event, index }) => {
             const row = document.createElement("div");
@@ -1670,9 +1674,26 @@ function renderPlayByPlay() {
             const label = document.createElement("span");
             const total = totalAt(index);
 
+            // An assist is stored as a linked event so that the shot and
+            // assist can be corrected together. Show it alongside the made
+            // basket instead of hiding it from Play-by-Play.
+            const linkedAssists = event.type === "shot" && event.made
+                ? state.events.filter(child =>
+                    child.type === "assist" &&
+                    child.linkedEventId === event.id
+                  )
+                : [];
+            const assistText = linkedAssists.length
+                ? ` · AST: ${linkedAssists.map(assist =>
+                    assist.team === "opponent"
+                        ? (currentGame?.opponent || "OPPONENT")
+                        : playerName(assist.playerId)
+                  ).join(", ")}`
+                : "";
+
             label.textContent =
                 `${periodName(event.period)} · ` +
-                `${eventDescription(event)} · ` +
+                `${eventDescription(event)}${assistText} · ` +
                 `${total.us}–${total.opponent}`;
 
             row.appendChild(label);
