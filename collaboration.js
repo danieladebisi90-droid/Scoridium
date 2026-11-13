@@ -140,6 +140,52 @@
   byId('sc-offense').parentElement.before(courtChoices);
   courtChoices.append(halfBtn,fullBtn);
 
+  // Keep a real pixel width on the SVG host. A flex item with width:auto,
+  // height:100% and aspect-ratio can collapse after an iOS orientation change.
+  let pendingCourtLayout=false;
+  function sizeCourtWorkspace(){
+    if(!courtSection.isConnected)return;
+    const main=courtSection.querySelector('.sc-court-main');
+    const body=courtSection.querySelector('.sc-court-body');
+    const rail=courtSection.querySelector('.sc-tools-sidebar');
+    const isLandscape=matchMedia('(orientation:landscape)').matches;
+    if(!isLandscape){
+      body.style.removeProperty('width');
+      body.style.removeProperty('flex-basis');
+      body.style.removeProperty('max-width');
+      rail.style.removeProperty('width');
+      rail.style.removeProperty('flex-basis');
+      return;
+    }
+    const height=main.clientHeight;
+    const width=main.clientWidth;
+    if(height<80||width<200)return; // hidden tab; size again when opened
+    // The full FIBA court is 860 x 470; half is 470 x 440.
+    const aspect=courtView==='full'?860/470:470/440;
+    const sidebarMin=Math.min(230,Math.max(155,width*.22));
+    const courtWidth=Math.max(1,Math.floor(Math.min(height*aspect,width-sidebarMin)));
+    const railWidth=Math.max(0,width-courtWidth);
+    if(Math.abs(body.getBoundingClientRect().width-courtWidth)>.5){
+      body.style.setProperty('width',courtWidth+'px','important');
+      body.style.setProperty('flex-basis',courtWidth+'px','important');
+      body.style.setProperty('max-width',courtWidth+'px','important');
+    }
+    rail.style.setProperty('width',railWidth+'px','important');
+    rail.style.setProperty('flex-basis',railWidth+'px','important');
+  }
+  function queueCourtLayout(){
+    if(pendingCourtLayout)return;
+    pendingCourtLayout=true;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      pendingCourtLayout=false;
+      sizeCourtWorkspace();
+      if(courtSection.getBoundingClientRect().width>0){
+        // Restore SVG viewBox + displayed half/full drawing after rotation.
+        if(typeof updateCourtView==='function')updateCourtView();
+        paintObservationMarkers();
+      }
+    }));
+  }
   function enforceOrientation(){
     const portrait=matchMedia('(orientation:portrait) and (max-width:800px)').matches;
     const landscape=matchMedia('(orientation:landscape)').matches;
@@ -162,7 +208,8 @@
         else if(portrait)left.prepend(counter);
       }
     }
-    if(portrait&&courtView!=='half')selectHalf();else updateCourtModeUI();paintObservationMarkers();
+    if(portrait&&courtView!=='half')selectHalf();else updateCourtModeUI();
+    queueCourtLayout();
   }
   fullBtn?.addEventListener('click',()=>{
     if(matchMedia('(orientation:portrait) and (max-width:800px)').matches){selectHalf();return;}
@@ -170,6 +217,14 @@
   });
   halfBtn?.addEventListener('click',()=>{selectHalf();updateCourtModeUI();});
   window.addEventListener('resize',enforceOrientation);
+  window.addEventListener('orientationchange',()=>{enforceOrientation();setTimeout(queueCourtLayout,180);setTimeout(queueCourtLayout,550);});
+  window.visualViewport?.addEventListener('resize',queueCourtLayout);
+  if(typeof ResizeObserver!=='undefined'){
+    const courtObserver=new ResizeObserver(()=>queueCourtLayout());
+    courtObserver.observe(courtSection.querySelector('.sc-court-main'));
+  }
+  fullBtn?.addEventListener('click',queueCourtLayout);
+  halfBtn?.addEventListener('click',queueCourtLayout);
   byId('sc-team-scope').addEventListener('change',()=>{refreshCourtQueue();scheduleReconcile();});
   function saveLocalObservations(){localStorage.setItem(observationsKey(),JSON.stringify(observations));}
   async function addObservation(o){
@@ -534,7 +589,7 @@
   }
   // Do not auto change offense/defense when Quick Track records a shot.
   const courtTab=document.querySelector('[data-focus-view="court"]');
-  courtTab?.addEventListener('click',()=>{enforceOrientation();refreshCourtQueue();});
+  courtTab?.addEventListener('click',()=>{enforceOrientation();refreshCourtQueue();queueCourtLayout();});
   // Start data load after main game bootstrap finishes.
   let startupTries=0;const initialized=()=>{if(currentGame){enforceOrientation();void initRemote();}else if(++startupTries<30)setTimeout(initialized,350);};
   setTimeout(initialized,300);
