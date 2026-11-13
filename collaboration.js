@@ -140,36 +140,31 @@
   byId('sc-offense').parentElement.before(courtChoices);
   courtChoices.append(halfBtn,fullBtn);
 
-  // Keep a real pixel width on the SVG host. A flex item with width:auto,
-  // height:100% and aspect-ratio can collapse after an iOS orientation change.
+  // Responsive layout: the Court is NEVER removed/recreated during rotation.
+  // Size it only when its parent is visible; avoid repeatedly invoking the
+  // old updateCourtView() during ResizeObserver callbacks.
   let pendingCourtLayout=false;
   function sizeCourtWorkspace(){
-    if(!courtSection.isConnected)return;
     const main=courtSection.querySelector('.sc-court-main');
     const body=courtSection.querySelector('.sc-court-body');
     const rail=courtSection.querySelector('.sc-tools-sidebar');
+    if(!courtSection.isConnected)return;
     const isLandscape=matchMedia('(orientation:landscape)').matches;
     if(!isLandscape){
-      body.style.removeProperty('width');
-      body.style.removeProperty('flex-basis');
-      body.style.removeProperty('max-width');
-      rail.style.removeProperty('width');
-      rail.style.removeProperty('flex-basis');
+      for(const prop of ['width','flex-basis','max-width','height']) body.style.removeProperty(prop);
+      for(const prop of ['width','flex-basis']) rail.style.removeProperty(prop);
       return;
     }
-    const height=main.clientHeight;
-    const width=main.clientWidth;
-    if(height<80||width<200)return; // hidden tab; size again when opened
-    // The full FIBA court is 860 x 470; half is 470 x 440.
+    const width=main.clientWidth,height=main.clientHeight;
+    if(width<200||height<100)return;
+    // Full FIBA 860x470, half 470x440. Keep true viewBox aspect ratio.
     const aspect=courtView==='full'?860/470:470/440;
-    const sidebarMin=Math.min(230,Math.max(155,width*.22));
-    const courtWidth=Math.max(1,Math.floor(Math.min(height*aspect,width-sidebarMin)));
+    const minRail=Math.min(260,Math.max(180,width*.23));
+    const courtWidth=Math.floor(Math.max(120,Math.min(height*aspect,width-minRail)));
     const railWidth=Math.max(0,width-courtWidth);
-    if(Math.abs(body.getBoundingClientRect().width-courtWidth)>.5){
-      body.style.setProperty('width',courtWidth+'px','important');
-      body.style.setProperty('flex-basis',courtWidth+'px','important');
-      body.style.setProperty('max-width',courtWidth+'px','important');
-    }
+    body.style.setProperty('width',courtWidth+'px','important');
+    body.style.setProperty('flex-basis',courtWidth+'px','important');
+    body.style.setProperty('max-width',courtWidth+'px','important');
     rail.style.setProperty('width',railWidth+'px','important');
     rail.style.setProperty('flex-basis',railWidth+'px','important');
   }
@@ -179,15 +174,12 @@
     requestAnimationFrame(()=>requestAnimationFrame(()=>{
       pendingCourtLayout=false;
       sizeCourtWorkspace();
-      if(courtSection.getBoundingClientRect().width>0){
-        // Restore SVG viewBox + displayed half/full drawing after rotation.
-        if(typeof updateCourtView==='function')updateCourtView();
-        paintObservationMarkers();
-      }
+      // The original SVG remains the single source of truth. No view toggle,
+      // score/event write, or redraw is triggered by a pure viewport resize.
     }));
   }
   function enforceOrientation(){
-    const portrait=matchMedia('(orientation:portrait) and (max-width:800px)').matches;
+    const portrait=matchMedia('(orientation:portrait)').matches;
     const landscape=matchMedia('(orientation:landscape)').matches;
     const left=courtSection.querySelector('.sc-shot-sidebar');
     const right=courtSection.querySelector('.sc-tools-sidebar');
@@ -212,16 +204,16 @@
     queueCourtLayout();
   }
   fullBtn?.addEventListener('click',()=>{
-    if(matchMedia('(orientation:portrait) and (max-width:800px)').matches){selectHalf();return;}
+    if(matchMedia('(orientation:portrait)').matches){selectHalf();return;}
     updateCourtModeUI();
   });
   halfBtn?.addEventListener('click',()=>{selectHalf();updateCourtModeUI();});
   window.addEventListener('resize',enforceOrientation);
-  window.addEventListener('orientationchange',()=>{enforceOrientation();setTimeout(queueCourtLayout,180);setTimeout(queueCourtLayout,550);});
+  window.addEventListener('orientationchange',()=>{enforceOrientation();setTimeout(queueCourtLayout,180);setTimeout(()=>{queueCourtLayout();paintObservationMarkers();},550);});
   window.visualViewport?.addEventListener('resize',queueCourtLayout);
   if(typeof ResizeObserver!=='undefined'){
     const courtObserver=new ResizeObserver(()=>queueCourtLayout());
-    courtObserver.observe(courtSection.querySelector('.sc-court-main'));
+    courtObserver.observe(courtSection.querySelector('.focus-court')||courtSection);
   }
   fullBtn?.addEventListener('click',queueCourtLayout);
   halfBtn?.addEventListener('click',queueCourtLayout);
