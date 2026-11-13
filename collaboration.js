@@ -142,9 +142,26 @@
 
   function enforceOrientation(){
     const portrait=matchMedia('(orientation:portrait) and (max-width:800px)').matches;
+    const landscape=matchMedia('(orientation:landscape)').matches;
+    const left=courtSection.querySelector('.sc-shot-sidebar');
+    const right=courtSection.querySelector('.sc-tools-sidebar');
     const counter=byId('sc-shot-counts');
-    if(counter){const destination=portrait?courtSection.querySelector('.sc-shot-sidebar'):courtSection.querySelector('.sc-tools-sidebar');
-      if(counter.parentElement!==destination)destination.prepend(counter);}
+    // Preserve the same controls and listeners; only move them between rails.
+    // Landscape: one wide right rail, with court occupying all available left space.
+    if(landscape){
+      for(const node of [courtChoices,byId('sc-offense').parentElement,byId('sc-team-scope').parentElement,byId('sc-swap-directions')]){
+        if(node && node.parentElement!==right)right.insertBefore(node,right.querySelector('.sc-ft-bar'));
+      }
+      if(counter && counter.parentElement!==right)right.insertBefore(counter,right.querySelector('.sc-ft-bar'));
+    }else{
+      for(const node of [courtChoices,byId('sc-offense').parentElement,byId('sc-team-scope').parentElement,byId('sc-swap-directions')]){
+        if(node && node.parentElement!==left)left.append(node);
+      }
+      if(counter){const dest=portrait?left:right;
+        if(counter.parentElement!==dest)dest.prepend(counter);
+        else if(portrait)left.prepend(counter);
+      }
+    }
     if(portrait&&courtView!=='half')selectHalf();else updateCourtModeUI();paintObservationMarkers();
   }
   fullBtn?.addEventListener('click',()=>{

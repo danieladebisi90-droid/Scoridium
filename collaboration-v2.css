@@ -228,3 +228,38 @@ html.focus-tracker .tracker-shell[data-focus-view="court"] .tracker-grid .stats-
     width:100%!important;height:100%!important;object-fit:contain!important;
   }
 }
+
+/* V5: one RIGHT rail in landscape. Give the court the entire LEFT portion. */
+@media (orientation:landscape) {
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-main {
+    display:flex!important; flex-direction:row!important; gap:0!important;
+    justify-content:flex-start!important; align-items:stretch!important;
+  }
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-shot-sidebar {
+    display:none!important;
+  }
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-body {
+    order:0!important; height:100%!important; flex:0 1 auto!important;
+    max-width:calc(100% - 205px)!important; min-width:0!important;
+    border-right:1px solid #d4deea!important;
+  }
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-tools-sidebar {
+    display:flex!important;order:1!important;flex:1 1 205px!important;
+    min-width:205px!important;max-width:none!important;
+    padding:8px 10px!important;gap:7px!important;overflow-y:auto!important;
+    border-left:0!important;
+  }
+  .sc-court-workspace .sc-tools-sidebar .sc-court-view-choices {display:grid!important;grid-template-columns:1fr 1fr;gap:5px;flex:none}
+  .sc-court-workspace .sc-tools-sidebar .sc-court-view-choices button {font-size:clamp(12px,1.6vw,16px)!important;min-height:38px}
+  .sc-court-workspace .sc-tools-sidebar .sc-court-modes {display:flex!important;flex-direction:row;gap:5px;flex:none}
+  .sc-court-workspace.sc-full-mode .sc-tools-sidebar .sc-court-modes {display:none!important}
+  .sc-court-workspace .sc-tools-sidebar .sc-court-modes button {flex:1;min-width:0;font-size:clamp(12px,1.5vw,15px)!important;min-height:36px}
+  .sc-court-workspace .sc-tools-sidebar .sc-court-scope {font-size:12px;flex:none}
+  .sc-court-workspace .sc-tools-sidebar .sc-court-scope select {height:36px;font-size:12px;width:100%}
+  .sc-court-workspace .sc-tools-sidebar .sc-compact-directions {flex:none;width:36px;height:33px;margin:0}
+  .sc-court-workspace .sc-tools-sidebar .sc-shot-counts {flex:none;min-height:78px;gap:2px;padding:8px;font-size:13px}
+  .sc-court-workspace .sc-tools-sidebar .sc-shot-counts strong {font-size:19px}
+  .sc-court-workspace .sc-tools-sidebar .sc-ft-bar {flex:none;width:100%;min-height:72px;max-height:72px;padding:7px}
+  .sc-court-workspace .sc-tools-sidebar #sc-undo-court {width:100%;min-height:40px;font-size:14px;margin-top:auto}
+  .sc-court-workspace .sc-court-body #sc-court-mount {width:100%;height:100%}
+}
