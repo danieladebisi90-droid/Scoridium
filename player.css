@@ -1002,3 +1002,8 @@ body{background:linear-gradient(180deg,#101a30 0,#080e1c 48%,#070c17 100%)!impor
     display: none !important;
   }
 }
+
+/* Player overview uses team secondary colour, keeping readable content. */
+.player-banner{background:var(--team-secondary,var(--secondary,#ffd600))!important;color:var(--team-secondary-ink,#10233f)!important}
+.player-banner .player-heading,.player-banner .player-heading h1,.player-banner .player-heading p{color:var(--team-secondary-ink,#10233f)!important}
+.letter-mark{display:none!important}

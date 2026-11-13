@@ -18,6 +18,7 @@
     const secondary=normalize(team.secondary_color,fallbackSecondary(primary));
     const root=document.documentElement;
     root.style.setProperty('--team-primary',primary);
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content',primary);
     root.style.setProperty('--team-secondary',secondary);
     root.style.setProperty('--team-primary-ink',ink(primary));
     root.style.setProperty('--team-secondary-ink',ink(secondary));

@@ -1860,3 +1860,9 @@ th:not(:first-child) {
 .traditional-zone-scroll .zone-summary tr {
     cursor: pointer;
 }
+/* Opponent scouting: same-season, real observations only. */
+.opponents-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0 24px}
+.opponents-summary>div{padding:16px;background:#eef2f8;border:1px solid #d8e0eb;border-radius:10px;display:flex;flex-direction:column;gap:5px}
+.opponents-summary strong{font-size:clamp(19px,3vw,29px);color:#173c75;font-variant-numeric:tabular-nums}
+.opponents-summary small{font-size:11px;color:#57657a}
+@media(max-width:650px){.opponents-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.opponents-summary>div{padding:11px}}

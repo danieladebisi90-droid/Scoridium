@@ -200,15 +200,16 @@
         else if(portrait)left.prepend(counter);
       }
     }
-    if(portrait&&courtView!=='half')selectHalf();else updateCourtModeUI();
+    if(portrait && Math.min(screen.width,screen.height)<=650 && courtView!=='half')selectHalf();else updateCourtModeUI();
     queueCourtLayout();
   }
   fullBtn?.addEventListener('click',()=>{
-    if(matchMedia('(orientation:portrait)').matches){selectHalf();return;}
-    updateCourtModeUI();
+    if(matchMedia('(orientation:portrait)').matches && Math.min(screen.width,screen.height)<=650){selectHalf();return;}
+    updateCourtModeUI();requestAnimationFrame(()=>paintObservationMarkers());
   });
-  halfBtn?.addEventListener('click',()=>{selectHalf();updateCourtModeUI();});
-  window.addEventListener('resize',enforceOrientation);
+  halfBtn?.addEventListener('click',()=>{selectHalf();updateCourtModeUI();requestAnimationFrame(()=>paintObservationMarkers());});
+  // Resize must never move the live SVG or its controls on every browser chrome change.
+  window.addEventListener('resize',queueCourtLayout);
   window.addEventListener('orientationchange',()=>{enforceOrientation();setTimeout(queueCourtLayout,180);setTimeout(()=>{queueCourtLayout();paintObservationMarkers();},550);});
   window.visualViewport?.addEventListener('resize',queueCourtLayout);
   if(typeof ResizeObserver!=='undefined'){

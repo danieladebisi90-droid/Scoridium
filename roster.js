@@ -98,7 +98,7 @@ function jerseySVG(player) {
     make("path", {
         d: "M53 12 C58 42 70 52 90 52 C110 52 122 42 127 12",
         fill: "none",
-        stroke: "white",
+        stroke: "var(--team-secondary, #FFD600)",
         "stroke-width": "5"
     });
 
@@ -106,7 +106,7 @@ function jerseySVG(player) {
     make("path", {
         d: "M25 12 V68 C25 94 13 108 3 118 M155 12 V68 C155 94 167 108 177 118",
         fill: "none",
-        stroke: "white",
+        stroke: "var(--team-secondary, #FFD600)",
         "stroke-width": "5"
     });
 
@@ -179,6 +179,7 @@ function jerseySVG(player) {
       fragment.appendChild(link);
     });
     grid.appendChild(fragment);
+    document.dispatchEvent(new CustomEvent('scoridium-roster-rendered',{detail:{players:shownPlayers,teamId}}));
   }
   function setTeam(team) {
     const school = team.team_type === 'club' ? (team.club_name || team.school_name || 'Scoridium') : (team.school_name || 'Scoridium');
@@ -186,7 +187,7 @@ function jerseySVG(player) {
     const label = mascot.toLowerCase().includes(school.toLowerCase()) ? mascot : `${school} ${mascot}`;
     $('team-name').textContent = label.toUpperCase();
     jerseyWordmark = String(school.split(' ')[0] || mascot).toUpperCase().slice(0, 11); 
-    $('school-name').textContent = school.toUpperCase();
+    if ($('school-name')) $('school-name').textContent = '';
     const details = $('roster-team-info');
     if (details) {
       details.replaceChildren();
@@ -266,7 +267,8 @@ seasonId =
     if (teamResponse.data) setTeam(teamResponse.data);
     $('staff-count').textContent = '—';
     $('record-count').textContent = '—';
-    shownPlayers = playersResponse.data || [];
+    shownPlayers = (playersResponse.data || []).filter(player=>player.active !== false);
+    document.dispatchEvent(new CustomEvent('scoridium-roster-loaded',{detail:{players:shownPlayers,teamId}}));
     // This page intentionally loads the complete team roster. If you later add a
     // season-to-player membership table, filter memberships here instead.
     displayRoster();
@@ -276,7 +278,7 @@ seasonId =
   const tabButtons = [...document.querySelectorAll('[data-roster-tab]')];
   function activateRosterTab(tab) {
     document.querySelector('.roster-page > .roster-panel').hidden = tab !== 'roster';
-    $('roster-info-panel').hidden = tab !== 'info';
+    // Team information panel removed from the roster interface.
     $('roster-staff-panel').hidden = tab !== 'staff';
     tabButtons.forEach(button => {
       const active = button.dataset.rosterTab === tab;

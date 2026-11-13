@@ -7,7 +7,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
   <meta name="theme-color" content="#10233F">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Scoridium">
 
 <script>if(window.top===window && sessionStorage.getItem('selectedTeamId')){location.replace('app.html?page=roster.html'+encodeURIComponent(location.search+location.hash));}</script>
@@ -15,18 +15,19 @@
 <style>html.scoridium-framed #shared-header {display:none!important;}html.scoridium-framed #app-header {display:none!important;}html.scoridium-framed body {padding-top:0!important;}html.scoridium-framed body {min-height:100dvh!important;}</style>
   <script src="team-theme-boot.js"></script>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Team & Roster | Scoridium</title>
   <link rel="stylesheet" href="roster.css" />
   <link rel="stylesheet" href="pageLayout.css">
   <link rel="stylesheet" href="navigation-smooth.css">
+  <link rel="stylesheet" href="universal-ui.css?v=1">
 </head>
 <body>
   <!-- Your shared pageLayout.html header can be inserted into this element. -->
   <div id="shared-header"><header id="app-header"><nav id="main-navigation" aria-label="Main navigation">
 <a href="myTeams.html" class="nav-home" aria-label="Back to My Teams" title="My Teams"><i data-lucide="house"></i></a>
 <span class="nav-divider"></span><div class="header-team"><h2 id="shared-team-name"></h2></div><span class="nav-divider"></span>
-<div class="nav-links"><a href="dashboard.html">Dashboard</a><a href="gamehub.html">Game Hub</a><a href="roster.html">Roster</a><a href="stats.html">Stats</a><a href="playbook.html">Playbook</a></div>
+<div class="nav-links"><a href="dashboard.html">Dashboard</a><a href="gamehub.html">Game Hub</a><a href="roster.html">Roster</a><a href="stats.html">Stats</a></div>
 <span class="nav-divider"></span><div class="season-selector-container"><select class="season-selector" aria-label="Select season"><option value="">Season</option></select></div>
 </nav></header>
 <script>/* synchronous identity restore, prior to first paint */
@@ -37,19 +38,19 @@
       <div class="team-emblem" id="team-emblem" aria-hidden="true"></div>
       <div class="team-title">
         <h2 id="team-name"></h2>
-        <p id="school-name"></p>
+        
         <p>VARSITY BASKETBALL <span class="gold-bar">│</span> <span id="season-label">2026 – 2027</span></p>
       </div>
       <div class="team-highlights">
         <div><strong id="player-count">—</strong><span>PLAYERS</span></div>
-        <div><strong id="active-count">—</strong><span>ACTIVE</span></div>
-        <div><strong id="staff-count">—</strong><span>STAFF</span></div>
+        <div hidden><strong id="active-count">—</strong><span>ACTIVE</span></div>
+        <div hidden><strong id="staff-count">—</strong><span>STAFF</span></div>
         <div><strong id="record-count">—</strong><span>RECORD</span></div>
       </div>
     </section>
     <nav class="roster-tabs" aria-label="Roster categories">
       <button type="button" class="is-selected" data-roster-tab="roster" aria-current="page">Roster</button>
-      <button type="button" data-roster-tab="info">Team Information</button>
+
       <button type="button" data-roster-tab="staff">Staff</button>
     </nav>
     <section class="roster-panel" aria-labelledby="roster-title">
@@ -62,7 +63,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg>
           <input id="roster-search" type="search" placeholder="Search players or numbers" aria-label="Search players or numbers" />
         </label>
-        <button type="button" class="add-player" disabled title="Player management is connected in the next development step">＋ Add Player</button>
+        <button type="button" id="edit-roster" class="add-player" hidden>✎ Edit Roster</button>
       </div>
       <div class="demo-control" id="demo-control" hidden>
         <span>Preview roster size</span>
@@ -72,8 +73,19 @@
       <div id="roster-status" class="status-message" role="status" hidden></div>
       <div id="jersey-grid" class="jersey-grid" aria-live="polite"></div>
     </section>
-    <section id="roster-info-panel" class="roster-panel roster-info-panel" hidden aria-label="Team Information"><h2>TEAM INFORMATION</h2><div id="roster-team-info">Loading team details…</div></section>
-    <section id="roster-staff-panel" class="roster-panel roster-info-panel" hidden aria-label="Staff"><h2>STAFF</h2><p>Staff directory hasn't been set up for this team yet.</p></section>
+    
+    <section id="roster-staff-panel" class="roster-panel roster-info-panel" hidden aria-label="Staff"><h2>STAFF</h2><div id="roster-staff-list">Loading staff roles…</div></section>
+    <dialog id="roster-edit-dialog" aria-labelledby="roster-edit-heading" class="roster-edit-dialog">
+      <form id="roster-player-form">
+        <h2 id="roster-edit-heading">Edit Player</h2>
+        <input type="hidden" id="roster-edit-id">
+        <label>First name<input id="roster-edit-first" required maxlength="100" autocomplete="off"></label>
+        <label>Last name<input id="roster-edit-last" required maxlength="100" autocomplete="off"></label>
+        <label>Jersey number<input id="roster-edit-number" type="number" min="0" max="999" required></label>
+        <p id="roster-edit-status" role="status"></p>
+        <div class="roster-edit-actions"><button type="button" id="roster-edit-cancel">Cancel</button><button id="roster-edit-save" type="submit">Save Player</button><button id="roster-edit-archive" type="button" hidden>Remove from roster</button></div>
+      </form>
+    </dialog>
     <footer class="page-footer">SCORIDIUM <span>HOME TO THE ELEMENTS OF YOUR GAME</span></footer>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -82,6 +94,8 @@
 <script src="pageLayout.js" defer></script>
   <!-- In your actual app, load the existing Supabase initialization and pageLayout scripts before roster.js. -->
   <script src="roster.js" defer></script>
+  <link rel="stylesheet" href="roster-editor.css">
+  <script src="roster-editor.js" defer></script>
   <script src="./pwa-register.js" defer></script>
 </body>
 </html>

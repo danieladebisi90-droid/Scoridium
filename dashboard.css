@@ -1440,3 +1440,13 @@ a.dashboard-player-card:hover {
     display: none !important;
   }
 }
+
+/* Tournament ranges use an adaptive secondary-color shade. */
+.weekly-day.weekly-tournament { background:var(--weekly-tournament-bg, #8d6d1b)!important;color:var(--weekly-tournament-ink, white)!important; }
+.weekly-day.weekly-tournament .day-name,.weekly-day.weekly-tournament .day-number,.weekly-day.weekly-tournament .weekly-game-info,.weekly-day.weekly-tournament .weekly-game-info * { color:var(--weekly-tournament-ink, white)!important; }
+.weekly-tournament-info {font-size:clamp(10px, .8vw, 13px);font-weight:700;overflow-wrap:anywhere;}
+
+/* Release: weekly schedule occupies available dashboard width. */
+#app-content .schedule-goals-container{display:block;min-width:0}
+#app-content .schedule-goals-container .weekly-schedule{width:100%;max-width:100%;min-width:0}
+#app-content .team-leaders{display:none!important}

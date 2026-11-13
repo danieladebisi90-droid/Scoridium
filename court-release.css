@@ -1,0 +1,33 @@
+/* Court layout release candidate; overrides incremental V2-V7 without redrawing SVG. */
+html.focus-tracker .tracker-shell[data-focus-view="court"] .focus-court{min-height:0;min-width:0}
+html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount{position:relative;min-height:0;min-width:0}
+html.focus-tracker .tracker-shell[data-focus-view="court"] #basketball-court{display:block!important;visibility:visible!important;width:100%!important;height:100%!important;min-height:0!important;min-width:0!important;object-fit:contain!important;touch-action:manipulation}
+@media(orientation:portrait){
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .focus-stage{overflow:auto!important}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-body{height:auto!important;min-height:0!important;overflow:visible!important}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount{height:auto!important;display:block!important;aspect-ratio:470/440!important}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount #tracker-controls{height:auto!important;aspect-ratio:470/440!important;min-height:0!important}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount .court-wrap{height:auto!important;min-height:0!important;aspect-ratio:470/440!important}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-full-mode .sc-court-body,
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-full-mode #sc-court-mount,
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-full-mode #sc-court-mount #tracker-controls,
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-full-mode #sc-court-mount .court-wrap{aspect-ratio:860/470!important}
+}
+@media(orientation:portrait) and (min-width:651px){
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-view-choices{display:flex!important;flex-direction:row!important;grid-column:1/-1!important;grid-row:3!important}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-view-choices button{flex:1}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-full-mode #sc-court-mount{width:min(100%,760px)!important;max-width:760px!important}
+}
+@media(orientation:landscape) and (min-height:601px){
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-body{height:100%!important;align-self:stretch!important;min-height:0!important}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount{display:block!important;height:100%!important;min-height:0!important}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount #tracker-controls,
+ html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount .court-wrap{height:100%!important;min-height:0!important}
+}
+/* Small phones no longer expose the former error-prone landscape court UI. */
+@media(orientation:landscape) and (max-height:600px) and (pointer:coarse){
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-main{display:none!important}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-head{display:flex!important;flex:1;align-items:center;justify-content:center;text-align:center;padding:15px!important}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-head p{font-size:14px}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-head p:after{content:' · Rotate your phone to portrait to record shots.'}
+}

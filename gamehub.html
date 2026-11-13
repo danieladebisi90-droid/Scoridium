@@ -7,7 +7,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
   <meta name="theme-color" content="#10233F">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Scoridium">
 
 <script>if(window.top===window && sessionStorage.getItem('selectedTeamId')){location.replace('app.html?page=gamehub.html'+encodeURIComponent(location.search+location.hash));}</script>
@@ -15,7 +15,7 @@
 <style>html.scoridium-framed #shared-header {display:none!important;}html.scoridium-framed #app-header {display:none!important;}html.scoridium-framed body {padding-top:0!important;}html.scoridium-framed body {min-height:100dvh!important;}</style>
   <script src="team-theme-boot.js"></script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Game Hub</title>
     <script src="https://unpkg.com/lucide@latest"></script>
 
@@ -23,7 +23,9 @@
     <link rel="stylesheet" href="gamehub-mobile.css">
     <link rel="stylesheet" href="pageLayout.css">
     <link rel="stylesheet" href="calendar-subscribe.css">
+    <link rel="stylesheet" href="tournaments.css">
   <link rel="stylesheet" href="navigation-smooth.css">
+  <link rel="stylesheet" href="universal-ui.css?v=1">
 </head>
 
 <body>
@@ -32,7 +34,7 @@
     <div id="shared-header"><header id="app-header"><nav id="main-navigation" aria-label="Main navigation">
 <a href="myTeams.html" class="nav-home" aria-label="Back to My Teams" title="My Teams"><i data-lucide="house"></i></a>
 <span class="nav-divider"></span><div class="header-team"><h2 id="shared-team-name"></h2></div><span class="nav-divider"></span>
-<div class="nav-links"><a href="dashboard.html">Dashboard</a><a href="gamehub.html">Game Hub</a><a href="roster.html">Roster</a><a href="stats.html">Stats</a><a href="playbook.html">Playbook</a></div>
+<div class="nav-links"><a href="dashboard.html">Dashboard</a><a href="gamehub.html">Game Hub</a><a href="roster.html">Roster</a><a href="stats.html">Stats</a></div>
 <span class="nav-divider"></span><div class="season-selector-container"><select class="season-selector" aria-label="Select season"><option value="">Season</option></select></div>
 </nav></header>
 <script>/* synchronous identity restore, prior to first paint */
@@ -92,7 +94,15 @@
                       <div class="mobile-section-label" id="mobile-selected-date">SELECT A DATE</div>
                       <div id="mobile-day-activities" class="mobile-day-activities">Tap a calendar date to see activities.</div>
                     </section>
-                    <div class="games-list">
+                    <div class="games-list" id="gamehub-context-container">
+                        <div class="games-list-header">
+                            <h2 id="context-panel-heading">OPPONENT HEAD-TO-HEAD</h2>
+                            <button type="button" id="add-tournament" class="manage-schedule-btn" hidden>Add Tournament</button>
+                        </div>
+                        <div id="gamehub-dynamic-context" class="gamehub-dynamic-context" aria-live="polite">
+                            <p class="context-muted">Select a game or tournament date on the calendar.</p>
+                        </div>
+                        <div class="legacy-season-games" hidden>
                         <div class="games-list-header">
                             <h2>SEASON GAMES</h2>
                             <span id="games-count">0 Games</span>
@@ -113,6 +123,7 @@
                             </tbody>
                         </table>
 
+                        </div>
                     </div>
                     </div>
 
@@ -186,6 +197,17 @@
             </section>
         </main>
 
+<!-- Tournament forms are separate from game scheduling and may start with zero games. -->
+<div id="tournament-editor" class="tournament-backdrop" hidden>
+  <form id="tournament-form" class="tournament-dialog" aria-label="Create tournament">
+    <div class="tournament-dialog-head"><h2>Create Tournament</h2><button type="button" id="tournament-cancel" aria-label="Close">×</button></div>
+    <label for="tournament-name">Name (optional)</label><input id="tournament-name" maxlength="120" placeholder="Tournament">
+    <div class="tournament-dates"><label>Start date<input id="tournament-start" type="date" required></label><label>End date<input id="tournament-end" type="date" required></label></div>
+    <p class="context-muted">You can add games and results later. No opponent or bracket is required.</p>
+    <p id="tournament-form-status" role="status"></p>
+    <div class="tournament-dialog-actions"><button type="button" id="tournament-dismiss">Cancel</button><button type="submit">Create Tournament</button></div>
+  </form>
+</div>
 <!-- MANAGE SCHEDULE MODAL -->
 <div id="schedule-modal" class="schedule-modal" hidden>
     <div class="schedule-modal-backdrop"></div>
@@ -231,6 +253,7 @@
     <select id="schedule-event-type" required>
         <option value="practice">Practice</option>
         <option value="game">Game</option>
+        <option value="tournament">Tournament</option>
         <option value="meeting">Team Meeting</option>
         <option value="training">Training</option>
         <option value="other">Other</option>
@@ -417,6 +440,7 @@
 <script src="pageLayout.js" defer></script>
     <script src="gamehub.js" defer></script>
     <script src="calendar-subscribe.js" defer></script>
+    <script src="tournaments.js" defer></script>
 
   <script src="./pwa-register.js" defer></script>
 </body>

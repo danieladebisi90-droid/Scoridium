@@ -7,13 +7,13 @@
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
   <meta name="theme-color" content="#10233F">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Scoridium">
 
 <script>if(window.parent!==window){document.documentElement.classList.add('scoridium-framed');}</script>
 <style>html.scoridium-framed #shared-header {display:none!important;}html.scoridium-framed #app-header {display:none!important;}html.scoridium-framed body {padding-top:0!important;}html.scoridium-framed body {min-height:100dvh!important;}</style>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Basketball | Game</title>
   <link rel="stylesheet" href="tracker.css">
   <link rel="stylesheet" href="mobile-tracker.css?v=tipoff4">
@@ -22,10 +22,12 @@
   <link rel="stylesheet" href="quick-track-polish.css?v=collab1">
   <link rel="stylesheet" href="collaboration.css?v=2">
   <link rel="stylesheet" href="collaboration-v2.css?v=7">
+  <link rel="stylesheet" href="court-release.css?v=1">
+  <link rel="stylesheet" href="universal-ui.css?v=1">
 </head>
 <body>
   <header class="topbar">
-    <a href="gamehub.html">← Game Hub</a>
+    <a class="game-hub-back-button" href="gamehub.html">← Game Hub</a>
     <strong>GAME CENTER</strong>
   </header>
   <main class="tracker-shell">
@@ -359,7 +361,7 @@
           <p class="hint">After Q4, ending the quarter finishes the game unless the score is tied (overtime). Confirmations protect against accidental endings.</p>
         </section>
         <section class="panel quick-track-panel" id="quick-track-panel" aria-label="Quick live tracking">
-          <div class="quick-head"><h3>QUICK TRACK</h3><button type="button" id="quick-view-toggle">Court controls</button></div>
+          <div class="quick-head"><h3>QUICK TRACK</h3><button type="button" id="quick-team-mode" aria-pressed="false">Team Mode</button><button type="button" id="quick-view-toggle">Court controls</button></div>
           <div id="quick-track-root"></div>
         </section>
         <section class="panel player-panel">

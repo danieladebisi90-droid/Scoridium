@@ -49,12 +49,11 @@ html.focus-tracker .focus-game-actions button:focus-visible,
 html.focus-tracker .qv-button:focus-visible{outline:3px solid #2563EB;outline-offset:2px}
 @media(max-width:740px){html.focus-tracker .scoreboard .score-team{padding:4px 2px}}
 
-/* Collaboration update: fixed-size, expanded foul choice surface. */
-html.focus-tracker .qv-foul{justify-content:stretch;gap:7px;overflow:auto}
-html.focus-tracker .qv-foul>.qv-line:first-child{flex:1;min-height:0}
-html.focus-tracker .qv-foul>.qv-line:first-child .qv-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));flex:1;min-height:80px}
-html.focus-tracker .qv-foul>.qv-line:first-child .qv-option{min-height:0!important;white-space:normal;font-size:clamp(12px,1.55vw,18px);font-weight:800}
-html.focus-tracker .qv-foul>.qv-line:first-child .qv-options .qv-option.selected{background:var(--qt-primary,#123b78)!important}
-html.focus-tracker .qv-foul .qv-line{min-height:0}
-html.focus-tracker .qv-foul .qv-line:not(:first-child) .qv-option{min-height:36px!important}
-html.focus-tracker .qv-grid .qv-tile{font-size:clamp(12px,1.6vw,19px)}
+/* Release: two rows of opponent core controls, contextual actions below. */
+.qv-opponent .qv-opp-buttons{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+#quick-team-mode[aria-pressed="true"]{background:#173c75;color:white;border-color:#173c75}
+#quick-team-mode{min-width:88px;font-weight:800}
+@media(max-width:850px){#quick-team-mode{min-width:76px;font-size:13px}.qv-grid .qv-tile{font-size:clamp(13px,3.5vw,20px)!important}}
+
+.qv-opponent .qv-opp-buttons{grid-template-rows:repeat(2,minmax(0,1fr));align-content:start}
+.qv-opponent.qv-opponent-highlight .qv-opp-buttons{grid-template-rows:repeat(3,minmax(0,1fr))}

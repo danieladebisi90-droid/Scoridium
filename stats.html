@@ -7,7 +7,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
   <meta name="theme-color" content="#10233F">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Scoridium">
 
 <script>if(window.top===window && sessionStorage.getItem('selectedTeamId')){location.replace('app.html?page=stats.html'+encodeURIComponent(location.search+location.hash));}</script>
@@ -29,12 +29,13 @@
     <!-- STATISTICS PAGE CSS -->
     <link rel="stylesheet" href="stats.css">
   <link rel="stylesheet" href="navigation-smooth.css">
+  <link rel="stylesheet" href="universal-ui.css?v=1">
 </head>
 <body>
   <div id="shared-header"><header id="app-header"><nav id="main-navigation" aria-label="Main navigation">
 <a href="myTeams.html" class="nav-home" aria-label="Back to My Teams" title="My Teams"><i data-lucide="house"></i></a>
 <span class="nav-divider"></span><div class="header-team"><h2 id="shared-team-name"></h2></div><span class="nav-divider"></span>
-<div class="nav-links"><a href="dashboard.html">Dashboard</a><a href="gamehub.html">Game Hub</a><a href="roster.html">Roster</a><a href="stats.html">Stats</a><a href="playbook.html">Playbook</a></div>
+<div class="nav-links"><a href="dashboard.html">Dashboard</a><a href="gamehub.html">Game Hub</a><a href="roster.html">Roster</a><a href="stats.html">Stats</a></div>
 <span class="nav-divider"></span><div class="season-selector-container"><select class="season-selector" aria-label="Select season"><option value="">Season</option></select></div>
 </nav></header>
 <script>/* synchronous identity restore, prior to first paint */
@@ -46,6 +47,7 @@
       <button type="button" class="active" data-view="team">Team Stats</button>
       <button type="button" data-view="players">Player Stats</button>
       <button type="button" data-view="games">Game Stats</button>
+      <button type="button" data-view="opponents">Opponent Stats</button>
     </nav>
 
     
@@ -188,6 +190,15 @@
         <article class="panel"><div class="panel-heading"><h2>SEASON GAMES</h2><span class="muted" id="game-count"></span></div><div class="table-scroll"><table><thead><tr><th>DATE</th><th>OPPONENT</th><th>LOCATION</th><th>RESULT</th><th>SCORE</th></tr></thead><tbody id="games-body"></tbody></table></div></article>
         <article class="panel"><div class="panel-heading"><h2>GAME SUMMARY</h2><span class="muted" id="selected-game-date"></span></div><div id="game-score" class="game-score"></div><div class="mini-tabs" id="game-summary-tabs"><button data-summary="box" class="active">Box Score</button><button data-summary="shooting">Shooting</button><button data-summary="plays">Play-by-Play</button><button data-summary="compare">Team Comparison</button></div><div id="game-summary-content"></div><button type="button" id="open-game-details" class="text-button">VIEW FULL GAME DETAILS →</button></article>
       </div>
+    </section>
+
+    <section id="opponents-view" class="view" aria-label="Opponent statistics">
+      <article class="panel" style="max-width:1100px;margin:auto">
+        <div class="panel-heading"><h2>OPPONENT SCOUTING</h2><span class="muted">Completed games · Selected season</span></div>
+        <label for="opponent-select">Opponent</label>
+        <select id="opponent-select" style="width:100%;max-width:460px;padding:10px;border-radius:8px;margin:10px 0"></select>
+        <div id="opponent-analysis"></div>
+      </article>
     </section>
 
     <section id="details-view" class="view" aria-label="Game details">

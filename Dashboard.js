@@ -252,6 +252,7 @@ function findLeader(statistic){
 
 function displayTeamLeaders(){
     const leadersList = document.getElementById("leaders-list")
+    if(!leadersList)return; // Team Leaders panel removed from the dashboard.
     leadersList.replaceChildren();
     let playerList = [];
     if (!playerList || playerList.length === 0) {
@@ -560,6 +561,7 @@ async function renderWeeklySchedule() {
 
     let games = [];
     let teamEvents = [];
+    let tournaments = [];
 
     if (teamId && seasonId) {
         const startDate = formatScheduleDate(monday);
@@ -584,6 +586,21 @@ async function renderWeeklySchedule() {
             .gte("event_date", startDate)
             .lte("event_date", endDate)
             .order("event_date", { ascending: true });
+
+        // A tournament is a date-range schedule event, even with no games yet.
+        const tournamentsResult = await supabaseClient
+            .from("scoridium_tournaments")
+            .select("id,name,starts_on,ends_on")
+            .eq("team_id", teamId)
+            .eq("season_id", seasonId)
+            .lte("starts_on", endDate)
+            .gte("ends_on", startDate);
+        if (tournamentsResult.error) {
+            // Before the tournament migration, don't break regular schedules.
+            console.warn("Tournament dates unavailable:", tournamentsResult.error.message);
+        } else {
+            tournaments = tournamentsResult.data || [];
+        }
 
         // Prevent older requests from replacing new data.
         if (requestId !== weeklyScheduleRequest) return;
@@ -633,6 +650,9 @@ async function renderWeeklySchedule() {
         const dayEvents = teamEvents.filter(event =>
             String(event.event_date).slice(0, 10) === dateKey
         );
+        const dayTournaments = tournaments.filter(t =>
+            t.starts_on <= dateKey && dateKey <= t.ends_on
+        );
 
         const dayCard = document.createElement("div");
         dayCard.className = "weekly-day";
@@ -668,6 +688,21 @@ async function renderWeeklySchedule() {
             dayCard.classList.add("team-event");
         }
 
+        if (dayTournaments.length) {
+            dayCard.classList.add("weekly-tournament");
+            const raw = getComputedStyle(document.documentElement)
+                .getPropertyValue("--team-secondary").trim();
+            const hex = /^#([a-f0-9]{6})$/i.exec(raw)?.[1] || "9299a5";
+            const rgb = [0,2,4].map(n => parseInt(hex.slice(n,n+2),16));
+            const linear = n => { n /= 255; return n <= .04045 ? n/12.92 : Math.pow((n+.055)/1.055,2.4); };
+            const lightness = rgb.reduce((sum,n,i)=>sum+linear(n)*[.2126,.7152,.0722][i],0);
+            const factor = lightness > .45 ? .36 : .53;
+            const mixed = rgb.map(n=>Math.round(n*(1-factor)+(lightness>.45?0:255)*factor));
+            const finalLum = mixed.reduce((sum,n,i)=>sum+linear(n)*[.2126,.7152,.0722][i],0);
+            dayCard.style.setProperty("--weekly-tournament-bg",`rgb(${mixed.join(',')})`);
+            dayCard.style.setProperty("--weekly-tournament-ink",finalLum>.22?"#12243b":"#ffffff");
+        }
+
         // Render basketball games.
         dayGames.forEach(game => {
             const gameInfo = document.createElement("div");
@@ -695,6 +730,18 @@ async function renderWeeklySchedule() {
             gameInfo.append(venue, opponent, time);
             dayCard.appendChild(gameInfo);
         });
+
+        // Tournament dates are visible even before any games are known.
+        for (const tournament of dayTournaments) {
+            const marker = document.createElement("div");
+            marker.className = "weekly-game-info weekly-tournament-info";
+            const icon = document.createElement("span");
+            icon.textContent = "🏆 TOURNAMENT";
+            const name = document.createElement("span");
+            name.textContent = tournament.name || "Tournament";
+            marker.append(icon,name);
+            dayCard.appendChild(marker);
+        }
 
         // Render practices, meetings and other events.
         dayEvents.forEach(event => {
@@ -755,7 +802,8 @@ async function renderWeeklySchedule() {
         // Show dash only when nothing is scheduled.
         if (
             dayGames.length === 0 &&
-            dayEvents.length === 0
+            dayEvents.length === 0 &&
+            dayTournaments.length === 0
         ) {
             const empty = document.createElement("span");
             empty.className = "weekly-no-game";

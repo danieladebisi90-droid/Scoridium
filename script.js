@@ -1143,10 +1143,6 @@ function eventDescription(event) {
 
     return `${name} — ${event.made ? "Made" : "Missed"} Free Throw`;
 }
-  if (event.type === "no_assist") return "No assist (confirmed)";
-  if (event.type === "team_offensive_rebound" || event.type === "team_defensive_rebound") {
-    return `${event.team === "us" ? teamName : currentGame?.opponent || "OPPONENT"} — Team ${event.type === "team_offensive_rebound" ? "offensive" : "defensive"} rebound`;
-  }
   if (event.type === "opponent_score") return `Opponent — +${event.points} points`;
   const names = { assist:"Assist", defensive_rebound:"Defensive rebound", offensive_rebound:"Offensive rebound", steal:"Steal", block:"Block", turnover:"Turnover", foul:"Personal foul" };
   const name = event.team === "opponent"
@@ -1171,8 +1167,6 @@ function totalAt(index) { return scores(state.events.slice(0, index + 1)); }
 function renderScoreboard() {
   const total = scores();
   const isHome = currentGame?.location?.toLowerCase() !== "away";
-  const scorePanel=document.querySelector(".scoreboard");
-  if(scorePanel)scorePanel.dataset.trackedSide=isHome?"home":"away";
   $("home-name").textContent = isHome ? teamName : currentGame?.opponent || "OPPONENT";
   $("away-name").textContent = isHome ? currentGame?.opponent || "OPPONENT" : teamName;
   $("home-score").textContent = isHome ? total.us : total.opponent;
@@ -1429,9 +1423,7 @@ function renderCourt() {
     markers.replaceChildren();
 
     state.events
-        .filter(event => event.type === "shot" &&
-            event.x != null && event.y != null &&
-            Number.isFinite(Number(event.x)) && Number.isFinite(Number(event.y)))
+        .filter(event => event.type === "shot")
         .forEach(event => {
 
             // Convert saved coordinates to the current court view
@@ -1489,8 +1481,7 @@ function renderCourt() {
 function renderUnassigned() {
   const list = $("unassigned-list"); list.replaceChildren();
   const unassigned = state.events
-    .filter(e => e.team === "us" && e.playerId == null &&
-      (!e.linkedEventId || e.type === "free_throw") && !String(e.type).startsWith("team_"))
+    .filter(e => e.team === "us" && e.playerId == null)
     .reverse();
   $("tab-unassigned-count").textContent =
     unassigned.length > 0 ? `(${unassigned.length})` : "";
@@ -1661,11 +1652,7 @@ function renderPlayByPlay() {
     }
 
     matching
-        .filter(({ event }) =>
-            !event.linkedEventId ||
-            (event.type === "assist" &&
-             !state.events.some(parent => parent.id === event.linkedEventId))
-        )
+        .filter(({ event }) => !event.linkedEventId)
         .reverse()
         .forEach(({ event, index }) => {
             const row = document.createElement("div");
@@ -1674,26 +1661,9 @@ function renderPlayByPlay() {
             const label = document.createElement("span");
             const total = totalAt(index);
 
-            // An assist is stored as a linked event so that the shot and
-            // assist can be corrected together. Show it alongside the made
-            // basket instead of hiding it from Play-by-Play.
-            const linkedAssists = event.type === "shot" && event.made
-                ? state.events.filter(child =>
-                    child.type === "assist" &&
-                    child.linkedEventId === event.id
-                  )
-                : [];
-            const assistText = linkedAssists.length
-                ? ` · AST: ${linkedAssists.map(assist =>
-                    assist.team === "opponent"
-                        ? (currentGame?.opponent || "OPPONENT")
-                        : playerName(assist.playerId)
-                  ).join(", ")}`
-                : "";
-
             label.textContent =
                 `${periodName(event.period)} · ` +
-                `${eventDescription(event)}${assistText} · ` +
+                `${eventDescription(event)} · ` +
                 `${total.us}–${total.opponent}`;
 
             row.appendChild(label);
@@ -2617,16 +2587,9 @@ async function loadSelectedGame() {
   directionSyncAvailable=typeof game.home_attacks_left_first_half==='boolean';
   if(directionSyncAvailable) applySharedDirection(game.home_attacks_left_first_half);
   await loadGameRoster();
-  const {data:team,error:teamError} = await supabaseClient.from("teams").select("mascot,primary_color,secondary_color").eq("id",game.team_id).single();
+  const {data:team,error:teamError} = await supabaseClient.from("teams").select("mascot").eq("id",game.team_id).single();
   if (teamError) console.warn("Team name loading failed",teamError);
   teamName=team?.mascot || "OUR TEAM";
-  // Quick Track visual identity only: never changes scoring or opponent data.
-  // Missing/invalid tracked-team colors use the standard navy and gold.
-  const validColor=value=>typeof value==='string' && /^#[0-9a-f]{6}$/i.test(value);
-  const quickPrimary=validColor(team?.primary_color)?team.primary_color:'#173C75';
-  const quickSecondary=validColor(team?.secondary_color)?team.secondary_color:'#FFD600';
-  document.documentElement.style.setProperty('--qt-primary',quickPrimary);
-  document.documentElement.style.setProperty('--qt-secondary',quickSecondary);
   window.dispatchEvent(new Event("scoridium-tipoff-teams-loaded"));
   await loadGameEvents();
   

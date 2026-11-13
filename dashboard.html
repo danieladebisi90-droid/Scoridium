@@ -8,7 +8,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
   <meta name="theme-color" content="#10233F">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Scoridium">
 
 <script>if(window.top===window && sessionStorage.getItem('selectedTeamId')){location.replace('app.html?page=dashboard.html'+encodeURIComponent(location.search+location.hash));}</script>
@@ -16,18 +16,19 @@
 <style>html.scoridium-framed #shared-header {display:none!important;}html.scoridium-framed #app-header {display:none!important;}html.scoridium-framed body {padding-top:0!important;}html.scoridium-framed body {min-height:100dvh!important;}</style>
   <script src="team-theme-boot.js"></script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Basketball Stats</title>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="dashboard.css">
     <link rel="stylesheet" href="pageLayout.css">
   <link rel="stylesheet" href="navigation-smooth.css">
+  <link rel="stylesheet" href="universal-ui.css?v=1">
 </head>
 <body>
     <div id="shared-header"><header id="app-header"><nav id="main-navigation" aria-label="Main navigation">
 <a href="myTeams.html" class="nav-home" aria-label="Back to My Teams" title="My Teams"><i data-lucide="house"></i></a>
 <span class="nav-divider"></span><div class="header-team"><h2 id="shared-team-name"></h2></div><span class="nav-divider"></span>
-<div class="nav-links"><a href="dashboard.html">Dashboard</a><a href="gamehub.html">Game Hub</a><a href="roster.html">Roster</a><a href="stats.html">Stats</a><a href="playbook.html">Playbook</a></div>
+<div class="nav-links"><a href="dashboard.html">Dashboard</a><a href="gamehub.html">Game Hub</a><a href="roster.html">Roster</a><a href="stats.html">Stats</a></div>
 <span class="nav-divider"></span><div class="season-selector-container"><select class="season-selector" aria-label="Select season"><option value="">Season</option></select></div>
 </nav></header>
 <script>/* synchronous identity restore, prior to first paint */
@@ -72,15 +73,6 @@
                 </div>
                 <div class="weekly-days" id="weekly-days">
                 <!-- JavaScript will generate the seven days -->
-                </div>
-            </div>
-        <div class="team-leaders">
-                <div class="team-leaders-header">
-                    <h2>Team Leaders</h2>
-                    <p>Season Leaders</p>
-                </div>
-                <div id="leaders-list">
-
                 </div>
             </div>
         </section>

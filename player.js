@@ -252,7 +252,7 @@ tile.append(value, name, details);
     $('player-grade').textContent=`GRADE ${p.grade??'—'}`;
     $('player-school').textContent=(team.school_name||'Team').toUpperCase();
     $('player-mascot').textContent=(team.mascot||'').toUpperCase();
-    $('team-letter').textContent=String(team.mascot||team.school_name||'S').slice(0,1).toUpperCase();
+    // Team-initial ornament removed from Player Overview.
     renderCourt();
     const totals=$('stat-totals');totals.replaceChildren();
     [['Games Played',g],['Points',total('pts')],['Rebounds',total('reb')],['Assists',total('ast')],['Steals',total('stl')],['Blocks',total('blk')],['Turnovers',total('tov')],['Fouls',total('pf')]].forEach(([a,b])=>row(totals,a,b));

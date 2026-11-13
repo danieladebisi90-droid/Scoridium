@@ -7,21 +7,23 @@
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
   <meta name="theme-color" content="#10233F">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Scoridium">
 
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Scoridium</title>
   <script src="team-theme-boot.js"></script>
   <link rel="stylesheet" href="pageLayout.css">
-  <link rel="stylesheet" href="app-shell.css?v=fullscreen3">
+  <link rel="stylesheet" href="app-shell.css">
+  <link rel="stylesheet" href="release-ui.css?v=1">
   <script src="https://unpkg.com/lucide@latest" defer></script>
+  <link rel="stylesheet" href="universal-ui.css?v=1">
 </head>
 <body class="scoridium-shell">
   <header id="app-header" class="shell-header">
     <nav id="main-navigation" aria-label="Main navigation">
-      <a href="myTeams.html" class="nav-home" title="My Teams" aria-label="Go to My Teams">⌂</a>
+      <a href="myTeams.html" class="nav-home" title="My Teams" aria-label="Go to My Teams">SCORIDIUM</a>
       <span class="nav-divider"></span>
       <div class="header-team"><h2 id="shared-team-name"></h2></div>
       <span class="nav-divider"></span>
@@ -30,7 +32,7 @@
         <a href="gamehub.html" data-view="gamehub.html">Game Hub</a>
         <a href="roster.html" data-view="roster.html">Roster</a>
         <a href="stats.html" data-view="stats.html">Stats</a>
-        <a href="playbook.html" data-view="playbook.html">Playbook</a>
+
       </div>
       <span class="nav-divider"></span>
       <div class="season-selector-container"><select class="season-selector" aria-label="Select season"><option>Season</option></select></div>
@@ -43,7 +45,7 @@
   </div>
   <div class="mobile-more-menu" id="mobile-more-menu" hidden>
     <a href="myTeams.html">Switch Team</a>
-    <a href="playbook.html">Playbook</a>
+
   </div>
   <main class="shell-main" id="shell-main" aria-label="Scoridium page">
     <iframe id="page-frame" title="Scoridium content" loading="eager" allow="fullscreen" referrerpolicy="same-origin"></iframe>
@@ -54,7 +56,7 @@
     <a href="gamehub.html" data-view="gamehub.html"><span class="mobile-nav-icon">▦</span><span>Games</span></a>
     <a href="roster.html" data-view="roster.html"><span class="mobile-nav-icon">♙</span><span>Roster</span></a>
     <a href="stats.html" data-view="stats.html"><span class="mobile-nav-icon">▥</span><span>Stats</span></a>
-    <button type="button" id="mobile-more-btn" aria-expanded="false"><span class="mobile-nav-icon">⋯</span><span>More</span></button>
+
   </nav>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>

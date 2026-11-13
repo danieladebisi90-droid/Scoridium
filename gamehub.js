@@ -86,6 +86,11 @@ function renderGameCalendar() {
             dayButton.classList.add("away-game");
         }
 
+        // Tournament ranges are separate events and may have zero known games.
+        if (window.scoridiumTournaments?.decorateDate) {
+            window.scoridiumTournaments.decorateDate(dayButton, dateKey);
+        }
+
         // Highlight selected date.
         if (
             selectedGameDate &&
@@ -183,6 +188,10 @@ if (totalItems === 1 && eventsForDay.length === 1) {
             renderGameCalendar();
             renderMobileSelectedDay();
             renderMobileGameCard();
+            window.scoridiumTournaments?.renderSelectedDate();
+            const selectedCompleted = selectedGameDate ? gameHubGames.filter(g =>
+                String(g.date).slice(0,10) === dateKey && g.status === "completed") : [];
+            displayPreviousGame(selectedCompleted.length ? selectedCompleted : gameHubGames);
         });
 
         calendar.appendChild(dayButton);
@@ -243,6 +252,7 @@ async function loadGameHubGames() {
     renderGameCalendar();
     console.log("Game Hub games:", games);
     displayGameHubGames(games);
+    window.scoridiumTournaments?.renderSelectedDate();
     renderMobileSelectedDay();
     renderMobileGameCard();
 
@@ -256,6 +266,7 @@ async function initializeGameHub() {
 
     await loadGameHubGames();
     await loadGameHubEvents();
+    await window.scoridiumTournaments?.reload();
 }
 
 initializeGameHub();
@@ -300,6 +311,7 @@ function displayGameHubGames(games) {
             row.appendChild(cell);
         });
         row.addEventListener("click", function () {
+            // Table rows are legacy-only. Calendar dates now drive game context.
             if (selectedGameId === game.id) {
         selectedGameId = null;
 
@@ -324,7 +336,7 @@ function displayGameHubGames(games) {
         } else if (game.status === "scheduled" || 
             game.status === "live" ||
             game.status === "paused") {
-            displayNextGame(gameHubGames, game);
+            displayNextGame(gameHubGames);
         }
     });
                 tableBody.appendChild(row);
@@ -708,7 +720,7 @@ function renderPreviousGameLeaders(events, players) {
 }
 
 
-function displayNextGame(games, selectedGame = null) {
+function displayNextGame(games) {
     const today = new Date();
     const todayKey = [
         today.getFullYear(),
@@ -723,7 +735,7 @@ function displayNextGame(games, selectedGame = null) {
         )
         .sort((a, b) => a.date.localeCompare(b.date));
 
-    const nextGame = selectedGame || upcomingGames[0];
+    const nextGame = upcomingGames[0];
     const openGameButton = document.getElementById("open-next-game");
 
     openGameButton.disabled = !nextGame;
@@ -1492,6 +1504,13 @@ scheduleForm?.addEventListener("submit", async event => {
         return;
     }
 
+    // Tournament creation is handled by a separate date-range editor.
+    if (type === 'tournament') {
+        scheduleModal.hidden = true;
+        document.getElementById('add-tournament')?.click();
+        return;
+    }
+
     // Games will use the games table later.
     
 if (type === "game") {
@@ -1757,6 +1776,7 @@ function updateScheduleLayout() {
     const type = eventTypeSelect.value;
 
     const isGame = type === "game";
+    const isTournament = type === "tournament";
     const isSimpleEvent =
         ["practice", "meeting", "game"].includes(type);
 
@@ -1774,6 +1794,12 @@ function updateScheduleLayout() {
     const gameVenue =
         document.getElementById("schedule-game-venue");
 
+    if (isTournament) {
+        const tournamentButton = document.getElementById('add-tournament');
+        if (tournamentButton && !tournamentButton.hidden) tournamentButton.click();
+        eventTypeSelect.value = 'practice';
+        return updateScheduleLayout();
+    }
     opponentField.hidden = !isGame;
     opponentInput.required = isGame;
 
@@ -1852,7 +1878,8 @@ async function checkSchedulePermissions() {
         .select("role")
         .eq("team_id", teamId)
         .eq("user_id", user.id)
-        .eq("role", "head_coach")
+        .in("role", ["head_coach", "coach", "assistant_coach", "manager"])
+        .limit(1)
         .maybeSingle();
 
     if (error) {
@@ -1865,12 +1892,14 @@ async function checkSchedulePermissions() {
         return;
     }
 
-    canManageSchedule = membership?.role === "head_coach";
+    canManageSchedule = ["head_coach", "coach", "assistant_coach", "manager"].includes(membership?.role);
 
     if (button) {
         button.hidden = !canManageSchedule;
     }
 
+    const tournamentAdd = document.getElementById("add-tournament");
+    if (tournamentAdd) tournamentAdd.hidden = !canManageSchedule;
     console.log("Can manage schedule:", canManageSchedule);
 }
 
@@ -2092,6 +2121,11 @@ function renderMobileSelectedDay() {
     }).toUpperCase();
     const games = gameHubGames.filter(game => String(game.date).slice(0,10) === key);
     const events = gameHubEvents.filter(event => String(event.event_date).slice(0,10) === key);
+    const tournaments = window.scoridiumTournaments?.forDate(key) || [];
+    for (const tournament of tournaments) {
+        container.appendChild(mobileEventRow('Tournament', tournament.name || 'Tournament',
+            `${tournament.starts_on} – ${tournament.ends_on}`));
+    }
     for (const game of games) {
         const finished = game.status === 'completed';
         const score = finished && game.team_score != null && game.opponent_score != null
@@ -2105,7 +2139,7 @@ function renderMobileSelectedDay() {
             event.title || 'Team Event',
             event.start_time || event.time || 'Time TBD'));
     }
-    if (!games.length && !events.length) {
+    if (!games.length && !events.length && !tournaments.length) {
         container.appendChild(mobileEventRow('Schedule','No events', 'Nothing scheduled for this date.'));
     }
 }
@@ -2119,29 +2153,13 @@ function renderMobileGameCard() {
     const result = card.querySelector('[data-mobile-game-result]');
     const action = card.querySelector('[data-mobile-game-action]');
 
-    const selectedDayKey = selectedGameDate ? mobileDateKey(selectedGameDate) : null;
-    const completedOnDay = selectedDayKey ? gameHubGames.filter(game =>
-        String(game.date).slice(0,10) === selectedDayKey && game.status === 'completed'
-    ).sort((a,b) => String(b.date).localeCompare(String(a.date))) : [];
+    const today = mobileDateKey(new Date());
+    const game = gameHubGames.filter(g =>
+        g.status === 'scheduled' && String(g.date).slice(0,10) >= today
+    ).sort((a,b) => String(a.date).localeCompare(String(b.date)))[0] || null;
+    const completed = false;
 
-    // A past, completed game gets a box-score card. Future game taps never
-    // change the next-game tracker target.
-    let game = completedOnDay[0] || null;
-    let completed = Boolean(game);
-    if (!game) {
-        const today = mobileDateKey(new Date());
-        game = gameHubGames.filter(g =>
-            ['scheduled','live','paused'].includes(g.status) &&
-            String(g.date).slice(0,10) >= today
-        ).sort((a,b) => String(a.date).localeCompare(String(b.date)))[0];
-        if (!game) {
-            game = gameHubGames.filter(g => g.status === 'completed')
-                .sort((a,b) => String(b.date).localeCompare(String(a.date)))[0];
-            completed = Boolean(game);
-        }
-    }
-
-    heading.textContent = completed ? 'PREVIOUS GAME' : 'NEXT GAME';
+    heading.textContent = 'NEXT GAME';
     date.textContent = game ? String(game.date).slice(0,10) : 'No scheduled games';
     matchup.textContent = game ? `${gameHubTeamName} vs ${game.opponent || 'Opponent'}` : 'No games available';
     result.textContent = game ? (completed

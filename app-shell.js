@@ -23,7 +23,7 @@
   const trackerScreen=window.matchMedia('(orientation: landscape) and (max-height: 650px)');
   function updateMobileTrackerMode(){
     const inGame=activeView.split(/[?#]/)[0]==='game.html';
-    document.body.classList.toggle('tracker-fullscreen',inGame);
+    document.body.classList.toggle('tracker-fullscreen',inGame && trackerScreen.matches);
     document.body.classList.toggle('tracker-page',inGame);
   }
   trackerScreen.addEventListener('change',updateMobileTrackerMode);
@@ -36,7 +36,7 @@
   moreButtons.forEach(b=>b?.addEventListener('click',()=>setMoreOpen(moreMenu.hidden)));
   moreMenu.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>setMoreOpen(false)));
 
-  function highlight(file){document.querySelectorAll('[data-view]').forEach(link=>link.classList.toggle('active',link.dataset.view===file.split(/[?#]/)[0]));}
+  function highlight(file){const selected=file.split(/[?#]/)[0];document.querySelectorAll('[data-view]').forEach(link=>link.classList.toggle('active',link.dataset.view===selected));const keys=['dashboard.html','gamehub.html','roster.html','stats.html'];const idx=keys.indexOf(selected);const nav=document.querySelector('.mobile-bottom-nav');if(nav&&idx!==-1)nav.style.setProperty('--nav-index',idx);}
   function navigate(view,{replace=false}={}) {
     const next=viewOf(view);
     if(!next)return;

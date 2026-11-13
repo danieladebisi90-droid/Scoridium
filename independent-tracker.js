@@ -7,7 +7,7 @@
  const mode=localStorage.getItem(id)==='independent'?'independent':'primary';
  const nav=document.querySelector('.focus-nav');if(!nav)return;
  const container=document.createElement('label');container.className='sc-tracker-role';
- container.innerHTML='<span>TRACKER ROLE</span><select id="sc-tracker-mode" aria-label="Tracking responsibility"><option value="primary">Primary</option><option value="independent">Observer</option></select>';
+ container.innerHTML='<span>STAT TRACKING STREAM</span><select id="sc-tracker-mode" aria-label="Tracking responsibility"><option value="primary">Stat Tracker</option><option value="independent">Independent Stat Tracker</option></select>';
  const tabs=nav.querySelector('.focus-tabs');tabs?.before(container);
  const selector=container.querySelector('select');selector.value=mode;
  const deviceKey='scoridium-device-id';
@@ -33,7 +33,7 @@
    try{
      const {data,error}=await supabaseClient.rpc('scoridium_claim_primary_tracker',{p_game_id:game,p_device_id:deviceId});
      if(error)throw error;
-     if(!Array.isArray(data)||data.length!==1)throw new Error('Primary claim unavailable');
+     if(!Array.isArray(data)||data.length!==1)throw new Error('Stat Tracker claim unavailable');
      permitPrimary(Boolean(data[0].is_owner));
      if(!ownsPrimary){
        status.textContent='Primary occupied';
@@ -43,17 +43,17 @@
        takeover.addEventListener('click',async()=>{
          if(!confirm('Force this device to become primary? Only do this after the other scorekeeper stops tracking.'))return;
          const r=await supabaseClient.rpc('scoridium_takeover_primary_tracker',{p_game_id:game,p_device_id:deviceId});
-         if(r.error){alert(r.error.message);return;}permitPrimary(true);status.textContent='Primary claimed';
+         if(r.error){alert(r.error.message);return;}permitPrimary(true);status.textContent='Stat Tracker active';
        });
-     }else status.textContent='Primary claimed';
+     }else status.textContent='Stat Tracker active';
    }catch(err){
      // Backward-compatible solo mode until SQL migration is installed.
-     status.textContent='Primary (solo mode)';console.warn('Primary tracker locking unavailable:',err.message);
+     status.textContent='Stat Tracker (solo mode)';console.warn('Stat Tracker claim unavailable:',err.message);
    }
  }
  selector.addEventListener('change',async()=>{
    const next=selector.value;
-   if(!confirm(next==='independent'?'Observer mode saves events separately for verification, without changing official scores. Switch and reload?':'Primary mode writes official game events. Only one device may own it. Switch and reload?')){
+   if(!confirm(next==='independent'?'Independent Stat Tracker mode saves events separately for verification, without changing official scores. Switch and reload?':'Stat Tracker mode writes official game events. Only one device may own it. Switch and reload?')){
      selector.value=mode;return;
    }
    if(mode==='primary'&&ownsPrimary&&game){
@@ -69,7 +69,7 @@
  if(mode!=='independent')return;
  // Independent observers may not start/stop a game or change official status.
  document.querySelectorAll('.focus-game-actions [data-original]').forEach(b=>{
-   b.disabled=true;b.title='Only the designated primary tracker controls game status.';
+   b.disabled=true;b.title='Only the active Stat Tracker controls game status.';
  });
  status.textContent='Independent observations';
  const originalAdd=window.addEvent,originalStat=window.recordStat;
@@ -82,7 +82,7 @@
  async function postObservation(obs){
   if(!ready||!user){status.textContent='Local only — sign in/apply migration';return;}
   const {error}=await supabaseClient.from('tracker_event_observations').insert(obs);
-  if(error){status.textContent='Observer sync failed — saved locally';console.error('Independent observer write',error);return;}
+  if(error){status.textContent='Independent tracking sync failed — saved locally';console.error('Independent observer write',error);return;}
   saved.add(obs.id);status.textContent='Independent observations synced';
  }
  function capture(ev){
@@ -111,7 +111,7 @@
    ready=true;
    const pending=backlog.filter(o=>!saved.has(o.id));
    for(const o of pending){o.tracker_id=user.id;await postObservation(o);}
-   if(pending.length===0)status.textContent='Independent observer ready';
+   if(pending.length===0)status.textContent='Independent Stat Tracker ready';
  }
  // Existing local observations may already exist remotely after a reload.
  // De-duplicate insert attempts using server IDs, never silently discard them.

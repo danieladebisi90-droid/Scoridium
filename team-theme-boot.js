@@ -9,6 +9,7 @@
     const p=item.primary_color,s=item.secondary_color;
     if(!hex(p)||!hex(s)) return;
     const root=document.documentElement.style;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content',p);
     const luminance=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4).reduce((a,v,i)=>a+v*[.2126,.7152,.0722][i],0);
     const mix=(a,b,t)=>'#'+[1,3,5].map(i=>Math.round(parseInt(a.slice(i,i+2),16)*(1-t)+parseInt(b.slice(i,i+2),16)*t).toString(16).padStart(2,'0')).join('');
     const ink=h=>luminance(h)>.179?'#151515':'#FFFFFF';

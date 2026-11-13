@@ -8,7 +8,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
   <meta name="theme-color" content="#10233F">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Scoridium">
 
 <script>if(window.parent!==window){document.documentElement.classList.add('scoridium-framed');}</script>
@@ -20,12 +20,13 @@
 <link href="player.css" rel="stylesheet"/>
 <link href="pageLayout.css" rel="stylesheet"/>
 <link href="player.css" rel="stylesheet"/>  <link rel="stylesheet" href="navigation-smooth.css">
+  <link rel="stylesheet" href="universal-ui.css?v=1">
 </head>
 <body>
 <div id="shared-header"><header id="app-header"><nav id="main-navigation" aria-label="Main navigation">
 <a href="myTeams.html" class="nav-home" aria-label="Back to My Teams" title="My Teams"><i data-lucide="house"></i></a>
 <span class="nav-divider"></span><div class="header-team"><h2 id="shared-team-name"></h2></div><span class="nav-divider"></span>
-<div class="nav-links"><a href="dashboard.html">Dashboard</a><a href="gamehub.html">Game Hub</a><a href="roster.html">Roster</a><a href="stats.html">Stats</a><a href="playbook.html">Playbook</a></div>
+<div class="nav-links"><a href="dashboard.html">Dashboard</a><a href="gamehub.html">Game Hub</a><a href="roster.html">Roster</a><a href="stats.html">Stats</a></div>
 <span class="nav-divider"></span><div class="season-selector-container"><select class="season-selector" aria-label="Select season"><option value="">Season</option></select></div>
 </nav></header>
 <script>/* synchronous identity restore, prior to first paint */
@@ -74,7 +75,7 @@
 <p><span id="player-school">SCHOOL</span> <i>│</i> <span id="player-mascot">TEAM</span></p>
 </div>
 
-<div aria-hidden="true" class="letter-mark" id="team-letter">C</div></section>
+</section>
 <nav aria-label="Player profile tabs" class="profile-tabs" role="tablist"><button aria-controls="panel-overview" aria-selected="true" id="tab-overview" role="tab" type="button">Overview</button><button aria-controls="panel-games" aria-selected="false" id="tab-games" role="tab" type="button">Game Log</button><button aria-controls="panel-statistics" aria-selected="false" id="tab-statistics" role="tab" type="button">Season Stats</button><button aria-controls="panel-career" aria-selected="false" id="tab-career" role="tab" type="button">Career</button></nav>
 <section aria-labelledby="tab-overview" class="tab-panel" id="panel-overview" role="tabpanel">
   <div class="concept-overview-grid">

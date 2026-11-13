@@ -5,7 +5,10 @@
   const root=document.getElementById('quick-track-root');
   if(!root || typeof addEvent!=='function') return;
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  let mode='idle', who=null, shooting='us', source=null, last='Ready to track', block=null, assister=null, pendingShooter=null;
+  let teamMode=false;
+  const teamModeBtn=document.getElementById('quick-team-mode');
+  teamModeBtn?.addEventListener('click',()=>{teamMode=!teamMode;teamModeBtn.setAttribute('aria-pressed',String(teamMode));teamModeBtn.textContent=teamMode?'Player Mode':'Team Mode';reset();});
+  let mode='idle', who=null, shooting='us', source=null, last='Ready to track', block=null;
   let foul={type:null,shot:null,result:null,bonus:null,ft:null,technicalPersonal:null};
   let ft={total:0,done:0,shooter:null,source:null,team:'us',lastMiss:false,dead:false};
   const opposite=t=>t==='us'?'opponent':'us';
@@ -23,9 +26,8 @@
   const related=(type,team,playerId=null,linkedEventId=source)=>record(type,team,playerId,{...(linkedEventId?{linkedEventId}:{})});
   const btn=(action,text,kind='',extra='')=>`<button type="button" class="qv-button ${kind}" data-qv="${action}" ${extra}>${esc(text)}</button>`;
   const tile=(action,text,kind='',extra='')=>`<button type="button" class="qv-button qv-tile ${kind}" data-qv="${action}" ${extra}>${esc(text)}</button>`;
-  const tileGrid=items=>`<div class="qv-grid" style="--qv-rows:${Math.max(3,Math.ceil(items.length/4))}">${items.join('')}</div>`;
-  const sortedPlayers=()=>[...players].sort((a,b)=>{const x=Number(a.number),y=Number(b.number);return (Number.isFinite(x)?x:9999)-(Number.isFinite(y)?y:9999)||String(a.number??'').localeCompare(String(b.number??''));});
-  const roster=(action='player',exclude=null,extra=null)=>tileGrid([...sortedPlayers().map(p=>tile(action,`#${p.number??'?'}`,'',`data-player="${esc(p.id)}" ${exclude!==null&&String(exclude)===String(p.id)?'disabled':''}`)),...(extra?[tile(extra[0],extra[1],'qv-neutral')]:[])]);
+  const tileGrid=items=>`<div class="qv-grid">${items.join('')}</div>`;
+  const roster=(action='player',exclude=null,extra=null)=>teamMode&&action!=='player'?tileGrid([tile(action,'TEAM','qv-neutral'),...(extra?[tile(extra[0],extra[1],'qv-neutral')]:[])]):tileGrid([...players.map(p=>tile(action,`#${p.number??'?'}`,'',`data-player="${esc(p.id)}" ${exclude!==null&&String(exclude)===String(p.id)?'disabled':''}`)),...(extra?[tile(extra[0],extra[1],'qv-neutral')]:[])]);
   const choice=(options)=>`<div class="qv-choices">${options.map(x=>tile(x[0],x[1],x[2]||'')).join('')}</div>`;
   function startRebound(missedTeam,id,blocked=null){shooting=missedTeam;source=id;block=blocked;mode='reboundChoice';render();}
   function conclude(message){last=message;reset();}
@@ -69,7 +71,7 @@
     if(action==='pf'){beginFoul('us',pid);return;}
     if(action==='made2'||action==='made3'){
       const points=action==='made2'?2:3;source=shot('us',points,true,pid);
-      if(!source)return;mode='assist';render();return;
+      if(!source)return;if(teamMode){conclude(`${names().us} • +${points}PT team basket`);return;}mode='assist';render();return;
     }
     if(action==='miss2'||action==='miss3'){
       const points=action==='miss2'?2:3;const id=shot('us',points,false,pid);
@@ -82,8 +84,7 @@
       // recordStat auto-creates opposite-team TO and links it.
       if(active()){recordStat('steal','us',pid);conclude(`Croxford ${label(pid)} • STL + opponent TO`);}return;
     }
-    if(action==='ast'){if(pid==null){tell('Select a player to enter an assist first.');return;}assister=pid;mode='assistFirstShooter';render();return;}
-    const types={reb:'defensive_rebound',blk:'block'};
+    const types={reb:'defensive_rebound',ast:'assist',blk:'block'};
     if(types[action]){record(types[action],'us',pid);conclude(`${names().us} ${label(pid)} • ${action.toUpperCase()}`);}
   }
   function opponentAction(action){
@@ -91,7 +92,7 @@
     if(action==='made2'||action==='made3'){const points=action==='made2'?2:3;shot('opponent',points,true);conclude(`${names().opponent} +${points}PT`);return;}
     if(action==='miss2'||action==='miss3'){const points=action==='miss2'?2:3;const id=shot('opponent',points,false);if(id)startRebound('opponent',id);return;}
     if(action==='to'){source=record('turnover','opponent');if(source){mode='steal';render();}return;}
-    if(action==='stl'){if(active()&&mode==='oppSteal'){related('steal','opponent',null,source);conclude(`${names().opponent} STL linked to tracked-team TO`);}return;}
+    if(action==='stl'){if(active()){recordStat('steal','opponent',null);conclude(`${names().opponent} STL + tracked team TO`);}return;}
     if(action==='reb'){
       if(['reboundChoice','reboundPlayer','blocker','ftRebound'].includes(mode))assignRebound('opponent',null,true);
       else {record('team_defensive_rebound','opponent');conclude(`${names().opponent} team rebound`);}
@@ -102,21 +103,20 @@
   const locked=()=>!active();
   function render(){
     const ns=names();
-    const descriptive={idle:'Select a player',stats:`${label(who)} • Choose stat`,assist:'Who assisted?',assistFirstShooter:'Who scored?',assistFirstShot:'Choose the made shot',steal:'Who stole the ball?',oppSteal:'Did the opponent steal?',reboundChoice:'Block or rebound?',blocker:'Who blocked?',reboundPlayer:'Who rebounded?',foul:'Classify the foul',ft:'Record each free throw',ftShooter:'Who is shooting?',ftRebound:'Final FT missed • rebound',done:'Complete'};
+    const descriptive={idle:'Select a player',stats:`${label(who)} • Choose stat`,assist:'Who assisted?',steal:'Who stole the ball?',oppSteal:'Did the opponent steal?',reboundChoice:'Block or rebound?',blocker:'Who blocked?',reboundPlayer:'Who rebounded?',foul:'Classify the foul',ft:'Record each free throw',ftShooter:'Who is shooting?',ftRebound:'Final FT missed • rebound',done:'Complete'};
     const current=mode==='idle'?'':mode;
     let content='';
-    if(mode==='idle') content=roster('player');
+    if(mode==='idle') content=teamMode?tileGrid([tile('made2','+2PT','qv-made'),tile('made3','+3PT','qv-made'),tile('miss2','2PT MISS','qv-miss'),tile('miss3','3PT MISS','qv-miss'),...[['reb','REB'],['ast','AST'],['stl','STL'],['blk','BLK'],['pf','PF'],['to','TO']].map(([a,b])=>tile(a,b))]):roster('player');
     else if(mode==='stats') content=tileGrid([
-      tile('made2','+2PT','qv-made'),tile('miss2','2PT MISS','qv-miss'),
-      tile('made3','+3PT','qv-made'),tile('miss3','3PT MISS','qv-miss'),
+      tile('made2','+2PT','qv-made'),tile('made3','+3PT','qv-made'),
+      tile('miss2','2PT MISS','qv-miss'),tile('miss3','3PT MISS','qv-miss'),
       ...[['reb','REB'],['ast','AST'],['stl','STL'],['blk','BLK'],['pf','PF'],['to','TO']].map(([a,b])=>tile(a,b)),
       tile('back','BACK','qv-neutral'),tile('skip','SKIP','qv-neutral')]);
-    else if(['assist','assistFirstShooter','steal','blocker','reboundPlayer','ftShooter'].includes(mode)){
-      const action={assist:'assistPlayer',assistFirstShooter:'assistFirstPick',steal:'stealPlayer',blocker:'blockPlayer',reboundPlayer:'rebPlayer',ftShooter:'shooterPlayer'}[mode];
+    else if(['assist','steal','blocker','reboundPlayer','ftShooter'].includes(mode)){
+      const action={assist:'assistPlayer',steal:'stealPlayer',blocker:'blockPlayer',reboundPlayer:'rebPlayer',ftShooter:'shooterPlayer'}[mode];
       const special={assist:['noAssist','NO AST'],steal:['noSteal','NO STL'],reboundPlayer:['unknownReb','UNKNOWN'],ftShooter:['unknownShooter','TEAM']}[mode];
-      content=roster(action,mode==='assist'?who:mode==='assistFirstShooter'?assister:null,special);
-    }else if(mode==='assistFirstShot')content=choice([['assistMake2','+2PT','qv-made'],['assistMake3','+3PT','qv-made']]);
-    else if(mode==='reboundChoice')content=choice(shooting==='opponent'&&!block?[['chooseBlock','BLK','qv-info'],['chooseRebound','REB','qv-neutral']]:[['chooseRebound','REB','qv-neutral']]);
+      content=roster(action,mode==='assist'?who:null,special);
+    }else if(mode==='reboundChoice')content=choice(shooting==='opponent'&&!block?[['chooseBlock','BLK','qv-info'],['chooseRebound','REB','qv-neutral']]:[['chooseRebound','REB','qv-neutral']]);
     else if(mode==='oppSteal')content=choice([['oppStealYes','OPP STL'],['noSteal','NO STL'],['skip','SKIP']]);
     else if(mode==='foul'){
       const sel=(field,value,label)=>`<button type="button" class="qv-option ${String(foul[field])===(field==='technicalPersonal'?String(value==='yes'):value)?'selected':''}" data-qv="setFoul" data-field="${field}" data-value="${value}">${esc(label)}</button>`;
@@ -132,29 +132,21 @@
     }else if(mode==='ftRebound')content=choice([['chooseRebound','REB','qv-info'],['noLiveRebound','DEAD BALL / NO REB'],['skip','SKIP']]);
     const reboundActive=['reboundChoice','reboundPlayer','blocker','ftRebound'].includes(mode);
     const trackedActive=mode!=='idle';
-    // Only show opponent BLK/STL/REB as contextual controls, preventing
-    // double-entry of events already linked to a tracked-team shot/TO.
-    const opponentActions=[['made2','+2PT','qv-made'],['miss2','2PT MISS','qv-miss'],
-      ['made3','+3PT','qv-made'],['miss3','3PT MISS','qv-miss'],['to','TO',''],['pf','PF','']];
-    if(reboundActive){opponentActions.push(['reb','REB','']);
-      if(shooting==='us')opponentActions.push(['blk','BLK','']);}
-    if(mode==='oppSteal')opponentActions.push(['stl','STL','']);
     root.innerHTML=`<div class="qv-layout">
       <section class="qv-tracked ${trackedActive?'qv-highlight':''}" aria-label="Tracked team controls">
-        <div class="qv-team-heading"><div><strong>${esc(ns.us)}</strong><small>${esc(descriptive[mode]||'Choose action')}</small></div>${btn('teamPlayer','TEAM','qv-team-btn',trackedActive?'disabled':'')}</div>
+        <div class="qv-team-heading"><div><strong>${esc(ns.us)}</strong><small>${esc(descriptive[mode]||'Choose action')}</small></div>${teamMode?'':btn('teamPlayer','TEAM','qv-team-btn',trackedActive?'disabled':'')}</div>
         <div class="qv-action-surface">${content}</div>
         <div class="qv-bottom">${mode!=='idle'&&mode!=='stats'&&mode!=='foul'?btn('skip','SKIP','qv-neutral'):''}${mode!=='idle'&&mode!=='stats'&&mode!=='foul'?btn('back','BACK','qv-neutral'):''}</div>
       </section>
       <section class="qv-opponent ${reboundActive?'qv-opponent-highlight':''}" aria-label="Opponent controls"><div class="qv-team-heading"><div><strong>${esc(ns.opponent)}</strong><small>Opponent team stats</small></div></div>
-      <div class="qv-opp-buttons">${opponentActions.map(([a,label,kind])=>btn(`opp:${a}`,label,kind,(mode!=='idle'&&!(reboundActive&&(a==='reb'||(shooting==='us'&&a==='blk')))&&!(mode==='oppSteal'&&a==='stl'))?'disabled':'')).join('')}</div></section>
+      <div class="qv-opp-buttons">${[['made2','+2PT','qv-made'],['made3','+3PT','qv-made'],['to','TO',''],['miss2','2PT MISS','qv-miss'],['miss3','3PT MISS','qv-miss'],['pf','PF',''],...(reboundActive?[['reb','REB',''],['stl','STL',''],['blk','BLK','']]:[])].map(([a,label,kind])=>btn(`opp:${a}`,label,kind,(mode!=='idle'&&!(reboundActive&&(a==='reb'||(shooting==='us'&&a==='blk'))))?'disabled':'')).join('')}</div></section>
       <section class="qv-last"><small>LAST EVENT</small><strong>${esc(last)}</strong></section></div>`;
   }
   root.addEventListener('click',e=>{
     const b=e.target.closest('button[data-qv]');if(!b||b.disabled)return;
     const a=b.dataset.qv;
-    if(a==='back'){if(mode==='assistFirstShot'){mode='assistFirstShooter';render();return;}if(mode==='stats')reset();else if(mode==='reboundPlayer')mode='reboundChoice';else if(mode==='ftShooter')mode='ft';else if(mode==='foul')reset();else {reset();}render();return;}
+    if(a==='back'){if(mode==='stats')reset();else if(mode==='reboundPlayer')mode='reboundChoice';else if(mode==='ftShooter')mode='ft';else if(mode==='foul')reset();else {reset();}render();return;}
     if(a==='skip'){
-      if(mode==='assistFirstShooter'||mode==='assistFirstShot'){conclude('Assist entry cancelled — no basket or assist credited');assister=null;pendingShooter=null;return;}
       if(mode==='foul'){reset();return;}
       if(mode==='ft'){conclude('FT sequence incomplete — continue in review');return;}
       conclude('Recorded play • follow-up unresolved');return;
@@ -162,8 +154,6 @@
     if(a==='player'||a==='teamPlayer'){if(!active()){tell('Start or resume the game first.');return;}who=a==='teamPlayer'?null:b.dataset.player;mode='stats';render();return;}
     if(['made2','made3','miss2','miss3','reb','ast','stl','blk','pf','to'].includes(a)){stat(a);return;}
     if(a.startsWith('opp:')){if(!active()){tell('Start or resume the game first.');return;}opponentAction(a.slice(4));return;}
-    if(a==='assistFirstPick'){pendingShooter=b.dataset.player;mode='assistFirstShot';render();return;}
-    if(a==='assistMake2'||a==='assistMake3'){const pts=a==='assistMake2'?2:3;const shotId=shot('us',pts,true,pendingShooter);if(!shotId)return;record('assist','us',assister,{linkedEventId:shotId});conclude(`${label(pendingShooter)} +${pts}PT • AST ${label(assister)}`);assister=null;pendingShooter=null;return;}
     if(a==='assistPlayer'){related('assist','us',b.dataset.player);conclude(`${label(b.dataset.player)} • AST`);return;}
     if(a==='noAssist'){related('no_assist','us',null);conclude('No assist (confirmed)');return;}
     if(a==='stealPlayer'){related('steal','us',b.dataset.player);conclude(`${label(b.dataset.player)} • STL`);return;}
