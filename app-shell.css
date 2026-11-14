@@ -56,3 +56,34 @@ body.scoridium-shell.tracker-fullscreen .shell-main {
 body.scoridium-shell.tracker-fullscreen #page-frame {
   display:block!important; width:100%!important; height:100%!important;
 }
+
+
+/* Fullscreen game tracking on all devices */
+body.scoridium-shell.tracker-fullscreen {
+  padding: 0 !important;
+  height: 100dvh !important;
+  overflow: hidden !important;
+}
+
+/* Hide website navigation during tracking */
+body.scoridium-shell.tracker-fullscreen #app-header,
+body.scoridium-shell.tracker-fullscreen .shell-header,
+body.scoridium-shell.tracker-fullscreen .mobile-app-topbar,
+body.scoridium-shell.tracker-fullscreen .mobile-bottom-nav {
+  display: none !important;
+}
+
+/* Give the tracker the full available screen */
+body.scoridium-shell.tracker-fullscreen .shell-main {
+  flex: 1 1 auto !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  border-radius: 0 !important;
+}
+
+body.scoridium-shell.tracker-fullscreen #page-frame {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+

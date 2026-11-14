@@ -21,11 +21,26 @@
   let activeView='';
   let loadingSeq=0;
   const trackerScreen=window.matchMedia('(orientation: landscape) and (max-height: 650px)');
-  function updateMobileTrackerMode(){
-    const inGame=activeView.split(/[?#]/)[0]==='game.html';
-    document.body.classList.toggle('tracker-fullscreen',inGame);
-    document.body.classList.toggle('tracker-page',inGame);
-  }
+  
+function updateMobileTrackerMode() {
+  const inGame =
+    activeView.split(/[?#]/)[0] === 'game.html';
+
+  document.body.classList.toggle(
+    'tracker-fullscreen',
+    inGame
+  );
+
+  document.body.classList.toggle(
+    'tracker-page',
+    inGame
+  );
+
+  // Hide the website navigation while tracking.
+  const header = document.getElementById('app-header');
+  if (header) header.hidden = inGame;
+}
+
   trackerScreen.addEventListener('change',updateMobileTrackerMode);
   const moreMenu=document.getElementById('mobile-more-menu');
   const moreButtons=[document.getElementById('mobile-more-btn'),document.getElementById('mobile-team-menu-btn')];
