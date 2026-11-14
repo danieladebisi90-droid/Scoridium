@@ -426,3 +426,9 @@ html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount #bask
   html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-body{height:auto!important}
   html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-tools-sidebar{margin-top:4px!important}
 }
+
+/* Manual confirmation for ambiguous Stat/Court shot pairs */
+.sc-manual-match-controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px;border-bottom:1px solid #e2e8ef}
+.sc-manual-match-controls select{flex:1 1 190px;min-width:0;max-width:100%;padding:9px;border:1px solid #9db6d2;border-radius:7px;background:#fff;color:#10233f}
+.sc-manual-match-controls button{padding:9px 12px;border:0;border-radius:7px;background:#173d78;color:#fff;font-weight:700;cursor:pointer}
+.sc-manual-match-controls button:disabled{opacity:.45;cursor:not-allowed}

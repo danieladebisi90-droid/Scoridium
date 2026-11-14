@@ -365,11 +365,20 @@
     const obs=candidates.filter(o=>
       (o.kind==='shot'&&(scope==='both'||o.team==='us'))||o.kind==='free_throw')
       .sort((a,b)=>Date.parse(a.observed_at)-Date.parse(b.observed_at));
-    const found=alignSequence(official,obs);
+    // Treat persisted links as fixed anchors; never put them back into the
+    // ambiguous sequence alignment on a later refresh.
+    const eventById=new Map(official.map(e=>[String(e.id),e]));
+    const locked=obs.filter(o=>o.matched_event_id&&eventById.has(String(o.matched_event_id)))
+      .map(o=>({event:eventById.get(String(o.matched_event_id)),obs:o,status:'linked'}));
+    const usedEvents=new Set(locked.map(r=>String(r.event.id)));
+    const usedObservations=new Set(locked.map(r=>String(r.obs.id)));
+    const openEvents=official.filter(e=>!usedEvents.has(String(e.id))&&e.x==null&&e.y==null);
+    const openObservations=obs.filter(o=>!usedObservations.has(String(o.id))&&!o.matched_event_id);
+    const found=[...locked,...alignSequence(openEvents,openObservations)]
+      .sort((a,b)=>Number(a.event?.time||Date.parse(a.obs?.observed_at)||0)-Number(b.event?.time||Date.parse(b.obs?.observed_at)||0));
     return {found,
       unused:found.filter(r=>!r.event&&r.obs?.kind==='shot').map(r=>r.obs),
-      matched:found.filter(r=>r.obs?.kind==='shot'&&r.event?.type==='shot'&&
-        (r.obs.matched_event_id===r.event.id||r.status==='aligned')).length,
+      matched:locked.filter(r=>r.obs.kind==='shot'&&r.event.type==='shot').length,
       ambiguous:found.filter(r=>r.status==='ambiguous'||r.status==='conflict').length};
   }
   // Automatic linking requires one unique candidate in BOTH directions.
@@ -400,20 +409,33 @@
     if(linking||busy||!remoteEnabled||!sessionUser)return;
     linking=true;
     try{
-      const periods=new Set(observations.filter(o=>!o.retracted_at&&o.kind==='shot').map(o=>Number(o.period)));
-      for(const period of periods){
-        const result=compare(period);
-        for(const pair of result.found){
-          if(pair.status!=='aligned'||pair.event?.type!=='shot'||pair.obs?.kind!=='shot'||pair.obs.matched_event_id||pair.event.x!=null||pair.event.y!=null)continue;
-          // Leave repeated or late observations pending for manual review.
-          if(!canAutoLinkShot(pair.event,pair.obs))continue;
+      // Repeat after a successful link: removing its two records can make the
+      // next pair unique. Existing links remain locked and cannot be reassigned.
+      let progress=true;
+      while(progress){
+        progress=false;
+        const openEvents=state.events.filter(e=>e.type==='shot'&&e.x==null&&e.y==null&&
+          Number.isInteger(Number(e.version))&&Number(e.version)>=1);
+        const openObservations=observations.filter(o=>o.kind==='shot'&&!o.retracted_at&&
+          !o.matched_event_id&&!unsyncedIds.has(o.id));
+        for(const event of openEvents){
+          const possible=openObservations.filter(o=>canAutoLinkShot(event,o));
+          if(possible.length!==1)continue;
+          const obs=possible[0];
+          // Recheck immediately before writing in case an earlier pair changed eligibility.
+          if(!canAutoLinkShot(event,obs))continue;
           try{
             const {data,error}=await supabaseClient.rpc('scoridium_link_shot_observation',{
-              p_game_id:gameId,p_observation_id:pair.obs.id,p_event_id:pair.event.id,p_expected_version:Number(pair.event.version)});
+              p_game_id:gameId,p_observation_id:obs.id,p_event_id:event.id,
+              p_expected_version:Number(event.version)});
             if(error||!Array.isArray(data)||data.length!==1)continue;
-            pair.obs.matched_event_id=pair.event.id;pair.event.x=Number(pair.obs.x);pair.event.y=Number(pair.obs.y);
-            pair.event.distanceMeters=Number(pair.obs.distance_meters);pair.event.distanceFeet=Number(pair.obs.distance_feet);
-            pair.event.version=Number(data[0].new_version);
+            obs.matched_event_id=event.id;
+            event.x=Number(obs.x);event.y=Number(obs.y);
+            event.distanceMeters=Number(obs.distance_meters);
+            event.distanceFeet=Number(obs.distance_feet);
+            event.version=Number(data[0].new_version);
+            progress=true;
+            break;
           }catch(e){console.warn('Auto-link skipped',e);}
         }
       }
@@ -496,6 +518,40 @@
         const span=document.createElement('span');span.textContent=text;div.append(span);
       }
       rows.append(div);
+      // When automation cannot decide, let an authorized tracker link one
+      // official attempt with one eligible unlinked court observation.
+      const event=row.event;
+      if(event?.type==='shot'&&event.x==null&&event.y==null&&remoteEnabled&&sessionUser){
+        const choices=observations.filter(o=>o.kind==='shot'&&!o.retracted_at&&
+          !o.matched_event_id&&!unsyncedIds.has(o.id)&&sameFieldGoal(event,o));
+        if(choices.length){
+          const controls=document.createElement('div');
+          controls.className='sc-manual-match-controls';
+          const select=document.createElement('select');
+          select.setAttribute('aria-label','Court observation to link');
+          const placeholder=document.createElement('option');
+          placeholder.value='';placeholder.textContent='Choose court shot…';select.append(placeholder);
+          for(const obs of choices){
+            const option=document.createElement('option');option.value=obs.id;
+            const t=new Date(obs.observed_at);
+            option.textContent=`${Number(obs.points)}PT ${obs.made?'Made':'Miss'} · ${Number.isNaN(t.getTime())?'Time unknown':t.toLocaleTimeString()} · (${Math.round(Number(obs.x))}, ${Math.round(Number(obs.y))})`;
+            select.append(option);
+          }
+          const confirm=document.createElement('button');confirm.type='button';
+          confirm.textContent='Confirm Match';confirm.disabled=true;
+          select.addEventListener('change',()=>{confirm.disabled=!select.value;});
+          confirm.addEventListener('click',async()=>{
+            const selected=observations.find(o=>String(o.id)===select.value);
+            if(!selected||!sameFieldGoal(event,selected)||selected.matched_event_id||
+               event.x!=null||event.y!=null)return;
+            if(!window.confirm(`Link this ${event.points}PT ${event.made?'make':'miss'} to the selected court location? Official points will not change.`))return;
+            confirm.disabled=true;
+            await linkCandidate(selected,event);
+            if(!busy)scheduleReconcile();
+          });
+          controls.append(select,confirm);rows.append(controls);
+        }
+      }
     }
     const checks=checkpointRows.filter(c=>Number(c.period)===Number(period));
     if(checks.length){
