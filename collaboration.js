@@ -399,10 +399,123 @@
       !o.retracted_at&&!o.matched_event_id&&!unsyncedIds.has(o.id)&&sameFieldGoal(event,o)&&
       Math.abs(officialTime-Date.parse(o.observed_at))<=AUTO_MATCH_WINDOW_MS);
     const possibleEvents=state.events.filter(e=>
-      e.x==null&&e.y==null&&sameFieldGoal(e,obs)&&
+      e.x==null&&e.y==null&&Number.isInteger(Number(e.version))&&Number(e.version)>=1&&sameFieldGoal(e,obs)&&
       Math.abs(Number(e.time)-observedTime)<=AUTO_MATCH_WINDOW_MS);
     return possibleObservations.length===1&&possibleObservations[0].id===obs.id&&
       possibleEvents.length===1&&possibleEvents[0].id===event.id;
+  }
+  // Unresolved groups do not halt the matching loop. Only genuinely unique
+  // one-to-one edges can be linked automatically; every other edge stays local
+  // to its own candidate group for optional human verification.
+  const skippedMatchingPrompts=new Set();
+  let activeMatchingPrompt=null;
+  function openShotCandidates(){
+    const events=state.events.filter(e=>e.type==='shot'&&e.x==null&&e.y==null&&
+      Number.isInteger(Number(e.version))&&Number(e.version)>=1);
+    const obs=observations.filter(o=>o.kind==='shot'&&!o.retracted_at&&
+      !o.matched_event_id&&!unsyncedIds.has(o.id));
+    const match=(e,o)=>sameFieldGoal(e,o)&&
+      Number.isFinite(Number(e.time))&&Number.isFinite(Date.parse(o.observed_at))&&
+      Math.abs(Number(e.time)-Date.parse(o.observed_at))<=AUTO_MATCH_WINDOW_MS;
+    return {events,obs,match};
+  }
+  // Half-court coordinates are aligned to the FIBA basket, not the screen
+  // orientation. A zone is a hint for confirmation, not a new shot coordinate.
+  function observationZone(o){
+    if(!Number.isFinite(Number(o.x))||!Number.isFinite(Number(o.y)))return null;
+    // Same FIBA half-court traditional zone boundaries as Stats, expressed
+    // relative to the actual basket while preserving canonical coordinates.
+    const leftBasket=Number(o.x)<460;
+    const depth=leftBasket?Number(o.x)-57.25:802.75-Number(o.x);
+    const side=leftBasket?Number(o.y)-235:235-Number(o.y);
+    const x=235+side,y=57.25+depth;
+    const dist=Math.hypot(x-235,y-57.25);
+    const arcY=57.25+Math.sqrt(202.5**2-(235-37)**2);
+    const outsideThree=(y<=arcY&&(x<37||x>433))||(y>arcY&&dist>202.5);
+    if(outsideThree){
+      if(y<=arcY)return x<235?'Left Corner':'Right Corner';
+      if(x<170)return 'Left Wing';
+      if(x>300)return 'Right Wing';
+      return 'Top of Key';
+    }
+    if(x>=161.5&&x<=308.5&&y>=10&&y<=184){
+      const sideLabel=x<235?'Left':'Right';
+      return `${sideLabel} ${y<97?'Low':'High'} Paint`;
+    }
+    if(y<145){
+      if(x<161.5)return 'Left Short Corner';
+      if(x>308.5)return 'Right Short Corner';
+    }
+    if(x<170)return 'Left Midrange';
+    if(x>300)return 'Right Midrange';
+    return 'Top Midrange';
+  }
+
+  function closeMatchingPrompt(){
+    activeMatchingPrompt?.remove();activeMatchingPrompt=null;
+  }
+  function showMatchingPrompt(){
+    if(activeMatchingPrompt&&!activeMatchingPrompt.isConnected)activeMatchingPrompt=null;
+    if(activeMatchingPrompt||!remoteEnabled||busy||linking||!sessionUser)return;
+    const view=document.querySelector('.tracker-shell')?.dataset.focusView;
+    if(view!=='track'&&view!=='court')return;
+    const {events,obs,match}=openShotCandidates();
+    let question=null,choices=null,scope=null,key=null;
+    if(view==='track'){
+      // Only ask for a zone when each offered zone identifies ONE specific
+      // court observation. Otherwise the answer wouldn't resolve the pair.
+      for(const e of events){
+        const c=obs.filter(o=>match(e,o));
+        if(c.length<2)continue;
+        const labeled=c.map(o=>({o,label:observationZone(o)}));
+        if(labeled.some(v=>!v.label)||new Set(labeled.map(v=>v.label)).size!==c.length)continue;
+        key=`stat:${e.id}:${c.map(o=>o.id).sort().join(',')}`;
+        if(skippedMatchingPrompts.has(key))continue;
+        question=`Where was ${e.playerId?pName(e.playerId):'this player'}'s ${e.points}PT ${e.made?'make':'miss'}?`;
+        choices=labeled.map(({o,label})=>({label,observation:o,event:e}));
+        scope='track';break;
+      }
+    }else{
+      for(const o of obs){
+        const c=events.filter(e=>match(e,o));
+        if(c.length<2||c.some(e=>!e.playerId))continue;
+        const labels=c.map(e=>pName(e.playerId));
+        if(new Set(labels).size!==labels.length)continue;
+        key=`court:${o.id}:${c.map(e=>e.id).sort().join(',')}`;
+        if(skippedMatchingPrompts.has(key))continue;
+        question=`Who took this ${o.points}PT ${o.made?'make':'miss'} (${observationZone(o)||'court shot'})?`;
+        choices=c.map((e,i)=>({label:labels[i],observation:o,event:e}));
+        scope='court';break;
+      }
+    }
+    if(!choices)return;
+    const host=scope==='track'?byId('quick-track-root'):courtSection.querySelector('.sc-court-body');
+    if(!host)return;
+    const panel=document.createElement('div');panel.className='sc-inline-shot-question';
+    panel.setAttribute('role','group');panel.setAttribute('aria-label','Optional shot matching question');
+    const heading=document.createElement('strong');heading.textContent=question;panel.append(heading);
+    const options=document.createElement('div');options.className='sc-inline-shot-options';
+    for(const choice of choices){
+      const button=document.createElement('button');button.type='button';button.textContent=choice.label;
+      button.addEventListener('click',async()=>{
+        // One tap links; no second confirmation. The RPC enforces the final
+        // database condition and never creates an official scoring event.
+        closeMatchingPrompt();
+        skippedMatchingPrompts.add(key);
+        if(!choice.observation.matched_event_id&&choice.event.x==null&&choice.event.y==null)
+          await linkCandidate(choice.observation,choice.event);
+        scheduleReconcile();
+      });options.append(button);
+    }
+    panel.append(options);
+    const skip=document.createElement('button');skip.type='button';skip.className='sc-inline-shot-skip';skip.textContent='Skip';
+    skip.addEventListener('click',()=>{skippedMatchingPrompts.add(key);closeMatchingPrompt();});
+    panel.append(skip);host.append(panel);activeMatchingPrompt=panel;
+  }
+  function scheduleShotPrompt(){
+    // Reconciliation and new events have priority; prompts do not wait for a
+    // remote device and never modify official scoring.
+    setTimeout(()=>showMatchingPrompt(),0);
   }
   function scheduleReconcile(){clearTimeout(reconcileTimer);reconcileTimer=setTimeout(()=>void reconcile(),550);}
   async function reconcile(){
@@ -440,7 +553,7 @@
         }
       }
       saveLocalObservations();save();renderCourt();paintObservationMarkers();refreshCourtQueue();
-    }finally{linking=false;}
+    }finally{linking=false;scheduleShotPrompt();}
   }
   async function linkCandidate(observation,event){
     if(!remoteEnabled){setFeedback('Please apply MIGRATION_COLLABORATION.sql and sync the observation before linking.');return;}
@@ -527,29 +640,21 @@
         if(choices.length){
           const controls=document.createElement('div');
           controls.className='sc-manual-match-controls';
-          const select=document.createElement('select');
-          select.setAttribute('aria-label','Court observation to link');
-          const placeholder=document.createElement('option');
-          placeholder.value='';placeholder.textContent='Choose court shot…';select.append(placeholder);
+          // Optional review uses the same one-tap behavior: no confirmation
+          // dialogue, and no scoring changes.
           for(const obs of choices){
-            const option=document.createElement('option');option.value=obs.id;
+            const button=document.createElement('button');button.type='button';
             const t=new Date(obs.observed_at);
-            option.textContent=`${Number(obs.points)}PT ${obs.made?'Made':'Miss'} · ${Number.isNaN(t.getTime())?'Time unknown':t.toLocaleTimeString()} · (${Math.round(Number(obs.x))}, ${Math.round(Number(obs.y))})`;
-            select.append(option);
+            button.textContent=`${observationZone(obs)||'Court location'} · ${Number.isNaN(t.getTime())?'Time unknown':t.toLocaleTimeString()}`;
+            button.addEventListener('click',async()=>{
+              if(busy||obs.matched_event_id||event.x!=null||event.y!=null||!sameFieldGoal(event,obs))return;
+              button.disabled=true;
+              await linkCandidate(obs,event);
+              scheduleReconcile();
+            });
+            controls.append(button);
           }
-          const confirm=document.createElement('button');confirm.type='button';
-          confirm.textContent='Confirm Match';confirm.disabled=true;
-          select.addEventListener('change',()=>{confirm.disabled=!select.value;});
-          confirm.addEventListener('click',async()=>{
-            const selected=observations.find(o=>String(o.id)===select.value);
-            if(!selected||!sameFieldGoal(event,selected)||selected.matched_event_id||
-               event.x!=null||event.y!=null)return;
-            if(!window.confirm(`Link this ${event.points}PT ${event.made?'make':'miss'} to the selected court location? Official points will not change.`))return;
-            confirm.disabled=true;
-            await linkCandidate(selected,event);
-            if(!busy)scheduleReconcile();
-          });
-          controls.append(select,confirm);rows.append(controls);
+          rows.append(controls);
         }
       }
     }
@@ -654,7 +759,8 @@
   }
   // Do not auto change offense/defense when Quick Track records a shot.
   const courtTab=document.querySelector('[data-focus-view="court"]');
-  courtTab?.addEventListener('click',()=>{enforceOrientation();refreshCourtQueue();queueCourtLayout();});
+  courtTab?.addEventListener('click',()=>{closeMatchingPrompt();enforceOrientation();refreshCourtQueue();queueCourtLayout();scheduleShotPrompt();});
+  document.querySelector('[data-focus-view="track"]')?.addEventListener('click',()=>{closeMatchingPrompt();scheduleShotPrompt();});
   // Start data load after main game bootstrap finishes.
   let startupTries=0;const initialized=()=>{if(currentGame){enforceOrientation();void initRemote();}else if(++startupTries<30)setTimeout(initialized,350);};
   setTimeout(initialized,300);

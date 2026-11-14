@@ -432,3 +432,12 @@ html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount #bask
 .sc-manual-match-controls select{flex:1 1 190px;min-width:0;max-width:100%;padding:9px;border:1px solid #9db6d2;border-radius:7px;background:#fff;color:#10233f}
 .sc-manual-match-controls button{padding:9px 12px;border:0;border-radius:7px;background:#173d78;color:#fff;font-weight:700;cursor:pointer}
 .sc-manual-match-controls button:disabled{opacity:.45;cursor:not-allowed}
+
+/* Optional one-tap shot clarification within the existing tracker panel. */
+#quick-track-root,.sc-court-body{position:relative}
+.sc-inline-shot-question{position:absolute;z-index:25;inset:0;min-height:190px;overflow:auto;display:flex;flex-direction:column;gap:12px;padding:18px;background:var(--surface,#fff);color:var(--text,#102643);border:2px solid #e0ac21;border-radius:12px;box-shadow:0 5px 20px #0002}
+.sc-inline-shot-question strong{font-size:clamp(15px,2vw,21px);line-height:1.35}
+.sc-inline-shot-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.sc-inline-shot-question button{min-height:52px;border-radius:10px;padding:10px;border:1px solid #cbd5e1;font-size:15px;font-weight:750;cursor:pointer;touch-action:manipulation}
+.sc-inline-shot-options button{background:#123b78;color:white}
+.sc-inline-shot-skip{background:#f1f5f9;color:#123b78}
