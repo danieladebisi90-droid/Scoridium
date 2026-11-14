@@ -72,14 +72,24 @@
   const originalRender=window.render;
   let lastShotCount=officialShots().length;
   let previouslyRenderedPeriod=Number(state.period)||1;
+  let previouslyRenderedStatus=String(state.status||'');
   window.render=function(){
     const prior=previouslyRenderedPeriod;
+    const priorStatus=previouslyRenderedStatus;
+    previouslyRenderedStatus=String(state.status||'');
     originalRender();refreshSummary();refreshCourtQueue();paintObservationMarkers();
     const shotCount=officialShots().length;if(shotCount!==lastShotCount){lastShotCount=shotCount;if(remoteEnabled)scheduleReconcile();}
     if(currentGame && state.status!=='not_started' && Number(state.period)!==prior){
       previouslyRenderedPeriod=Number(state.period);
-      // A quarter boundary is a reconciliation checkpoint, not a hard lock.
-      renderCheckpoint(prior);if(!scorePromptOpen&&document.querySelector('.tracker-shell')?.dataset.focusView==='court')void physicalScoreCheckpoint(prior);
+      // Match and compare the completed quarter without interrupting tracking.
+      scheduleReconcile();
+      if(!byId('sc-checkpoint-summary')?.hidden)renderCheckpoint(prior);
+      if(!scorePromptOpen&&document.querySelector('.tracker-shell')?.dataset.focusView==='court')void physicalScoreCheckpoint(prior);
+    }
+    // Also reconcile the last quarter when the game becomes final.
+    if(priorStatus!==previouslyRenderedStatus &&
+       ['finished','final','completed','ended'].includes(previouslyRenderedStatus.toLowerCase())){
+      scheduleReconcile();
     }
   };
   // Existing play-by-play tab is replaced by the combined view, with the unassigned tab intact.
@@ -581,6 +591,8 @@
         }
       }
       saveLocalObservations();save();renderCourt();paintObservationMarkers();refreshCourtQueue();
+      const review=byId('sc-checkpoint-summary');
+      if(review&&!review.hidden)renderCheckpoint(Number(state.period)>1?Number(state.period)-1:Number(state.period));
     }finally{linking=false;scheduleShotPrompt();}
   }
   async function linkCandidate(observation,event){
@@ -640,11 +652,29 @@
     if(e&&e.made)totals[e.team]+=Number(e.points||0);
     return {...r,quickScore:`${totals.us}–${totals.opponent}`};
   });}
+  function quarterShotFingerprint(period){
+    // 2PT/3PT made/missed independently, per team: no fabricated locations.
+    const scope=effectiveScope();
+    const teams=scope==='both'?['us','opponent']:['us'];
+    const keys=[];
+    for(const team of teams)for(const points of [2,3])for(const made of [true,false])
+      keys.push({team,points,made});
+    const official=state.events.filter(e=>e.type==='shot'&&Number(e.period)===Number(period));
+    const court=observations.filter(o=>o.kind==='shot'&&!o.retracted_at&&Number(o.period)===Number(period));
+    const rows=keys.map(k=>{
+      const filter=e=>e.team===k.team&&Number(e.points)===k.points&&Boolean(e.made)===k.made;
+      return {...k,stat:official.filter(filter).length,shot:court.filter(filter).length};
+    });
+    return {rows,discrepancies:rows.filter(r=>r.stat!==r.shot).length};
+  }
   function renderCheckpoint(period=state.period){
     const r=compare(period),ind=compareIndependent(period),fts=compareFT(period);
+    const fingerprint=quarterShotFingerprint(period);
     const area=byId('sc-checkpoint-summary');area.hidden=false;
     const summary=`<div class="sc-review-head"><h3>${safe(periodName(period))} · Tracker A / B</h3><button id="sc-close-review" aria-label="Close comparison" type="button">×</button></div>
-      <p>${r.matched} aligned or linked · ${r.found.filter(x=>x.status!=='aligned'&&(x.obs?.matched_event_id==null||x.obs?.matched_event_id!==x.event?.id)).length} for review · ${r.ambiguous} conflicts/ambiguous</p>
+      <p><strong>Quarter fingerprint:</strong> ${fingerprint.discrepancies===0?'Shot-type totals agree':'Some shot-type totals differ'} · ${r.matched} locations linked · ${r.ambiguous} ambiguous. Review is optional.</p>
+      <div class="sc-fingerprint-counts">${fingerprint.rows.map(k=>`<div>${k.team==='us'?'Tracked':'Opponent'} ${k.points}PT ${k.made?'made':'miss'}: Stat ${k.stat} · Court ${k.shot}${k.stat===k.shot?'':' · DIFFERENCE'}</div>`).join('')}</div>
+      <p>Matching counts do not establish correct player-to-location attribution. Any uncertain location remains unverified.</p>
       <div class="sc-review-columns"><b>Quick Track A</b><b>Court B</b><b>Result</b></div><div class="sc-review-rows"></div>
       <p>Recorded scoring this quarter: Quick ${eventTotals(period,'us')}–${eventTotals(period,'opponent')} · Court observations ${observedTotals(period,'us')}–${observedTotals(period,'opponent')} (may omit opponent).</p>
       <p>FT observations: ${fts.matches}/${fts.official} likely matching attempts; ${fts.unmatched} extra Court observations.</p>
