@@ -476,18 +476,46 @@
         scope='track';break;
       }
     }else{
-      for(const o of obs){
-        const c=events.filter(e=>match(e,o));
-        if(c.length<2||c.some(e=>!e.playerId))continue;
-        const labels=c.map(e=>pName(e.playerId));
-        if(new Set(labels).size!==labels.length)continue;
-        key=`court:${o.id}:${c.map(e=>e.id).sort().join(',')}`;
-        if(skippedMatchingPrompts.has(key))continue;
-        question=`Who took this ${o.points}PT ${o.made?'make':'miss'} (${observationZone(o)||'court shot'})?`;
-        choices=c.map((e,i)=>({label:labels[i],observation:o,event:e}));
-        scope='court';break;
-      }
-    }
+  for(const o of obs){
+    const c=events.filter(e=>match(e,o));
+
+    // Only consider a question if multiple Stat Tracker
+    // shots could match this observation.
+    if(c.length<2||c.some(e=>!e.playerId))continue;
+
+    // Wait until the Shot Tracker has recorded at least
+    // two corresponding court observations.
+    const courtShots=observations.filter(other=>
+      other.kind==='shot' &&
+      !other.retracted_at &&
+      !unsyncedIds.has(other.id) &&
+      sameFieldGoal(c[0],other) &&
+      c.some(e=>match(e,other))
+    );
+
+    if(courtShots.length<2)continue;
+
+    const labels=c.map(e=>pName(e.playerId));
+    if(new Set(labels).size!==labels.length)continue;
+
+    key=`court:${o.id}:${c.map(e=>e.id).sort().join(',')}`;
+    if(skippedMatchingPrompts.has(key))continue;
+
+    question=`Who took this ${o.points}PT ${
+      o.made?'make':'miss'
+    } (${observationZone(o)||'court shot'})?`;
+
+    choices=c.map((e,i)=>({
+      label:labels[i],
+      observation:o,
+      event:e
+    }));
+
+    scope='court';
+    break;
+  }
+}
+
     if(!choices)return;
     const host=scope==='track'?byId('quick-track-root'):courtSection.querySelector('.sc-court-body');
     if(!host)return;
