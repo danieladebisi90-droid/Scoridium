@@ -41,3 +41,18 @@ body.scoridium-shell {display:flex; flex-direction:column; margin:0; padding: 4p
   body.scoridium-shell.tracker-fullscreen .shell-main{height:100%;flex:1;min-height:0;border-radius:0!important}
   body.scoridium-shell.tracker-fullscreen #page-frame{height:100%;width:100%;display:block}
 }
+
+/* Full-screen tracker on iPad and every other display size. */
+body.scoridium-shell.tracker-fullscreen {
+  padding:0!important; height:100dvh!important; overflow:hidden!important;
+}
+body.scoridium-shell.tracker-fullscreen .shell-header,
+body.scoridium-shell.tracker-fullscreen .mobile-app-topbar,
+body.scoridium-shell.tracker-fullscreen .mobile-bottom-nav {display:none!important;}
+body.scoridium-shell.tracker-fullscreen .shell-main {
+  flex:1 1 auto!important; min-height:0!important; height:100%!important;
+  border-radius:0!important;
+}
+body.scoridium-shell.tracker-fullscreen #page-frame {
+  display:block!important; width:100%!important; height:100%!important;
+}

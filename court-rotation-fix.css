@@ -79,3 +79,21 @@ html.focus-tracker .tracker-shell[data-focus-view="court"] #basketball-court {
     flex-basis:160px!important; width:160px!important;
   }
 }
+
+/* Keep the iPad scoreboard legible above the court, overriding
+   older 48px caps from collaboration-v2.css. */
+html.focus-tracker .tracker-shell[data-focus-view="court"] > .scoreboard {
+  flex:0 0 auto!important;
+  height:auto!important; min-height:104px!important; max-height:none!important;
+  overflow:visible!important; padding:8px 14px!important;
+}
+html.focus-tracker .tracker-shell[data-focus-view="court"] > .scoreboard .score-team output {
+  display:block!important; visibility:visible!important;
+  font-size:clamp(28px,4.4vw,52px)!important; line-height:1.05!important;
+}
+@media (max-height:620px) {
+  html.focus-tracker .tracker-shell[data-focus-view="court"] > .scoreboard {
+    min-height:82px!important; padding:4px 10px!important;
+  }
+  html.focus-tracker .tracker-shell[data-focus-view="court"] > .scoreboard .score-team output {font-size:32px!important;}
+}
