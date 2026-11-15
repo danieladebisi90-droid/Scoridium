@@ -83,6 +83,7 @@
       previouslyRenderedPeriod=Number(state.period);
       // Match and compare the completed quarter without interrupting tracking.
       scheduleReconcile();
+      selectedReviewPeriod = prior;
       if(!byId('sc-checkpoint-summary')?.hidden)renderCheckpoint(prior);
       if(!scorePromptOpen&&document.querySelector('.tracker-shell')?.dataset.focusView==='court')void physicalScoreCheckpoint(prior);
     }
@@ -465,6 +466,7 @@
     activeMatchingPrompt?.remove();activeMatchingPrompt=null;
   }
   function showMatchingPrompt(){
+    return; // Live matching stays quiet; review is optional.
     if(activeMatchingPrompt&&!activeMatchingPrompt.isConnected)activeMatchingPrompt=null;
     if(activeMatchingPrompt||!remoteEnabled||busy||linking||!sessionUser)return;
     const view=document.querySelector('.tracker-shell')?.dataset.focusView;
@@ -667,7 +669,13 @@
     });
     return {rows,discrepancies:rows.filter(r=>r.stat!==r.shot).length};
   }
-  function renderCheckpoint(period=state.period){
+  let selectedReviewPeriod = null;
+  const latestCompletedReviewPeriod = () => {
+    const current = Number(state.period) || 1;
+    return current > 1 ? current - 1 : current;
+  };
+  function renderCheckpoint(period=selectedReviewPeriod ?? latestCompletedReviewPeriod()){
+    selectedReviewPeriod = Number(period);
     const r=compare(period),ind=compareIndependent(period),fts=compareFT(period);
     const fingerprint=quarterShotFingerprint(period);
     const area=byId('sc-checkpoint-summary');area.hidden=false;
@@ -727,20 +735,20 @@
     }
     area.querySelector('#sc-close-review').addEventListener('click',()=>{area.hidden=true;});
   }
-  byId('sc-shot-counts').addEventListener('click',()=>renderCheckpoint());
+  byId('sc-shot-counts').addEventListener('click',()=>{selectedReviewPeriod=latestCompletedReviewPeriod();renderCheckpoint(selectedReviewPeriod);});
   function refreshCourtQueue(){
     const count=byId('sc-total-shots');if(!count)return;
     const scope=effectiveScope(),shots=observations.filter(o=>!o.retracted_at&&o.kind==='shot'&&(scope==='both'||o.team==='us'));
     const matches=shots.filter(o=>o.matched_event_id).length;
     count.textContent=`${shots.length} shots`;
     byId('sc-total-matched').textContent=`${matches} matched · ${shots.length-matches} pending`;
-    const area=byId('sc-checkpoint-summary');if(area&&!area.hidden)renderCheckpoint();
+    const area=byId('sc-checkpoint-summary');if(area&&!area.hidden)renderCheckpoint(selectedReviewPeriod ?? latestCompletedReviewPeriod());
   }
   async function physicalScoreCheckpoint(period){
     if(scorePromptOpen||!gameId||localStorage.getItem(scoreSavedKey(period))==='yes')return false;scorePromptOpen=true;
     const dialog=document.createElement('dialog');dialog.className='sc-ft-dialog';
     dialog.innerHTML=`<form method="dialog"><h3>End of ${safe(periodName(period))} · Physical scoreboard</h3>
-      <p>Both trackers must independently enter what the venue scoreboard actually shows. Do not copy Scoridium's score.</p>
+      <p>Both trackers must independently enter what the venue scoreboard actually shows. Do not copy ApexVision's score.</p>
       <label>Home <input name="home" type="number" min="0" max="999" required placeholder="Actual score"></label>
       <label>Away <input name="away" type="number" min="0" max="999" required placeholder="Actual score"></label>
       <div class="sc-ft-checks"><button type="button" id="sc-submit-score" class="sc-make">SAVE SCORE</button><button type="button" id="sc-cancel-score">LATER</button></div>
@@ -778,7 +786,7 @@
     const load=async()=>{
       const {data,error}=await supabaseClient.from('tracker_event_observations').select('*')
         .eq('game_id',gameId).order('observed_at',{ascending:true}).limit(2000);
-      if(!error&&data){quickObservations=data;if(!byId('sc-checkpoint-summary').hidden)renderCheckpoint();}
+      if(!error&&data){quickObservations=data;if(!byId('sc-checkpoint-summary').hidden)renderCheckpoint(selectedReviewPeriod ?? latestCompletedReviewPeriod());}
     };
     await load();
     if(quickObsChannel)await supabaseClient.removeChannel(quickObsChannel);

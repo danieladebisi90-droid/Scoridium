@@ -9,7 +9,7 @@
     banner=document.createElement('div');
     banner.setAttribute('role','status');
     banner.style.cssText='position:fixed;bottom:75px;left:12px;right:12px;max-width:420px;margin:auto;background:#10233f;color:white;border-radius:10px;padding:12px;z-index:999999;font:14px system-ui;display:flex;align-items:center;gap:10px;box-shadow:0 6px 20px #0004';
-    const label=document.createElement('span');label.textContent='Scoridium update available';label.style.flex='1';
+    const label=document.createElement('span');label.textContent='ApexVision update available';label.style.flex='1';
     const button=document.createElement('button');button.textContent='Update';button.style.cssText='background:#ffd600;color:#111;border:0;border-radius:7px;padding:9px 12px;font-weight:bold';
     button.addEventListener('click',()=>{
       if(hasLiveSession()){

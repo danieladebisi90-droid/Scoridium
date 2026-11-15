@@ -2,21 +2,21 @@
 
 <html lang="en">
 <head>
-  <!-- Installable Scoridium app (iOS, Android, desktop) -->
+  <!-- Installable ApexVision app (iOS, Android, desktop) -->
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
   <meta name="theme-color" content="#10233F">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Scoridium">
+  <meta name="apple-mobile-web-app-title" content="ApexVision">
 
 <script>if(window.parent!==window){document.documentElement.classList.add('scoridium-framed');}</script>
 <style>html.scoridium-framed #shared-header {display:none!important;}html.scoridium-framed #app-header {display:none!important;}html.scoridium-framed body {padding-top:0!important;}html.scoridium-framed body {min-height:100dvh!important;}</style>
   <script src="team-theme-boot.js"></script>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
-<title>Player Profile | Scoridium</title>
+<title>Player Profile | ApexVision</title>
 <link href="player.css" rel="stylesheet"/>
 <link href="pageLayout.css" rel="stylesheet"/>
 <link href="player.css" rel="stylesheet"/>  <link rel="stylesheet" href="navigation-smooth.css">
@@ -42,7 +42,7 @@
 (()=>{const t=window.__scoridiumCachedTeam;const id=sessionStorage.getItem('selectedTeamId');const label=t&&t.id===id?((t.team_type==='club'?(t.club_name||t.mascot):(t.mascot||t.club_name))||''):'';const target=document.getElementById('shared-team-name');if(target)target.textContent=label.toUpperCase();const link=document.querySelector('#main-navigation a[href="'+location.pathname.split('/').pop()+'"]');if(link)link.classList.add('active');const seasonId=sessionStorage.getItem('selectedSeasonId');const seasonName=sessionStorage.getItem('scoridium:season-label:'+id);if(seasonId&&seasonName){const s=document.querySelector('.season-selector');s.options[0].text=seasonName;s.options[0].value=seasonId;}})();
 </script></div>
 <nav aria-label="Preview navigation" class="preview-header" hidden="" id="preview-header">
-<strong>SCORIDIUM</strong><span>Dashboard</span><span>Game Hub</span><b>Team &amp; Roster</b><span>Stats</span><span>Playbook</span><span>2026 – 2027 ⌄</span>
+<strong>APEXVISION</strong><span>Dashboard</span><span>Game Hub</span><b>Team &amp; Roster</b><span>Stats</span><span>Playbook</span><span>2026 – 2027 ⌄</span>
 </nav>
 <main class="player-page"><div class="profile-page-toolbar"><a class="back-link" href="roster.html" id="back-roster">← Players</a><strong class="profile-page-title">Player Profile</strong><span class="profile-view-label">PLAYER ANALYTICS</span></div>
 
@@ -171,11 +171,6 @@
   <div class="breakdown" id="shot-breakdown" hidden></div>
 
     <div id="zone-preview-slot">
-        <div class="sc-player-zone-inline-tabs" role="group" aria-label="Player shot zone view">
-          <button type="button" data-inline-player-zone="basic" aria-pressed="true">Basic Zones</button>
-          <button type="button" data-inline-player-zone="traditional" aria-pressed="false">Traditional Zones</button>
-          <button type="button" data-inline-player-zone="distance" aria-pressed="false">Distance Zones</button>
-        </div>
         <article class="panel player-shooting-panel">
             <button
                 aria-controls="player-analysis-modal"

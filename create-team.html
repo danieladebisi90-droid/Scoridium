@@ -1,18 +1,18 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <!-- Installable Scoridium app (iOS, Android, desktop) -->
+  <!-- Installable ApexVision app (iOS, Android, desktop) -->
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
   <meta name="theme-color" content="#10233F">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Scoridium">
+  <meta name="apple-mobile-web-app-title" content="ApexVision">
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Create Team · Scoridium</title>
+  <title>Create Team · ApexVision</title>
   
 <!-- 1. Load the Supabase library -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -36,7 +36,7 @@
 <body>
   <main class="setup-shell">
     <header class="setup-header">
-      <a href="dashboard.html" class="wordmark">SCORIDIUM<span class="brand-dot">.</span></a>
+      <a href="dashboard.html" class="wordmark">APEXVISION<span class="brand-dot">.</span></a>
       <span class="progress-text" id="step-indicator">STEP 1 OF 2</span>
     </header>
     <div class="progress-track" aria-hidden="true"><div id="progress-fill"></div></div>
@@ -73,7 +73,7 @@
         </div>
         <div class="section-divider"></div>
         <h2>Team Colours</h2>
-        <p class="helper">These colours will become your team's theme throughout Scoridium.</p>
+        <p class="helper">These colours will become your team's theme throughout ApexVision.</p>
         <div class="colour-targets" role="group" aria-label="Colour to customize">
           <button type="button" class="colour-target active" id="target-primary" data-colour-target="primary" aria-pressed="true"><span class="colour-sample" id="primary-sample"></span><span><strong>Primary</strong><small id="primary-target-hex">#181818</small></span></button>
           <button type="button" class="colour-target" id="target-secondary" data-colour-target="secondary" aria-pressed="false"><span class="colour-sample" id="secondary-sample"></span><span><strong>Secondary</strong><small id="secondary-target-hex">#9299A5</small></span></button>
@@ -89,7 +89,7 @@
             <div class="shade-ends"><span>Darker</span><span>Original</span><span>Lighter</span></div>
           </div>
           <button type="button" id="reset-default-colours" class="default-colours-button">↺ Use default black, grey &amp; white</button>
-          <p class="palette-hint" id="default-colours-hint">Optional: Scoridium starts with black, grey and white. If you don't choose colours, these defaults are saved automatically.</p>
+          <p class="palette-hint" id="default-colours-hint">Optional: ApexVision starts with black, grey and white. If you don't choose colours, these defaults are saved automatically.</p>
         </div>
         <details class="custom-colours">
           <summary>Custom colours (optional)</summary>
@@ -116,7 +116,7 @@
       <div class="finish-icon" aria-hidden="true">✓</div>
       <div class="eyebrow">TEAM CREATED</div>
       <h1 id="finish-heading">Your team is ready.</h1>
-      <p class="subheading">Your team is saved in Scoridium. What would you like to do first?</p>
+      <p class="subheading">Your team is saved in ApexVision. What would you like to do first?</p>
       <div class="finish-summary" id="finish-summary"></div>
       <div class="next-actions">
         <a href="app.html?page=roster.html" id="roster-link" class="next-option"><span class="next-icon">♙</span><span><strong>Set Up Roster</strong><small>Add players and jersey numbers</small></span><span>→</span></a>

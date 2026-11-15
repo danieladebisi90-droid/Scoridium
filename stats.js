@@ -781,16 +781,16 @@ ${dots}
     </svg>`;
 }
 
-let scPlayerZoneMode='traditional';
+let scPlayerZoneMode='basic';
 function renderPlayerShots() {
   const games=filteredGames().filter(g=>$('shot-game-filter').value==='all'||g.id===$('shot-game-filter').value);
   const shots=shotsFor(games,$('shot-player-filter').value);
-  $('player-shot-court').innerHTML=courtSVG(shots,'half');
+  $('player-shot-court').innerHTML=courtSVG(shots,'full');
   const host=$('player-zones');
   if(!host)return;
   const controls=document.createElement('div');controls.className='sc-player-zone-controls';
   const surface=document.createElement('div');surface.className='sc-player-zone-surface';
-  for(const [key,label] of [['traditional','Traditional Zones'],['distance','Distance Zones'],['spots','Shot Spots']]){
+  for(const [key,label] of [['basic','Basic Zones'],['traditional','Traditional Zones'],['distance','Distance Zones']]){
     const b=document.createElement('button');b.type='button';b.textContent=label;
     b.setAttribute('aria-pressed',String(scPlayerZoneMode===key));
     b.addEventListener('click',()=>{scPlayerZoneMode=key;renderPlayerShots();});
@@ -798,9 +798,10 @@ function renderPlayerShots() {
   }
   // These visualizations are shared with the existing team-zone engine.
   try {
-    if(scPlayerZoneMode==='traditional')surface.innerHTML=buildZoneCourt(shots,'offence');
+    if(scPlayerZoneMode==='basic')surface.innerHTML=buildBasicZoneCourt(shots);
+    else if(scPlayerZoneMode==='traditional')surface.innerHTML=buildZoneCourt(shots,'offence');
     else if(scPlayerZoneMode==='distance')surface.innerHTML=buildDistanceZoneCourt(shots);
-    else surface.innerHTML=courtSVG(shots,'half');
+    else surface.innerHTML=buildDistanceZoneCourt(shots);
   }catch(e){console.warn('Player zone chart unavailable',e);surface.innerHTML=courtSVG(shots,'half');}
   host.replaceChildren(controls,surface);
   if(!shots.some(x=>x.x!=null&&x.y!=null)){
@@ -851,6 +852,13 @@ function renderDetails(){
 }
 let activeOpponent = 'all';
 let activeOpponentGame = 'all';
+let opponentZoneMode = 'basic';
+function opponentZoneDiagram(shots){
+  if(opponentZoneMode==='distance')return buildDistanceZoneCourt(shots);
+  if(opponentZoneMode==='traditional')return buildZoneCourt(shots,'offence');
+  return buildBasicZoneCourt(shots);
+}
+
 function renderOpponents(){
   const select=$('opponent-select'),gameSelect=$('opponent-game-select'),host=$('opponent-analysis');
   if(!select||!host)return;
@@ -919,12 +927,15 @@ function renderOpponents(){
    <div><strong>${fmtAvg(totals.allowed)}</strong><small>Opponent PPG</small></div></div>`}
    ${heading}${bars}
    <h3>Shot locations & shooting zones</h3>
+   <div class="sc-opponent-zone-controls" aria-label="Opponent shooting zone view">
+      ${[['basic','Basic Zones'],['traditional','Traditional Zones'],['distance','Distance Zones']].map(([key,label])=>`<button type="button" data-opponent-zone-mode="${key}" aria-pressed="${opponentZoneMode===key}">${label}</button>`).join('')}
+   </div>
    <div class="opponent-courts-row">
     <section><h4>Full Court</h4>${courtOrOverlay}</section>
-    <section><h4>Offensive Zones</h4>${buildZoneCourt(opp,'offence')}</section>
-    <section><h4>Defensive Zones</h4>${buildZoneCourt(our,'defence')}</section>
+    <section><h4>Our Offence · Zones</h4>${opponentZoneDiagram(our)}</section>
+    <section><h4>Our Defence · Zones</h4>${opponentZoneDiagram(opp)}</section>
    </div>
-   <p class="muted">Swipe horizontally to view all courts. Offensive zones show opponent shooting; defensive zones show our shooting against them. Unrecorded statistics are not zero.</p>`;
+   <p class="muted">Swipe horizontally to view all courts. Our Offence shows our shooting; Our Defence shows opponent shooting against us. Unrecorded statistics are not zero.</p>`;
 }
 function render(){if(state.view==='team')renderTeam();if(state.view==='players')renderPlayerTable();if(state.view==='games')renderGames();if(state.view==='details')renderDetails();if(state.view==='opponents')renderOpponents();}
 
@@ -1287,6 +1298,7 @@ function renderTeamShotProfile() {
 function init(){
   fillGameOptions('player-game-filter');fillGameOptions('shot-game-filter');
   document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
+  $('opponent-analysis')?.addEventListener('click',e=>{const button=e.target.closest('[data-opponent-zone-mode]');if(!button)return;opponentZoneMode=button.dataset.opponentZoneMode;renderOpponents();});
   $('opponent-select')?.addEventListener('change',e=>{activeOpponent=e.target.value;activeOpponentGame='all';renderOpponents();});
   $('opponent-game-select')?.addEventListener('change',e=>{activeOpponentGame=e.target.value;renderOpponents();});
   $('player-game-filter').addEventListener('change',e=>{state.playerGame=e.target.value;renderPlayerTable();});

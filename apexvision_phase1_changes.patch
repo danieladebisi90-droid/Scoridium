@@ -1,0 +1,778 @@
+diff --git a/Login.html b/Login.html
+index d9fa8ee..5c0d2fc 100644
+--- a/Login.html
++++ b/Login.html
+@@ -1,17 +1,17 @@
+ <!doctype html><html lang="en"><head>
+-  <!-- Installable Scoridium app (iOS, Android, desktop) -->
++  <!-- Installable ApexVision app (iOS, Android, desktop) -->
+   <link rel="manifest" href="./manifest.webmanifest">
+   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+   <meta name="theme-color" content="#10233F">
+   <meta name="apple-mobile-web-app-capable" content="yes">
+   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+-  <meta name="apple-mobile-web-app-title" content="Scoridium">
+-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sign In · Scoridium</title><link rel="stylesheet" href="login.css">  <link rel="stylesheet" href="universal-ui.css?v=1">
++  <meta name="apple-mobile-web-app-title" content="ApexVision">
++<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sign In · ApexVision</title><link rel="stylesheet" href="login.css">  <link rel="stylesheet" href="universal-ui.css?v=1">
+ <link rel="stylesheet" href="revision43.css?v=2">
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+ <link rel="stylesheet" href="major-update.css">
+-</head><body><header class="auth-header"><a class="auth-brand" href="Login.html">SCORIDIUM<span>.</span></a><a class="auth-help" href="help.html">Help</a></header><main class="auth-main"><section class="auth-intro"><p class="eyebrow">HOME TO THE ELEMENTS OF YOUR GAME</p><h1>Everything your team needs.<br><span>One place.</span></h1><p>Game tracking, schedules, rosters and stats. Built for the people behind the game.</p><div class="auth-decor" aria-hidden="true">S<span>.</span></div></section><section class="auth-card"><p class="eyebrow">WELCOME BACK</p><h2>Sign in to Scoridium</h2><p class="auth-description">Access your teams and get back to the game.</p><form id="login-form"><label for="login-email">Email address</label><input id="login-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required><label for="login-password">Password</label><input id="login-password" name="password" type="password" autocomplete="current-password" required><a href="forgot-password.html" class="forgot">Forgot password?</a><button type="submit" id="sign-in-button" class="sign-in">Sign in →</button><p id="login-error" class="form-message" role="alert" aria-live="polite"></p></form><p class="no-account">New to Scoridium? <a href="signup.html">Create an account</a></p></section></main><footer class="auth-footer">© Scoridium · Built for basketball</footer><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="login.js"></script>  <script src="./pwa-register.js" defer></script>
++</head><body><header class="auth-header"><a class="auth-brand" href="Login.html">APEXVISION<span>.</span></a><a class="auth-help" href="help.html">Help</a></header><main class="auth-main"><section class="auth-intro"><p class="eyebrow">HOME TO THE ELEMENTS OF YOUR GAME</p><h1>Everything your team needs.<br><span>One place.</span></h1><p>Game tracking, schedules, rosters and stats. Built for the people behind the game.</p><div class="auth-decor" aria-hidden="true">S<span>.</span></div></section><section class="auth-card"><p class="eyebrow">WELCOME BACK</p><h2>Sign in to ApexVision</h2><p class="auth-description">Access your teams and get back to the game.</p><form id="login-form"><label for="login-email">Email address</label><input id="login-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required><label for="login-password">Password</label><input id="login-password" name="password" type="password" autocomplete="current-password" required><a href="forgot-password.html" class="forgot">Forgot password?</a><button type="submit" id="sign-in-button" class="sign-in">Sign in →</button><p id="login-error" class="form-message" role="alert" aria-live="polite"></p></form><p class="no-account">New to ApexVision? <a href="signup.html">Create an account</a></p></section></main><footer class="auth-footer">© ApexVision · Built for basketball</footer><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="login.js"></script>  <script src="./pwa-register.js" defer></script>
+ </body></html>
+\ No newline at end of file
+diff --git a/app-shell.css b/app-shell.css
+index 6335c8b..2594e4c 100644
+--- a/app-shell.css
++++ b/app-shell.css
+@@ -41,3 +41,11 @@ body.scoridium-shell {display:flex; flex-direction:column; margin:0; padding: 4p
+   body.scoridium-shell.tracker-fullscreen .shell-main{height:100%;flex:1;min-height:0;border-radius:0!important}
+   body.scoridium-shell.tracker-fullscreen #page-frame{height:100%;width:100%;display:block}
+ }
++
++/* ApexVision: tracker occupies the entire viewport on phone, iPad and desktop. */
++body.scoridium-shell.tracker-fullscreen {padding:0!important;height:100dvh!important;overflow:hidden!important}
++body.scoridium-shell.tracker-fullscreen .shell-header,
++body.scoridium-shell.tracker-fullscreen .mobile-app-topbar,
++body.scoridium-shell.tracker-fullscreen .mobile-bottom-nav {display:none!important}
++body.scoridium-shell.tracker-fullscreen .shell-main {flex:1 1 auto!important;min-height:0!important;border-radius:0!important}
++body.scoridium-shell.tracker-fullscreen #page-frame {width:100%!important;height:100%!important}
+diff --git a/app-shell.js b/app-shell.js
+index 4404d6c..bd4e664 100644
+--- a/app-shell.js
++++ b/app-shell.js
+@@ -23,7 +23,7 @@
+   const trackerScreen=window.matchMedia('(orientation: landscape) and (max-height: 650px)');
+   function updateMobileTrackerMode(){
+     const inGame=activeView.split(/[?#]/)[0]==='game.html';
+-    document.body.classList.toggle('tracker-fullscreen',inGame && trackerScreen.matches);
++    document.body.classList.toggle('tracker-fullscreen',inGame);
+     document.body.classList.toggle('tracker-page',inGame);
+   }
+   trackerScreen.addEventListener('change',updateMobileTrackerMode);
+diff --git a/app.html b/app.html
+index 7b7520d..3b1ce7e 100644
+--- a/app.html
++++ b/app.html
+@@ -1,18 +1,18 @@
+ <!doctype html>
+ <html lang="en">
+ <head>
+-  <!-- Installable Scoridium app (iOS, Android, desktop) -->
++  <!-- Installable ApexVision app (iOS, Android, desktop) -->
+   <link rel="manifest" href="./manifest.webmanifest">
+   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+   <meta name="theme-color" content="#10233F">
+   <meta name="apple-mobile-web-app-capable" content="yes">
+   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+-  <meta name="apple-mobile-web-app-title" content="Scoridium">
++  <meta name="apple-mobile-web-app-title" content="ApexVision">
+ 
+   <meta charset="utf-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+-  <title>Scoridium</title>
++  <title>ApexVision</title>
+   <script src="team-theme-boot.js"></script>
+   <link rel="stylesheet" href="pageLayout.css">
+   <link rel="stylesheet" href="app-shell.css">
+@@ -30,7 +30,7 @@
+ <body class="scoridium-shell">
+   <header id="app-header" class="shell-header">
+     <nav id="main-navigation" aria-label="Main navigation">
+-      <a href="myTeams.html" class="nav-home" title="My Teams" aria-label="Go to My Teams">SCORIDIUM</a>
++      <a href="myTeams.html" class="nav-home" title="My Teams" aria-label="Go to My Teams">APEXVISION</a>
+       <span class="nav-divider"></span>
+       <div class="header-team"><h2 id="shared-team-name"></h2></div>
+       <span class="nav-divider"></span>
+@@ -46,7 +46,7 @@
+     </nav>
+   </header>
+   <div class="mobile-app-topbar" aria-label="Team header">
+-    <a class="mobile-brand" href="myTeams.html" aria-label="My Teams">SCORIDIUM<span>.</span></a>
++    <a class="mobile-brand" href="myTeams.html" aria-label="My Teams">APEXVISION<span>.</span></a>
+     <span class="mobile-team-name" id="mobile-team-name">MY TEAM</span>
+     <button type="button" class="mobile-team-menu-btn" id="mobile-team-menu-btn" aria-label="More options" aria-expanded="false">•••</button>
+   </div>
+@@ -54,8 +54,8 @@
+     <a href="myTeams.html">Switch Team</a>
+ 
+   </div>
+-  <main class="shell-main" id="shell-main" aria-label="Scoridium page">
+-    <iframe id="page-frame" title="Scoridium content" loading="eager" allow="fullscreen" referrerpolicy="same-origin"></iframe>
++  <main class="shell-main" id="shell-main" aria-label="ApexVision page">
++    <iframe id="page-frame" title="ApexVision content" loading="eager" allow="fullscreen" referrerpolicy="same-origin"></iframe>
+     <div class="shell-loading" id="shell-loading" aria-hidden="true"><span class="shell-loading-line"></span></div>
+   </main>
+   <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+diff --git a/collaboration.js b/collaboration.js
+index 3bec3ab..dc3a4d5 100644
+--- a/collaboration.js
++++ b/collaboration.js
+@@ -79,7 +79,7 @@
+     if(currentGame && state.status!=='not_started' && Number(state.period)!==prior){
+       previouslyRenderedPeriod=Number(state.period);
+       // A quarter boundary is a reconciliation checkpoint, not a hard lock.
+-      renderCheckpoint(prior);if(!scorePromptOpen&&document.querySelector('.tracker-shell')?.dataset.focusView==='court')void physicalScoreCheckpoint(prior);
++      selectedReviewPeriod=prior;renderCheckpoint(prior);if(!scorePromptOpen&&document.querySelector('.tracker-shell')?.dataset.focusView==='court')void physicalScoreCheckpoint(prior);
+     }
+   };
+   // Existing play-by-play tab is replaced by the combined view, with the unassigned tab intact.
+@@ -455,7 +455,13 @@
+     if(e&&e.made)totals[e.team]+=Number(e.points||0);
+     return {...r,quickScore:`${totals.us}–${totals.opponent}`};
+   });}
+-  function renderCheckpoint(period=state.period){
++  let selectedReviewPeriod = null;
++  const latestCompletedReviewPeriod = () => {
++    const current = Number(state.period) || 1;
++    return current > 1 ? current - 1 : current;
++  };
++  function renderCheckpoint(period=selectedReviewPeriod ?? latestCompletedReviewPeriod()){
++    selectedReviewPeriod = Number(period);
+     const r=compare(period),ind=compareIndependent(period),fts=compareFT(period);
+     const area=byId('sc-checkpoint-summary');area.hidden=false;
+     const summary=`<div class="sc-review-head"><h3>${safe(periodName(period))} · Tracker A / B</h3><button id="sc-close-review" aria-label="Close comparison" type="button">×</button></div>
+@@ -486,7 +492,7 @@
+     }
+     area.querySelector('#sc-close-review').addEventListener('click',()=>{area.hidden=true;});
+   }
+-  byId('sc-shot-counts').addEventListener('click',()=>renderCheckpoint());
++  byId('sc-shot-counts').addEventListener('click',()=>{selectedReviewPeriod=latestCompletedReviewPeriod();renderCheckpoint(selectedReviewPeriod);});
+   function refreshCourtQueue(){
+     const count=byId('sc-total-shots');if(!count)return;
+     const scope=effectiveScope(),shots=observations.filter(o=>!o.retracted_at&&o.kind==='shot'&&(scope==='both'||o.team==='us'));
+@@ -499,7 +505,7 @@
+     if(scorePromptOpen||!gameId||localStorage.getItem(scoreSavedKey(period))==='yes')return false;scorePromptOpen=true;
+     const dialog=document.createElement('dialog');dialog.className='sc-ft-dialog';
+     dialog.innerHTML=`<form method="dialog"><h3>End of ${safe(periodName(period))} · Physical scoreboard</h3>
+-      <p>Both trackers must independently enter what the venue scoreboard actually shows. Do not copy Scoridium's score.</p>
++      <p>Both trackers must independently enter what the venue scoreboard actually shows. Do not copy ApexVision's score.</p>
+       <label>Home <input name="home" type="number" min="0" max="999" required placeholder="Actual score"></label>
+       <label>Away <input name="away" type="number" min="0" max="999" required placeholder="Actual score"></label>
+       <div class="sc-ft-checks"><button type="button" id="sc-submit-score" class="sc-make">SAVE SCORE</button><button type="button" id="sc-cancel-score">LATER</button></div>
+diff --git a/create-team.html b/create-team.html
+index d12ae5d..ce4a7d3 100644
+--- a/create-team.html
++++ b/create-team.html
+@@ -1,18 +1,18 @@
+ <!doctype html>
+ <html lang="en">
+ <head>
+-  <!-- Installable Scoridium app (iOS, Android, desktop) -->
++  <!-- Installable ApexVision app (iOS, Android, desktop) -->
+   <link rel="manifest" href="./manifest.webmanifest">
+   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+   <meta name="theme-color" content="#10233F">
+   <meta name="apple-mobile-web-app-capable" content="yes">
+   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+-  <meta name="apple-mobile-web-app-title" content="Scoridium">
++  <meta name="apple-mobile-web-app-title" content="ApexVision">
+ 
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1">
+-  <title>Create Team · Scoridium</title>
++  <title>Create Team · ApexVision</title>
+   
+ <!-- 1. Load the Supabase library -->
+ <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+@@ -36,7 +36,7 @@
+ <body>
+   <main class="setup-shell">
+     <header class="setup-header">
+-      <a href="dashboard.html" class="wordmark">SCORIDIUM<span class="brand-dot">.</span></a>
++      <a href="dashboard.html" class="wordmark">APEXVISION<span class="brand-dot">.</span></a>
+       <span class="progress-text" id="step-indicator">STEP 1 OF 2</span>
+     </header>
+     <div class="progress-track" aria-hidden="true"><div id="progress-fill"></div></div>
+@@ -73,7 +73,7 @@
+         </div>
+         <div class="section-divider"></div>
+         <h2>Team Colours</h2>
+-        <p class="helper">These colours will become your team's theme throughout Scoridium.</p>
++        <p class="helper">These colours will become your team's theme throughout ApexVision.</p>
+         <div class="colour-targets" role="group" aria-label="Colour to customize">
+           <button type="button" class="colour-target active" id="target-primary" data-colour-target="primary" aria-pressed="true"><span class="colour-sample" id="primary-sample"></span><span><strong>Primary</strong><small id="primary-target-hex">#181818</small></span></button>
+           <button type="button" class="colour-target" id="target-secondary" data-colour-target="secondary" aria-pressed="false"><span class="colour-sample" id="secondary-sample"></span><span><strong>Secondary</strong><small id="secondary-target-hex">#9299A5</small></span></button>
+@@ -89,7 +89,7 @@
+             <div class="shade-ends"><span>Darker</span><span>Original</span><span>Lighter</span></div>
+           </div>
+           <button type="button" id="reset-default-colours" class="default-colours-button">↺ Use default black, grey &amp; white</button>
+-          <p class="palette-hint" id="default-colours-hint">Optional: Scoridium starts with black, grey and white. If you don't choose colours, these defaults are saved automatically.</p>
++          <p class="palette-hint" id="default-colours-hint">Optional: ApexVision starts with black, grey and white. If you don't choose colours, these defaults are saved automatically.</p>
+         </div>
+         <details class="custom-colours">
+           <summary>Custom colours (optional)</summary>
+@@ -116,7 +116,7 @@
+       <div class="finish-icon" aria-hidden="true">✓</div>
+       <div class="eyebrow">TEAM CREATED</div>
+       <h1 id="finish-heading">Your team is ready.</h1>
+-      <p class="subheading">Your team is saved in Scoridium. What would you like to do first?</p>
++      <p class="subheading">Your team is saved in ApexVision. What would you like to do first?</p>
+       <div class="finish-summary" id="finish-summary"></div>
+       <div class="next-actions">
+         <a href="app.html?page=roster.html" id="roster-link" class="next-option"><span class="next-icon">♙</span><span><strong>Set Up Roster</strong><small>Add players and jersey numbers</small></span><span>→</span></a>
+diff --git a/dashboard.html b/dashboard.html
+index c35edfd..e142704 100644
+--- a/dashboard.html
++++ b/dashboard.html
+@@ -2,14 +2,14 @@
+ <html lang="en">
+     <!-- Testing GitHub online editor -->
+ <head>
+-  <!-- Installable Scoridium app (iOS, Android, desktop) -->
++  <!-- Installable ApexVision app (iOS, Android, desktop) -->
+   <link rel="manifest" href="./manifest.webmanifest">
+   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+   <meta name="theme-color" content="#10233F">
+   <meta name="apple-mobile-web-app-capable" content="yes">
+   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+-  <meta name="apple-mobile-web-app-title" content="Scoridium">
++  <meta name="apple-mobile-web-app-title" content="ApexVision">
+ 
+ <script>if(window.top===window && sessionStorage.getItem('selectedTeamId')){location.replace('app.html?page=dashboard.html'+encodeURIComponent(location.search+location.hash));}</script>
+ <script>if(window.parent!==window){document.documentElement.classList.add('scoridium-framed');}</script>
+diff --git a/forgot-password.html b/forgot-password.html
+index a7f8a73..d919a4f 100644
+--- a/forgot-password.html
++++ b/forgot-password.html
+@@ -1,16 +1,16 @@
+ <!doctype html><html lang="en"><head>
+-  <!-- Installable Scoridium app (iOS, Android, desktop) -->
++  <!-- Installable ApexVision app (iOS, Android, desktop) -->
+   <link rel="manifest" href="./manifest.webmanifest">
+   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+   <meta name="theme-color" content="#10233F">
+   <meta name="apple-mobile-web-app-capable" content="yes">
+   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+-  <meta name="apple-mobile-web-app-title" content="Scoridium">
+-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Forgot Password · Scoridium</title><link rel="stylesheet" href="login.css"><link rel="stylesheet" href="revision43.css?v=2">
++  <meta name="apple-mobile-web-app-title" content="ApexVision">
++<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Forgot Password · ApexVision</title><link rel="stylesheet" href="login.css"><link rel="stylesheet" href="revision43.css?v=2">
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+ <link rel="stylesheet" href="major-update.css">
+-</head><body><header class="auth-header"><a class="auth-brand" href="Login.html">SCORIDIUM<span>.</span></a><a class="auth-help" href="help.html">Help</a></header><main class="auth-main"><section class="auth-intro"><p class="eyebrow">JOIN SCORIDIUM</p><h1>Build your team.<br><span>Own the game.</span></h1><p>Manage your team with scheduling, roster tools, game tracking and season statistics.</p></section><section class="auth-card"><p class="eyebrow">ACCOUNT RECOVERY</p><h2>Reset your password</h2><p class="auth-description">Enter your account email. If an account exists, we'll email a password reset link.</p><form id="forgot-form"><label for="forgot-email">Email address</label><input id="forgot-email" type="email" autocomplete="email" required><button class="sign-in" type="submit">Send reset link →</button><p id="auth-message" class="form-message" role="status" aria-live="polite"></p></form><p class="no-account"><a href="Login.html">Back to sign in</a></p></section></main><footer class="auth-footer">Scoridium · Home to the elements of your game</footer><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="auth-pages.js"></script>  <script src="./pwa-register.js" defer></script>
++</head><body><header class="auth-header"><a class="auth-brand" href="Login.html">APEXVISION<span>.</span></a><a class="auth-help" href="help.html">Help</a></header><main class="auth-main"><section class="auth-intro"><p class="eyebrow">JOIN APEXVISION</p><h1>Build your team.<br><span>Own the game.</span></h1><p>Manage your team with scheduling, roster tools, game tracking and season statistics.</p></section><section class="auth-card"><p class="eyebrow">ACCOUNT RECOVERY</p><h2>Reset your password</h2><p class="auth-description">Enter your account email. If an account exists, we'll email a password reset link.</p><form id="forgot-form"><label for="forgot-email">Email address</label><input id="forgot-email" type="email" autocomplete="email" required><button class="sign-in" type="submit">Send reset link →</button><p id="auth-message" class="form-message" role="status" aria-live="polite"></p></form><p class="no-account"><a href="Login.html">Back to sign in</a></p></section></main><footer class="auth-footer">ApexVision · Home to the elements of your game</footer><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="auth-pages.js"></script>  <script src="./pwa-register.js" defer></script>
+ </body></html>
+\ No newline at end of file
+diff --git a/game.html b/game.html
+index 863021e..0871d70 100644
+--- a/game.html
++++ b/game.html
+@@ -1,14 +1,14 @@
+ <!DOCTYPE html>
+ <html lang="en">
+ <head>
+-  <!-- Installable Scoridium app (iOS, Android, desktop) -->
++  <!-- Installable ApexVision app (iOS, Android, desktop) -->
+   <link rel="manifest" href="./manifest.webmanifest">
+   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+   <meta name="theme-color" content="#10233F">
+   <meta name="apple-mobile-web-app-capable" content="yes">
+   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+-  <meta name="apple-mobile-web-app-title" content="Scoridium">
++  <meta name="apple-mobile-web-app-title" content="ApexVision">
+ 
+ <script>if(window.parent!==window){document.documentElement.classList.add('scoridium-framed');}</script>
+ <style>html.scoridium-framed #shared-header {display:none!important;}html.scoridium-framed #app-header {display:none!important;}html.scoridium-framed body {padding-top:0!important;}html.scoridium-framed body {min-height:100dvh!important;}</style>
+diff --git a/gamehub.html b/gamehub.html
+index b813149..fa3a12c 100644
+--- a/gamehub.html
++++ b/gamehub.html
+@@ -1,14 +1,14 @@
+ <!DOCTYPE html>
+ <html lang="en">
+ <head>
+-  <!-- Installable Scoridium app (iOS, Android, desktop) -->
++  <!-- Installable ApexVision app (iOS, Android, desktop) -->
+   <link rel="manifest" href="./manifest.webmanifest">
+   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+   <meta name="theme-color" content="#10233F">
+   <meta name="apple-mobile-web-app-capable" content="yes">
+   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+-  <meta name="apple-mobile-web-app-title" content="Scoridium">
++  <meta name="apple-mobile-web-app-title" content="ApexVision">
+ 
+ <script>if(window.top===window && sessionStorage.getItem('selectedTeamId')){location.replace('app.html?page=gamehub.html'+encodeURIComponent(location.search+location.hash));}</script>
+ <script>if(window.parent!==window){document.documentElement.classList.add('scoridium-framed');}</script>
+diff --git a/help.html b/help.html
+index 7dc1e53..00835a5 100644
+--- a/help.html
++++ b/help.html
+@@ -1,16 +1,16 @@
+ <!doctype html><html lang="en"><head>
+-  <!-- Installable Scoridium app (iOS, Android, desktop) -->
++  <!-- Installable ApexVision app (iOS, Android, desktop) -->
+   <link rel="manifest" href="./manifest.webmanifest">
+   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+   <meta name="theme-color" content="#10233F">
+   <meta name="apple-mobile-web-app-capable" content="yes">
+   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+-  <meta name="apple-mobile-web-app-title" content="Scoridium">
+-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Help · Scoridium</title><link rel="stylesheet" href="login.css"><link rel="stylesheet" href="revision43.css?v=2">
++  <meta name="apple-mobile-web-app-title" content="ApexVision">
++<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Help · ApexVision</title><link rel="stylesheet" href="login.css"><link rel="stylesheet" href="revision43.css?v=2">
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+ <link rel="stylesheet" href="major-update.css">
+-</head><body><header class="auth-header"><a class="auth-brand" href="Login.html">SCORIDIUM<span>.</span></a><a class="auth-help" href="help.html">Help</a></header><main class="auth-main"><section class="auth-intro"><p class="eyebrow">JOIN SCORIDIUM</p><h1>Build your team.<br><span>Own the game.</span></h1><p>Manage your team with scheduling, roster tools, game tracking and season statistics.</p></section><section class="auth-card"><p class="eyebrow">SCORIDIUM SUPPORT</p><h2>How can we help?</h2><p class="auth-description">Common account and team setup questions.</p><div class="help-topics"><details open><summary>I can't sign in</summary><p>Check your email and password. If you recently registered, confirm your email using the link sent to your inbox. Check spam or junk as well.</p></details><details><summary>I forgot my password</summary><p>Use the password reset form to request a new password. The reset link must be opened in the same Scoridium site.</p><p><a href="forgot-password.html">Reset password</a></p></details><details><summary>How do I create a team?</summary><p>Sign in, select Create Team on My Teams, choose School or Club, and enter the team identity, division, season and colours.</p></details><details><summary>My team isn't appearing</summary><p>Check that you're using the account assigned to that team's membership, then refresh My Teams.</p></details></div><p class="no-account"><a href="Login.html">Back to sign in</a></p></section></main><footer class="auth-footer">Scoridium · Home to the elements of your game</footer><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="auth-pages.js"></script>  <script src="./pwa-register.js" defer></script>
++</head><body><header class="auth-header"><a class="auth-brand" href="Login.html">APEXVISION<span>.</span></a><a class="auth-help" href="help.html">Help</a></header><main class="auth-main"><section class="auth-intro"><p class="eyebrow">JOIN APEXVISION</p><h1>Build your team.<br><span>Own the game.</span></h1><p>Manage your team with scheduling, roster tools, game tracking and season statistics.</p></section><section class="auth-card"><p class="eyebrow">APEXVISION SUPPORT</p><h2>How can we help?</h2><p class="auth-description">Common account and team setup questions.</p><div class="help-topics"><details open><summary>I can't sign in</summary><p>Check your email and password. If you recently registered, confirm your email using the link sent to your inbox. Check spam or junk as well.</p></details><details><summary>I forgot my password</summary><p>Use the password reset form to request a new password. The reset link must be opened in the same ApexVision site.</p><p><a href="forgot-password.html">Reset password</a></p></details><details><summary>How do I create a team?</summary><p>Sign in, select Create Team on My Teams, choose School or Club, and enter the team identity, division, season and colours.</p></details><details><summary>My team isn't appearing</summary><p>Check that you're using the account assigned to that team's membership, then refresh My Teams.</p></details></div><p class="no-account"><a href="Login.html">Back to sign in</a></p></section></main><footer class="auth-footer">ApexVision · Home to the elements of your game</footer><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="auth-pages.js"></script>  <script src="./pwa-register.js" defer></script>
+ </body></html>
+\ No newline at end of file
+diff --git a/index.html b/index.html
+index ad8e2d9..3b8b2ca 100644
+--- a/index.html
++++ b/index.html
+@@ -2,19 +2,19 @@
+ <!DOCTYPE html>
+ <html lang="en">
+ <head>
+-  <!-- Installable Scoridium app (iOS, Android, desktop) -->
++  <!-- Installable ApexVision app (iOS, Android, desktop) -->
+   <link rel="manifest" href="./manifest.webmanifest">
+   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+   <meta name="theme-color" content="#10233F">
+   <meta name="apple-mobile-web-app-capable" content="yes">
+   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+-  <meta name="apple-mobile-web-app-title" content="Scoridium">
++  <meta name="apple-mobile-web-app-title" content="ApexVision">
+ 
+   <meta charset="UTF-8">
+   <meta name="viewport"
+         content="width=device-width, initial-scale=1.0">
+-  <title>Scoridium</title>
++  <title>ApexVision</title>
+   <meta http-equiv="refresh"
+         content="0; url=myTeams.html">
+ <link rel="stylesheet" href="revision43.css?v=2">
+@@ -25,7 +25,7 @@
+ </head>
+ <body>
+   <p>
+-    Opening Scoridium...
++    Opening ApexVision...
+     <a href="myTeams.html">Continue</a>
+   </p>
+   <script src="./pwa-register.js" defer></script>
+diff --git a/manifest.webmanifest b/manifest.webmanifest
+index e831b33..712cca0 100644
+--- a/manifest.webmanifest
++++ b/manifest.webmanifest
+@@ -1,7 +1,7 @@
+ {
+   "id": "./",
+-  "name": "Scoridium",
+-  "short_name": "Scoridium",
++  "name": "ApexVision",
++  "short_name": "ApexVision",
+   "description": "Basketball team management and live game statistics.",
+   "start_url": "./myTeams.html",
+   "scope": "./",
+@@ -10,7 +10,17 @@
+   "theme_color": "#10233F",
+   "orientation": "any",
+   "icons": [
+-    {"src":"./icon-192.png", "sizes":"192x192", "type":"image/png", "purpose":"any maskable"},
+-    {"src":"./icon-512.png", "sizes":"512x512", "type":"image/png", "purpose":"any maskable"}
++    {
++      "src": "./icon-192.png",
++      "sizes": "192x192",
++      "type": "image/png",
++      "purpose": "any maskable"
++    },
++    {
++      "src": "./icon-512.png",
++      "sizes": "512x512",
++      "type": "image/png",
++      "purpose": "any maskable"
++    }
+   ]
+ }
+diff --git a/myTeams.html b/myTeams.html
+index de74c63..109ab9b 100644
+--- a/myTeams.html
++++ b/myTeams.html
+@@ -1,14 +1,14 @@
+ <!doctype html>
+ <html lang="en"><head>
+-  <!-- Installable Scoridium app (iOS, Android, desktop) -->
++  <!-- Installable ApexVision app (iOS, Android, desktop) -->
+   <link rel="manifest" href="./manifest.webmanifest">
+   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+   <meta name="theme-color" content="#10233F">
+   <meta name="apple-mobile-web-app-capable" content="yes">
+   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+-  <meta name="apple-mobile-web-app-title" content="Scoridium">
+-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>My Teams · Scoridium</title><link rel="stylesheet" href="myTeams.css">  <link rel="stylesheet" href="universal-ui.css?v=1">
++  <meta name="apple-mobile-web-app-title" content="ApexVision">
++<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>My Teams · ApexVision</title><link rel="stylesheet" href="myTeams.css">  <link rel="stylesheet" href="universal-ui.css?v=1">
+ <link rel="stylesheet" href="revision43.css?v=2">
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+@@ -16,9 +16,9 @@
+ <link rel="stylesheet" href="major-update.css">
+ <link rel="stylesheet" href="revision44.css?v=1">
+ </head>
+-<body><header class="site-header"><a class="site-brand" href="myTeams.html">SCORIDIUM<span>.</span></a><div class="header-actions"><span class="header-label">TEAM MANAGEMENT</span><button type="button" id="sign-out">Sign out</button></div></header>
++<body><header class="site-header"><a class="site-brand" href="myTeams.html">APEXVISION<span>.</span></a><div class="header-actions"><span class="header-label">TEAM MANAGEMENT</span><button type="button" id="sign-out">Sign out</button></div></header>
+ <main class="teams-container"><div class="teams-page-header"><div><p class="eyebrow">WELCOME BACK</p><h1>My Teams</h1><p>Select a team to access its dashboard, roster, and schedule.</p></div><a href="create-team.html" class="new-team-button">＋ Create Team</a></div>
+ <div id="teams-notice" role="status" aria-live="polite"></div><div id="teams-list" class="teams-list"></div></main>
+-<footer class="site-footer">SCORIDIUM <span>HOME TO THE ELEMENTS OF YOUR GAME</span></footer>
++<footer class="site-footer">APEXVISION <span>HOME TO THE ELEMENTS OF YOUR GAME</span></footer>
+ <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="myTeams.js"></script>  <script src="./pwa-register.js" defer></script>
+ </body></html>
+\ No newline at end of file
+diff --git a/offline.html b/offline.html
+index dde9a5d..fba3adf 100644
+--- a/offline.html
++++ b/offline.html
+@@ -1,6 +1,6 @@
+-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#10233F"><title>Offline · Scoridium</title><style>html{background:#10233f;color:#fff;font-family:system-ui,sans-serif}body{min-height:95vh;display:grid;place-items:center;margin:0;padding:20px}.panel{max-width:430px;text-align:center}.logo{font-weight:900;font-size:52px;letter-spacing:-.04em}.logo span{color:#ffd600}p{color:#c8d3e0;line-height:1.6}button{background:#ffd600;color:#10233f;font:700 16px system-ui;border:0;border-radius:8px;padding:12px 24px}</style><link rel="stylesheet" href="revision43.css?v=2">
++<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#10233F"><title>Offline · ApexVision</title><style>html{background:#10233f;color:#fff;font-family:system-ui,sans-serif}body{min-height:95vh;display:grid;place-items:center;margin:0;padding:20px}.panel{max-width:430px;text-align:center}.logo{font-weight:900;font-size:52px;letter-spacing:-.04em}.logo span{color:#ffd600}p{color:#c8d3e0;line-height:1.6}button{background:#ffd600;color:#10233f;font:700 16px system-ui;border:0;border-radius:8px;padding:12px 24px}</style><link rel="stylesheet" href="revision43.css?v=2">
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+ <link rel="stylesheet" href="major-update.css">
+-</head><body><main class="panel"><div class="logo">S<span>.</span></div><h1>You're offline</h1><p>Connect to the internet and try again. Scoridium has not loaded this page from the network. Do not assume unsynced game events have been saved.</p><button onclick="location.reload()">Try again</button></main></body></html>
+\ No newline at end of file
++</head><body><main class="panel"><div class="logo">S<span>.</span></div><h1>You're offline</h1><p>Connect to the internet and try again. ApexVision has not loaded this page from the network. Do not assume unsynced game events have been saved.</p><button onclick="location.reload()">Try again</button></main></body></html>
+\ No newline at end of file
+diff --git a/pageLayout.html b/pageLayout.html
+index 29a10e1..3eced49 100644
+--- a/pageLayout.html
++++ b/pageLayout.html
+@@ -1,13 +1,13 @@
+ <!DOCTYPE html>
+ <head>
+-  <!-- Installable Scoridium app (iOS, Android, desktop) -->
++  <!-- Installable ApexVision app (iOS, Android, desktop) -->
+   <link rel="manifest" href="./manifest.webmanifest">
+   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+   <meta name="theme-color" content="#10233F">
+   <meta name="apple-mobile-web-app-capable" content="yes">
+   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+-  <meta name="apple-mobile-web-app-title" content="Scoridium">
++  <meta name="apple-mobile-web-app-title" content="ApexVision">
+ 
+     <meta charset="UTF-8">
+     <link rel="stylesheet" href="pageLayout.css">
+diff --git a/player.html b/player.html
+index 489d188..f5da7c4 100644
+--- a/player.html
++++ b/player.html
+@@ -2,21 +2,21 @@
+ 
+ <html lang="en">
+ <head>
+-  <!-- Installable Scoridium app (iOS, Android, desktop) -->
++  <!-- Installable ApexVision app (iOS, Android, desktop) -->
+   <link rel="manifest" href="./manifest.webmanifest">
+   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+   <meta name="theme-color" content="#10233F">
+   <meta name="apple-mobile-web-app-capable" content="yes">
+   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+-  <meta name="apple-mobile-web-app-title" content="Scoridium">
++  <meta name="apple-mobile-web-app-title" content="ApexVision">
+ 
+ <script>if(window.parent!==window){document.documentElement.classList.add('scoridium-framed');}</script>
+ <style>html.scoridium-framed #shared-header {display:none!important;}html.scoridium-framed #app-header {display:none!important;}html.scoridium-framed body {padding-top:0!important;}html.scoridium-framed body {min-height:100dvh!important;}</style>
+   <script src="team-theme-boot.js"></script>
+ <meta charset="utf-8"/>
+ <meta content="width=device-width,initial-scale=1" name="viewport"/>
+-<title>Player Profile | Scoridium</title>
++<title>Player Profile | ApexVision</title>
+ <link href="player.css" rel="stylesheet"/>
+ <link href="pageLayout.css" rel="stylesheet"/>
+ <link href="player.css" rel="stylesheet"/>  <link rel="stylesheet" href="navigation-smooth.css">
+@@ -42,7 +42,7 @@
+ (()=>{const t=window.__scoridiumCachedTeam;const id=sessionStorage.getItem('selectedTeamId');const label=t&&t.id===id?((t.team_type==='club'?(t.club_name||t.mascot):(t.mascot||t.club_name))||''):'';const target=document.getElementById('shared-team-name');if(target)target.textContent=label.toUpperCase();const link=document.querySelector('#main-navigation a[href="'+location.pathname.split('/').pop()+'"]');if(link)link.classList.add('active');const seasonId=sessionStorage.getItem('selectedSeasonId');const seasonName=sessionStorage.getItem('scoridium:season-label:'+id);if(seasonId&&seasonName){const s=document.querySelector('.season-selector');s.options[0].text=seasonName;s.options[0].value=seasonId;}})();
+ </script></div>
+ <nav aria-label="Preview navigation" class="preview-header" hidden="" id="preview-header">
+-<strong>SCORIDIUM</strong><span>Dashboard</span><span>Game Hub</span><b>Team &amp; Roster</b><span>Stats</span><span>Playbook</span><span>2026 – 2027 ⌄</span>
++<strong>APEXVISION</strong><span>Dashboard</span><span>Game Hub</span><b>Team &amp; Roster</b><span>Stats</span><span>Playbook</span><span>2026 – 2027 ⌄</span>
+ </nav>
+ <main class="player-page"><div class="profile-page-toolbar"><a class="back-link" href="roster.html" id="back-roster">← Players</a><strong class="profile-page-title">Player Profile</strong><span class="profile-view-label">PLAYER ANALYTICS</span></div>
+ 
+@@ -171,11 +171,6 @@
+   <div class="breakdown" id="shot-breakdown" hidden></div>
+ 
+     <div id="zone-preview-slot">
+-        <div class="sc-player-zone-inline-tabs" role="group" aria-label="Player shot zone view">
+-          <button type="button" data-inline-player-zone="basic" aria-pressed="true">Basic Zones</button>
+-          <button type="button" data-inline-player-zone="traditional" aria-pressed="false">Traditional Zones</button>
+-          <button type="button" data-inline-player-zone="distance" aria-pressed="false">Distance Zones</button>
+-        </div>
+         <article class="panel player-shooting-panel">
+             <button
+                 aria-controls="player-analysis-modal"
+diff --git a/pwa-register.js b/pwa-register.js
+index 2181b72..1c52901 100644
+--- a/pwa-register.js
++++ b/pwa-register.js
+@@ -9,7 +9,7 @@
+     banner=document.createElement('div');
+     banner.setAttribute('role','status');
+     banner.style.cssText='position:fixed;bottom:75px;left:12px;right:12px;max-width:420px;margin:auto;background:#10233f;color:white;border-radius:10px;padding:12px;z-index:999999;font:14px system-ui;display:flex;align-items:center;gap:10px;box-shadow:0 6px 20px #0004';
+-    const label=document.createElement('span');label.textContent='Scoridium update available';label.style.flex='1';
++    const label=document.createElement('span');label.textContent='ApexVision update available';label.style.flex='1';
+     const button=document.createElement('button');button.textContent='Update';button.style.cssText='background:#ffd600;color:#111;border:0;border-radius:7px;padding:9px 12px;font-weight:bold';
+     button.addEventListener('click',()=>{
+       if(hasLiveSession()){
+diff --git a/reset-password.html b/reset-password.html
+index 74572c2..a225539 100644
+--- a/reset-password.html
++++ b/reset-password.html
+@@ -1,16 +1,16 @@
+ <!doctype html><html lang="en"><head>
+-  <!-- Installable Scoridium app (iOS, Android, desktop) -->
++  <!-- Installable ApexVision app (iOS, Android, desktop) -->
+   <link rel="manifest" href="./manifest.webmanifest">
+   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+   <meta name="theme-color" content="#10233F">
+   <meta name="apple-mobile-web-app-capable" content="yes">
+   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+-  <meta name="apple-mobile-web-app-title" content="Scoridium">
+-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Choose New Password · Scoridium</title><link rel="stylesheet" href="login.css"><link rel="stylesheet" href="revision43.css?v=2">
++  <meta name="apple-mobile-web-app-title" content="ApexVision">
++<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Choose New Password · ApexVision</title><link rel="stylesheet" href="login.css"><link rel="stylesheet" href="revision43.css?v=2">
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+ <link rel="stylesheet" href="major-update.css">
+-</head><body><header class="auth-header"><a class="auth-brand" href="Login.html">SCORIDIUM<span>.</span></a><a class="auth-help" href="help.html">Help</a></header><main class="auth-main"><section class="auth-intro"><p class="eyebrow">JOIN SCORIDIUM</p><h1>Build your team.<br><span>Own the game.</span></h1><p>Manage your team with scheduling, roster tools, game tracking and season statistics.</p></section><section class="auth-card"><p class="eyebrow">ACCOUNT RECOVERY</p><h2>Choose a new password</h2><p class="auth-description" id="reset-description">Open this page through the password reset link in your email.</p><form id="reset-form"><label for="new-password">New password (at least 8 characters)</label><input id="new-password" type="password" autocomplete="new-password" minlength="8" required><label for="confirm-password">Confirm new password</label><input id="confirm-password" type="password" autocomplete="new-password" minlength="8" required><button class="sign-in" type="submit">Update password →</button><p id="auth-message" class="form-message" role="status" aria-live="polite"></p></form><p class="no-account"><a href="Login.html">Back to sign in</a></p></section></main><footer class="auth-footer">Scoridium · Home to the elements of your game</footer><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="auth-pages.js"></script>  <script src="./pwa-register.js" defer></script>
++</head><body><header class="auth-header"><a class="auth-brand" href="Login.html">APEXVISION<span>.</span></a><a class="auth-help" href="help.html">Help</a></header><main class="auth-main"><section class="auth-intro"><p class="eyebrow">JOIN APEXVISION</p><h1>Build your team.<br><span>Own the game.</span></h1><p>Manage your team with scheduling, roster tools, game tracking and season statistics.</p></section><section class="auth-card"><p class="eyebrow">ACCOUNT RECOVERY</p><h2>Choose a new password</h2><p class="auth-description" id="reset-description">Open this page through the password reset link in your email.</p><form id="reset-form"><label for="new-password">New password (at least 8 characters)</label><input id="new-password" type="password" autocomplete="new-password" minlength="8" required><label for="confirm-password">Confirm new password</label><input id="confirm-password" type="password" autocomplete="new-password" minlength="8" required><button class="sign-in" type="submit">Update password →</button><p id="auth-message" class="form-message" role="status" aria-live="polite"></p></form><p class="no-account"><a href="Login.html">Back to sign in</a></p></section></main><footer class="auth-footer">ApexVision · Home to the elements of your game</footer><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="auth-pages.js"></script>  <script src="./pwa-register.js" defer></script>
+ </body></html>
+\ No newline at end of file
+diff --git a/revision44.css b/revision44.css
+index be2fa19..4d11b78 100644
+--- a/revision44.css
++++ b/revision44.css
+@@ -68,3 +68,8 @@
+ .mobile-dashboard-next-event.sc-is-live .sc-live-view-link{display:inline-block!important;margin:0!important;padding:10px 15px!important;border-radius:10px!important;background:var(--team-secondary,#ffd600)!important;color:#10233f!important;font-weight:800!important;text-decoration:none!important;}
+ 
+ .sc-mobile-live-header{display:flex;align-items:center;justify-content:space-between;gap:8px;}.sc-mobile-live-header .mobile-dashboard-eyebrow{margin:0!important;min-width:0!important;}
++
++/* ApexVision opponent zone selection: shared Basic/Traditional/Distance court modes. */
++.sc-opponent-zone-controls{display:flex;flex-wrap:wrap;gap:8px;margin:9px 0 15px}
++.sc-opponent-zone-controls button{border:1px solid #cad5e5;background:#fff;color:#173d78;border-radius:8px;padding:9px 13px;font-weight:700;cursor:pointer}
++.sc-opponent-zone-controls button[aria-pressed="true"]{background:var(--team-primary,#173d78);color:white;border-color:var(--team-primary,#173d78)}
+diff --git a/roster.html b/roster.html
+index 90bb0eb..b4fdda0 100644
+--- a/roster.html
++++ b/roster.html
+@@ -1,14 +1,14 @@
+ <!DOCTYPE html>
+ <html lang="en">
+ <head>
+-  <!-- Installable Scoridium app (iOS, Android, desktop) -->
++  <!-- Installable ApexVision app (iOS, Android, desktop) -->
+   <link rel="manifest" href="./manifest.webmanifest">
+   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+   <meta name="theme-color" content="#10233F">
+   <meta name="apple-mobile-web-app-capable" content="yes">
+   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+-  <meta name="apple-mobile-web-app-title" content="Scoridium">
++  <meta name="apple-mobile-web-app-title" content="ApexVision">
+ 
+ <script>if(window.top===window && sessionStorage.getItem('selectedTeamId')){location.replace('app.html?page=roster.html'+encodeURIComponent(location.search+location.hash));}</script>
+ <script>if(window.parent!==window){document.documentElement.classList.add('scoridium-framed');}</script>
+@@ -16,7 +16,7 @@
+   <script src="team-theme-boot.js"></script>
+   <meta charset="UTF-8" />
+   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+-  <title>Team & Roster | Scoridium</title>
++  <title>Team & Roster | ApexVision</title>
+   <link rel="stylesheet" href="roster.css" />
+   <link rel="stylesheet" href="pageLayout.css">
+   <link rel="stylesheet" href="navigation-smooth.css">
+@@ -93,7 +93,7 @@
+         <div class="roster-edit-actions"><button type="button" id="roster-edit-cancel">Cancel</button><button id="roster-edit-save" type="submit">Save Player</button><button id="roster-edit-archive" type="button" hidden>Remove from roster</button></div>
+       </form>
+     </dialog>
+-    <footer class="page-footer">SCORIDIUM <span>HOME TO THE ELEMENTS OF YOUR GAME</span></footer>
++    <footer class="page-footer">APEXVISION <span>HOME TO THE ELEMENTS OF YOUR GAME</span></footer>
+   </main>
+   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+   <script src="supabase-config.js"></script>
+diff --git a/service-worker.js b/service-worker.js
+index f1fc67d..38c5623 100644
+--- a/service-worker.js
++++ b/service-worker.js
+@@ -1,8 +1,8 @@
+ /* Scoridium PWA — intentionally conservative.
+    Only the offline fallback and icons are cached. Game data, HTML, CSS,
+    JS, auth and Supabase responses are never cached by this service worker. */
+-const CACHE = 'scoridium-pwa-shell-v45';
+-const STATIC = 'scoridium-pwa-static-v45';
++const CACHE = 'scoridium-pwa-shell-v46';
++const STATIC = 'scoridium-pwa-static-v46';
+ const SHELL = ['./offline.html', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
+ self.addEventListener('install', event => {
+   event.waitUntil(Promise.all([caches.open(CACHE).then(cache => cache.addAll(SHELL)),caches.open(STATIC)]));
+diff --git a/signup.html b/signup.html
+index 23e0bec..aef6e08 100644
+--- a/signup.html
++++ b/signup.html
+@@ -1,17 +1,17 @@
+ <!doctype html><html lang="en"><head>
+-  <!-- Installable Scoridium app (iOS, Android, desktop) -->
++  <!-- Installable ApexVision app (iOS, Android, desktop) -->
+   <link rel="manifest" href="./manifest.webmanifest">
+   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+   <meta name="theme-color" content="#10233F">
+   <meta name="apple-mobile-web-app-capable" content="yes">
+   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+-  <meta name="apple-mobile-web-app-title" content="Scoridium">
+-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Create Account · Scoridium</title><link rel="stylesheet" href="login.css">  <link rel="stylesheet" href="universal-ui.css?v=1">
++  <meta name="apple-mobile-web-app-title" content="ApexVision">
++<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Create Account · ApexVision</title><link rel="stylesheet" href="login.css">  <link rel="stylesheet" href="universal-ui.css?v=1">
+ <link rel="stylesheet" href="revision43.css?v=2">
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+ <link rel="stylesheet" href="major-update.css">
+-</head><body><header class="auth-header"><a class="auth-brand" href="Login.html">SCORIDIUM<span>.</span></a><a class="auth-help" href="help.html">Help</a></header><main class="auth-main"><section class="auth-intro"><p class="eyebrow">JOIN SCORIDIUM</p><h1>Build your team.<br><span>Own the game.</span></h1><p>Manage your team with scheduling, roster tools, game tracking and season statistics.</p></section><section class="auth-card"><p class="eyebrow">GET STARTED</p><h2>Create your account</h2><p class="auth-description">Register as a coach, then create your first team.</p><form id="signup-form"><label for="signup-email">Email address</label><input id="signup-email" type="email" autocomplete="email" required><label for="signup-password">Password (at least 8 characters)</label><input id="signup-password" type="password" autocomplete="new-password" minlength="8" required><label for="signup-confirm">Confirm password</label><input id="signup-confirm" type="password" autocomplete="new-password" minlength="8" required><button class="sign-in" type="submit">Create account →</button><p id="auth-message" class="form-message" role="status" aria-live="polite"></p></form><p class="no-account">Already have an account? <a href="Login.html">Sign in</a></p></section></main><footer class="auth-footer">Scoridium · Home to the elements of your game</footer><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="auth-pages.js"></script>  <script src="./pwa-register.js" defer></script>
++</head><body><header class="auth-header"><a class="auth-brand" href="Login.html">APEXVISION<span>.</span></a><a class="auth-help" href="help.html">Help</a></header><main class="auth-main"><section class="auth-intro"><p class="eyebrow">JOIN APEXVISION</p><h1>Build your team.<br><span>Own the game.</span></h1><p>Manage your team with scheduling, roster tools, game tracking and season statistics.</p></section><section class="auth-card"><p class="eyebrow">GET STARTED</p><h2>Create your account</h2><p class="auth-description">Register as a coach, then create your first team.</p><form id="signup-form"><label for="signup-email">Email address</label><input id="signup-email" type="email" autocomplete="email" required><label for="signup-password">Password (at least 8 characters)</label><input id="signup-password" type="password" autocomplete="new-password" minlength="8" required><label for="signup-confirm">Confirm password</label><input id="signup-confirm" type="password" autocomplete="new-password" minlength="8" required><button class="sign-in" type="submit">Create account →</button><p id="auth-message" class="form-message" role="status" aria-live="polite"></p></form><p class="no-account">Already have an account? <a href="Login.html">Sign in</a></p></section></main><footer class="auth-footer">ApexVision · Home to the elements of your game</footer><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="auth-pages.js"></script>  <script src="./pwa-register.js" defer></script>
+ </body></html>
+\ No newline at end of file
+diff --git a/stats.html b/stats.html
+index 99abbf7..91d04ab 100644
+--- a/stats.html
++++ b/stats.html
+@@ -1,14 +1,14 @@
+ <!doctype html>
+ <html lang="en">
+ <head>
+-  <!-- Installable Scoridium app (iOS, Android, desktop) -->
++  <!-- Installable ApexVision app (iOS, Android, desktop) -->
+   <link rel="manifest" href="./manifest.webmanifest">
+   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+   <meta name="theme-color" content="#10233F">
+   <meta name="apple-mobile-web-app-capable" content="yes">
+   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+-  <meta name="apple-mobile-web-app-title" content="Scoridium">
++  <meta name="apple-mobile-web-app-title" content="ApexVision">
+ 
+ <script>if(window.top===window && sessionStorage.getItem('selectedTeamId')){location.replace('app.html?page=stats.html'+encodeURIComponent(location.search+location.hash));}</script>
+ <script>if(window.parent!==window){document.documentElement.classList.add('scoridium-framed');}</script>
+diff --git a/stats.js b/stats.js
+index eaca0f5..b724248 100644
+--- a/stats.js
++++ b/stats.js
+@@ -781,16 +781,16 @@ ${dots}
+     </svg>`;
+ }
+ 
+-let scPlayerZoneMode='traditional';
++let scPlayerZoneMode='basic';
+ function renderPlayerShots() {
+   const games=filteredGames().filter(g=>$('shot-game-filter').value==='all'||g.id===$('shot-game-filter').value);
+   const shots=shotsFor(games,$('shot-player-filter').value);
+-  $('player-shot-court').innerHTML=courtSVG(shots,'half');
++  $('player-shot-court').innerHTML=courtSVG(shots,'full');
+   const host=$('player-zones');
+   if(!host)return;
+   const controls=document.createElement('div');controls.className='sc-player-zone-controls';
+   const surface=document.createElement('div');surface.className='sc-player-zone-surface';
+-  for(const [key,label] of [['traditional','Traditional Zones'],['distance','Distance Zones'],['spots','Shot Spots']]){
++  for(const [key,label] of [['basic','Basic Zones'],['traditional','Traditional Zones'],['distance','Distance Zones']]){
+     const b=document.createElement('button');b.type='button';b.textContent=label;
+     b.setAttribute('aria-pressed',String(scPlayerZoneMode===key));
+     b.addEventListener('click',()=>{scPlayerZoneMode=key;renderPlayerShots();});
+@@ -798,9 +798,10 @@ function renderPlayerShots() {
+   }
+   // These visualizations are shared with the existing team-zone engine.
+   try {
+-    if(scPlayerZoneMode==='traditional')surface.innerHTML=buildZoneCourt(shots,'offence');
++    if(scPlayerZoneMode==='basic')surface.innerHTML=buildBasicZoneCourt(shots);
++    else if(scPlayerZoneMode==='traditional')surface.innerHTML=buildZoneCourt(shots,'offence');
+     else if(scPlayerZoneMode==='distance')surface.innerHTML=buildDistanceZoneCourt(shots);
+-    else surface.innerHTML=courtSVG(shots,'half');
++    else surface.innerHTML=buildDistanceZoneCourt(shots);
+   }catch(e){console.warn('Player zone chart unavailable',e);surface.innerHTML=courtSVG(shots,'half');}
+   host.replaceChildren(controls,surface);
+   if(!shots.some(x=>x.x!=null&&x.y!=null)){
+@@ -851,6 +852,13 @@ function renderDetails(){
+ }
+ let activeOpponent = 'all';
+ let activeOpponentGame = 'all';
++let opponentZoneMode = 'basic';
++function opponentZoneDiagram(shots){
++  if(opponentZoneMode==='distance')return buildDistanceZoneCourt(shots);
++  if(opponentZoneMode==='traditional')return buildZoneCourt(shots,'offence');
++  return buildBasicZoneCourt(shots);
++}
++
+ function renderOpponents(){
+   const select=$('opponent-select'),gameSelect=$('opponent-game-select'),host=$('opponent-analysis');
+   if(!select||!host)return;
+@@ -919,12 +927,15 @@ function renderOpponents(){
+    <div><strong>${fmtAvg(totals.allowed)}</strong><small>Opponent PPG</small></div></div>`}
+    ${heading}${bars}
+    <h3>Shot locations & shooting zones</h3>
++   <div class="sc-opponent-zone-controls" aria-label="Opponent shooting zone view">
++      ${[['basic','Basic Zones'],['traditional','Traditional Zones'],['distance','Distance Zones']].map(([key,label])=>`<button type="button" data-opponent-zone-mode="${key}" aria-pressed="${opponentZoneMode===key}">${label}</button>`).join('')}
++   </div>
+    <div class="opponent-courts-row">
+     <section><h4>Full Court</h4>${courtOrOverlay}</section>
+-    <section><h4>Offensive Zones</h4>${buildZoneCourt(opp,'offence')}</section>
+-    <section><h4>Defensive Zones</h4>${buildZoneCourt(our,'defence')}</section>
++    <section><h4>Our Offence · Zones</h4>${opponentZoneDiagram(our)}</section>
++    <section><h4>Our Defence · Zones</h4>${opponentZoneDiagram(opp)}</section>
+    </div>
+-   <p class="muted">Swipe horizontally to view all courts. Offensive zones show opponent shooting; defensive zones show our shooting against them. Unrecorded statistics are not zero.</p>`;
++   <p class="muted">Swipe horizontally to view all courts. Our Offence shows our shooting; Our Defence shows opponent shooting against us. Unrecorded statistics are not zero.</p>`;
+ }
+ function render(){if(state.view==='team')renderTeam();if(state.view==='players')renderPlayerTable();if(state.view==='games')renderGames();if(state.view==='details')renderDetails();if(state.view==='opponents')renderOpponents();}
+ 
+@@ -1287,6 +1298,7 @@ function renderTeamShotProfile() {
+ function init(){
+   fillGameOptions('player-game-filter');fillGameOptions('shot-game-filter');
+   document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
++  $('opponent-analysis')?.addEventListener('click',e=>{const button=e.target.closest('[data-opponent-zone-mode]');if(!button)return;opponentZoneMode=button.dataset.opponentZoneMode;renderOpponents();});
+   $('opponent-select')?.addEventListener('change',e=>{activeOpponent=e.target.value;activeOpponentGame='all';renderOpponents();});
+   $('opponent-game-select')?.addEventListener('change',e=>{activeOpponentGame=e.target.value;renderOpponents();});
+   $('player-game-filter').addEventListener('change',e=>{state.playerGame=e.target.value;renderPlayerTable();});
+diff --git a/watch-game.html b/watch-game.html
+index ee4719e..91e4546 100644
+--- a/watch-game.html
++++ b/watch-game.html
+@@ -4,7 +4,7 @@
+   <meta charset="utf-8">
+   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+   <meta name="theme-color" content="#173b78">
+-  <title>View Game | Scoridium</title>
++  <title>View Game | ApexVision</title>
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+@@ -13,7 +13,7 @@
+ <body>
+   <div class="viewer-shell">
+     <header class="viewer-header">
+-      <div><a class="back-link" href="gamehub.html" id="viewer-back">← Back to Games</a><p class="eyebrow">SCORIDIUM · GAME CENTER</p></div>
++      <div><a class="back-link" href="gamehub.html" id="viewer-back">← Back to Games</a><p class="eyebrow">APEXVISION · GAME CENTER</p></div>
+       <span class="read-only" title="This page cannot change game events">VIEW ONLY</span>
+     </header>
+     <main>

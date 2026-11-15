@@ -68,3 +68,8 @@
 .mobile-dashboard-next-event.sc-is-live .sc-live-view-link{display:inline-block!important;margin:0!important;padding:10px 15px!important;border-radius:10px!important;background:var(--team-secondary,#ffd600)!important;color:#10233f!important;font-weight:800!important;text-decoration:none!important;}
 
 .sc-mobile-live-header{display:flex;align-items:center;justify-content:space-between;gap:8px;}.sc-mobile-live-header .mobile-dashboard-eyebrow{margin:0!important;min-width:0!important;}
+
+/* ApexVision opponent zone selection: shared Basic/Traditional/Distance court modes. */
+.sc-opponent-zone-controls{display:flex;flex-wrap:wrap;gap:8px;margin:9px 0 15px}
+.sc-opponent-zone-controls button{border:1px solid #cad5e5;background:#fff;color:#173d78;border-radius:8px;padding:9px 13px;font-weight:700;cursor:pointer}
+.sc-opponent-zone-controls button[aria-pressed="true"]{background:var(--team-primary,#173d78);color:white;border-color:var(--team-primary,#173d78)}
