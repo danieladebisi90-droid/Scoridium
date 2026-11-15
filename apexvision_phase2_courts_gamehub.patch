@@ -1,0 +1,127 @@
+diff --git a/stats.js b/stats.js
+--- a/stats.js
++++ b/stats.js
++++ b/stats.js
+@@ -781,6 +781,31 @@ ${dots}
+     </svg>`;
+ }
+ 
++// Zone builders return {svg, table}, rather than an HTML string.
++// Reuse their SVGs on the compact Player and Opponent courts without
++// allowing duplicate SVG clipPath IDs to collide between courts.
++let apexZoneDiagramSerial = 0;
++function apexZoneCourtMarkup(shots, mode = 'basic') {
++  const builder = mode === 'distance' ? buildDistanceZoneCourt
++    : mode === 'traditional' ? buildZoneCourt : buildBasicZoneCourt;
++  const result = builder(shots);
++  if (!result || typeof result.svg !== 'string') {
++    return '<p class="muted">Shooting zones unavailable.</p>';
++  }
++  const prefix = `apex-zone-${++apexZoneDiagramSerial}-`;
++  const svg = result.svg
++    .replace(/\bid="([^"]+)"/g, (_, id) => `id="${prefix}${id}"`)
++    .replace(/url\(#([^)]+)\)/g, (_, id) => `url(#${prefix}${id})`)
++    .replace(/\b(?:href|xlink:href)="#([^"]+)"/g, (match, id) => match.replace(`#${id}`, `#${prefix}${id}`));
++  const located = shots.filter(shot => shot.x != null && shot.y != null &&
++    Number.isFinite(Number(shot.x)) && Number.isFinite(Number(shot.y)));
++  const made = located.filter(shot => shot.made === true).length;
++  const percentage = located.length ? `${(100 * made / located.length).toFixed(1)}%` : '—';
++  return `<div class="apex-zone-diagram">${svg}<div class="apex-zone-caption" aria-label="Recorded shot summary">
++    <span>${made}/${located.length} FG</span><strong>${percentage}</strong></div>
++    ${located.length ? '' : '<p class="muted apex-zone-empty">No recorded shot locations for this selection.</p>'}</div>`;
++}
++
+ let scPlayerZoneMode='basic';
+ function renderPlayerShots() {
+   const games=filteredGames().filter(g=>$('shot-game-filter').value==='all'||g.id===$('shot-game-filter').value);
+@@ -798,17 +823,12 @@ function renderPlayerShots() {
+   }
+   // These visualizations are shared with the existing team-zone engine.
+   try {
+-    if(scPlayerZoneMode==='basic')surface.innerHTML=buildBasicZoneCourt(shots);
+-    else if(scPlayerZoneMode==='traditional')surface.innerHTML=buildZoneCourt(shots,'offence');
+-    else if(scPlayerZoneMode==='distance')surface.innerHTML=buildDistanceZoneCourt(shots);
+-    else surface.innerHTML=buildDistanceZoneCourt(shots);
++    surface.innerHTML=apexZoneCourtMarkup(shots,scPlayerZoneMode);
+   }catch(e){console.warn('Player zone chart unavailable',e);surface.innerHTML=courtSVG(shots,'half');}
+   host.replaceChildren(controls,surface);
+-  if(!shots.some(x=>x.x!=null&&x.y!=null)){
+-    const note=document.createElement('p');note.className='muted';note.textContent='No shot locations available for this selection.';host.append(note);
+-  }
+ }
+ 
++
+ function scoreHTML(g) {
+   if(!g)return '<div class="empty">No games selected</div>';
+   const abbr=name=>name.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();
+@@ -854,9 +874,7 @@ let activeOpponent = 'all';
+ let activeOpponentGame = 'all';
+ let opponentZoneMode = 'basic';
+ function opponentZoneDiagram(shots){
+-  if(opponentZoneMode==='distance')return buildDistanceZoneCourt(shots);
+-  if(opponentZoneMode==='traditional')return buildZoneCourt(shots,'offence');
+-  return buildBasicZoneCourt(shots);
++  return apexZoneCourtMarkup(shots,opponentZoneMode);
+ }
+ 
+ function renderOpponents(){
+diff --git a/stats.html b/stats.html
+--- a/stats.html
++++ b/stats.html
++++ b/stats.html
+@@ -38,6 +38,7 @@
+ <script src="modal-safety.js" defer></script>
+ <link rel="stylesheet" href="major-update.css">
+ <link rel="stylesheet" href="revision44.css?v=2">
++<link rel="stylesheet" href="phase2-fixes.css?v=1">
+ <script src="sc-date-display.js" defer></script>
+ </head>
+ <body>
+diff --git a/gamehub.html b/gamehub.html
+--- a/gamehub.html
++++ b/gamehub.html
++++ b/gamehub.html
+@@ -34,6 +34,7 @@
+ <script src="modal-safety.js" defer></script>
+ <link rel="stylesheet" href="major-update.css">
+ <link rel="stylesheet" href="revision44.css?v=2">
++<link rel="stylesheet" href="phase2-fixes.css?v=1">
+ <script src="sc-date-display.js" defer></script>
+ </head>
+ 
+diff --git a/phase2-fixes.css b/phase2-fixes.css
+new file mode 100644
+index 0000000..c7f7de3
+--- /dev/null
++++ b/phase2-fixes.css
+@@ -0,0 +1,30 @@
++/* ApexVision Phase 2 — consistent compact zone SVG rendering. */
++.apex-zone-diagram{display:flex;flex-direction:column;min-width:0;gap:7px}
++.apex-zone-diagram>svg{width:100%!important;height:auto!important;max-height:420px;display:block}
++.apex-zone-caption{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;font-weight:800;color:var(--team-primary,#123b78)}
++.apex-zone-caption strong{font-size:15px}
++.apex-zone-empty{font-size:11px;margin:0;line-height:1.4}
++#player-zones .sc-player-zone-surface{width:100%;min-width:0;overflow:hidden}
++.opponent-courts-row>section .apex-zone-diagram{max-width:100%}
++
++/* ApexVision Phase 2 — desktop Game Hub always reserves stable space for
++   the calendar and keeps variable-length H2H content scrolling internally. */
++@media (min-width: 901px) and (min-height: 650px) {
++  html, body { min-height: 0; height: 100dvh; overflow: hidden; }
++  #app-content { flex: 1 1 auto; min-height: 0; overflow: hidden; }
++  .game-hub-layout { height: 100%; min-height: 0; overflow: hidden; }
++  .game-schedule { grid-template-rows: minmax(0, 0.48fr) minmax(0, 0.52fr); }
++  .game-info-container { grid-template-rows: minmax(0, 0.60fr) minmax(0, 0.40fr); }
++  .game-calendar, .games-list, .previous-game, .next-game { min-height: 0; overflow: hidden; }
++  .game-calendar { gap: 0; }
++  .game-calendar-header, .calendar-weekdays { flex: 0 0 auto; }
++  .calendar-weekdays { margin-top: 5px; margin-bottom: 3px; }
++  .calendar-dates { flex: 1 1 auto; grid-template-rows: repeat(6, minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); }
++  .calendar-day { padding: 1px; }
++  #gamehub-context-container .gamehub-dynamic-context { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; }
++  #gamehub-dynamic-context .sc-h2h-bars { gap: 4px; }
++  #gamehub-dynamic-context .sc-h2h-metric { padding: 4px 8px; border-radius: 6px; }
++  #gamehub-dynamic-context .sc-h2h-values { line-height: 1.15; }
++  #gamehub-dynamic-context .sc-h2h-track, #gamehub-dynamic-context .sc-h2h-full-track { height: 7px; margin-top: 3px; }
++  #gamehub-dynamic-context .gamehub-detailed-h2h { margin: 0; padding: 0; }
++}

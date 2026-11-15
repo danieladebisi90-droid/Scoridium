@@ -781,6 +781,31 @@ ${dots}
     </svg>`;
 }
 
+// Zone builders return {svg, table}, rather than an HTML string.
+// Reuse their SVGs on the compact Player and Opponent courts without
+// allowing duplicate SVG clipPath IDs to collide between courts.
+let apexZoneDiagramSerial = 0;
+function apexZoneCourtMarkup(shots, mode = 'basic') {
+  const builder = mode === 'distance' ? buildDistanceZoneCourt
+    : mode === 'traditional' ? buildZoneCourt : buildBasicZoneCourt;
+  const result = builder(shots);
+  if (!result || typeof result.svg !== 'string') {
+    return '<p class="muted">Shooting zones unavailable.</p>';
+  }
+  const prefix = `apex-zone-${++apexZoneDiagramSerial}-`;
+  const svg = result.svg
+    .replace(/\bid="([^"]+)"/g, (_, id) => `id="${prefix}${id}"`)
+    .replace(/url\(#([^)]+)\)/g, (_, id) => `url(#${prefix}${id})`)
+    .replace(/\b(?:href|xlink:href)="#([^"]+)"/g, (match, id) => match.replace(`#${id}`, `#${prefix}${id}`));
+  const located = shots.filter(shot => shot.x != null && shot.y != null &&
+    Number.isFinite(Number(shot.x)) && Number.isFinite(Number(shot.y)));
+  const made = located.filter(shot => shot.made === true).length;
+  const percentage = located.length ? `${(100 * made / located.length).toFixed(1)}%` : '—';
+  return `<div class="apex-zone-diagram">${svg}<div class="apex-zone-caption" aria-label="Recorded shot summary">
+    <span>${made}/${located.length} FG</span><strong>${percentage}</strong></div>
+    ${located.length ? '' : '<p class="muted apex-zone-empty">No recorded shot locations for this selection.</p>'}</div>`;
+}
+
 let scPlayerZoneMode='basic';
 function renderPlayerShots() {
   const games=filteredGames().filter(g=>$('shot-game-filter').value==='all'||g.id===$('shot-game-filter').value);
@@ -798,16 +823,11 @@ function renderPlayerShots() {
   }
   // These visualizations are shared with the existing team-zone engine.
   try {
-    if(scPlayerZoneMode==='basic')surface.innerHTML=buildBasicZoneCourt(shots);
-    else if(scPlayerZoneMode==='traditional')surface.innerHTML=buildZoneCourt(shots,'offence');
-    else if(scPlayerZoneMode==='distance')surface.innerHTML=buildDistanceZoneCourt(shots);
-    else surface.innerHTML=buildDistanceZoneCourt(shots);
+    surface.innerHTML=apexZoneCourtMarkup(shots,scPlayerZoneMode);
   }catch(e){console.warn('Player zone chart unavailable',e);surface.innerHTML=courtSVG(shots,'half');}
   host.replaceChildren(controls,surface);
-  if(!shots.some(x=>x.x!=null&&x.y!=null)){
-    const note=document.createElement('p');note.className='muted';note.textContent='No shot locations available for this selection.';host.append(note);
-  }
 }
+
 
 function scoreHTML(g) {
   if(!g)return '<div class="empty">No games selected</div>';
@@ -854,9 +874,7 @@ let activeOpponent = 'all';
 let activeOpponentGame = 'all';
 let opponentZoneMode = 'basic';
 function opponentZoneDiagram(shots){
-  if(opponentZoneMode==='distance')return buildDistanceZoneCourt(shots);
-  if(opponentZoneMode==='traditional')return buildZoneCourt(shots,'offence');
-  return buildBasicZoneCourt(shots);
+  return apexZoneCourtMarkup(shots,opponentZoneMode);
 }
 
 function renderOpponents(){
