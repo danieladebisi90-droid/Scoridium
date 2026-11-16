@@ -28,3 +28,20 @@
   #gamehub-dynamic-context .sc-h2h-track, #gamehub-dynamic-context .sc-h2h-full-track { height: 7px; margin-top: 3px; }
   #gamehub-dynamic-context .gamehub-detailed-h2h { margin: 0; padding: 0; }
 }
+
+/* Major update: independently selectable, vertically stacked opponent zone courts. */
+.opponent-courts-stack{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start;max-width:100%}
+.opponent-courts-stack>section{min-width:0;width:100%;border:1px solid rgba(140,156,176,.22);border-radius:12px;padding:12px;overflow:hidden}
+.opponent-courts-stack h4{margin:0 0 10px}
+.opponent-full-court>svg,.opponent-full-court .sc-no-shot-overlay>svg{max-width:100%;height:auto;display:block}
+.opponent-zone-panel>.apex-zone-diagram{width:100%;max-width:700px;margin:0 auto}
+.opponent-zone-panel>.sc-opponent-zone-controls{display:flex;gap:6px;margin:0 0 12px;flex-wrap:wrap}
+.opponent-zone-panel>.sc-opponent-zone-controls button{flex:1 1 90px}
+#opponent-analysis .opponent-courts-stack{overflow:visible!important}
+@media (max-width:600px){.opponent-courts-stack>section{padding:8px}}
+
+.apex-assist-connections>svg{width:100%;height:auto;max-height:350px;display:block}.apex-assist-list{padding-left:20px;margin:8px 0 0;font-size:12px;line-height:1.8}.apex-assist-list li strong{float:right}
+
+.apex-shot-layer-controls{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.apex-shot-layer-controls button{flex:1 1 110px;padding:8px 11px;border:1px solid #cbd5e3;border-radius:8px;background:#fff;color:#173d78;cursor:pointer;font-weight:700}.apex-shot-layer-controls button[aria-pressed="true"]{background:var(--team-primary,#173d78);color:#fff}.apex-shot-legend{font-size:11px;color:#53657b;line-height:1.5;margin:8px 0}
+
+.apex-game-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.apex-game-actions a{border:1px solid #cbd5e3;border-radius:7px;padding:8px 11px;font-size:12px;font-weight:800;text-decoration:none;color:var(--team-primary,#173d78)}.apex-game-actions [hidden]{display:none!important}

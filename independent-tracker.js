@@ -6,10 +6,43 @@
  const id=`scoridium-independent-role:${game||'demo'}`;
  const mode=localStorage.getItem(id)==='independent'?'independent':'primary';
  const nav=document.querySelector('.focus-nav');if(!nav)return;
- const container=document.createElement('label');container.className='sc-tracker-role';
- container.innerHTML='<span>TRACKER ROLE</span><select id="sc-tracker-mode" aria-label="Tracking responsibility"><option value="primary">Stat Tracker</option><option value="independent">Shot Tracker</option></select>';
+ const container=document.createElement('div');container.className='sc-tracker-role apex-room-trigger';
+ container.innerHTML='<button type="button" id="apex-tracking-room-open" aria-haspopup="dialog" aria-controls="apex-tracking-room">Tracking Room</button><select id="sc-tracker-mode" hidden aria-hidden="true"><option value="primary">Stat Tracker</option><option value="independent">Shot Tracker</option></select>';
  const tabs=nav.querySelector('.focus-tabs');tabs?.before(container);
  const selector=container.querySelector('select');selector.value=mode;
+ const dialog=document.createElement('dialog');dialog.id='apex-tracking-room';dialog.className='apex-tracking-room';
+ dialog.innerHTML=`<div class="apex-room-head"><h2>Tracking Room</h2><button type="button" id="apex-room-close" aria-label="Close">×</button></div>
+ <p class="apex-room-intro">Choose a role for this game. Tracking permissions are verified by the database.</p>
+ <div id="apex-room-slots" role="status" aria-live="polite">Checking availability…</div>
+ <p class="apex-room-privacy">Tracker identities are hidden. Only confirmed role activity is shown.</p>`;
+ document.body.append(dialog);
+ container.querySelector('#apex-tracking-room-open').addEventListener('click',()=>{dialog.showModal();void refreshRoom();});
+ dialog.querySelector('#apex-room-close').addEventListener('click',()=>dialog.close());
+ dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.close();});
+ async function refreshRoom(){
+   const host=dialog.querySelector('#apex-room-slots');host.replaceChildren();
+   let occupied=null,shotActivity=null;
+   if(game&&typeof supabaseClient!=='undefined'){
+     const [primary,shot]=await Promise.all([
+       supabaseClient.from('game_primary_trackers').select('tracker_id').eq('game_id',game).maybeSingle(),
+       supabaseClient.from('tracker_observations').select('tracker_id,observed_at').eq('game_id',game).order('observed_at',{ascending:false}).limit(20)
+     ]);
+     if(!primary.error)occupied=Boolean(primary.data);
+     if(!shot.error)shotActivity=(shot.data||[]).some(o=>Date.now()-new Date(o.observed_at).getTime()<180000);
+   }
+   for(const [value,label,info] of [
+     ['primary','Stat Tracker',occupied===null?'Availability unverified':occupied?'Official slot claimed':'Official slot available'],
+     ['independent','Shot Tracker',shotActivity===null?'Activity unverified':shotActivity?'Recent shot tracking activity':'No recent shot tracking activity']]){
+       const card=document.createElement('div');card.className='apex-room-card';
+       const headline=document.createElement('strong');headline.textContent=label+(mode===value?' · Your role':'');
+       const status=document.createElement('small');status.textContent=info;
+       const button=document.createElement('button');button.type='button';button.textContent=mode===value?'Current role':'Switch to '+label;
+       button.disabled=mode===value;
+       button.addEventListener('click',()=>{dialog.close();selector.value=value;selector.dispatchEvent(new Event('change'));});
+       card.append(headline,status,button);host.append(card);
+     }
+ }
+
  // Official Stat Trackers work in Quick Track and Play-by-Play only.
  // Shot Trackers can independently record locations AND Quick Track observations.
  // Database authorization remains mandatory; this is an interaction boundary,

@@ -142,6 +142,9 @@
 </article>
 
 
+            <!-- Linked assists only: no guessed passer/scorer relationships. -->
+            <article class="panel"><h2>ASSIST CONNECTIONS</h2><div id="assist-connections" class="apex-assist-connections"></div></article>
+
             <!-- OFFENCE & DEFENCE -->
             <article class="panel">
                 <h2>OFFENCE & DEFENCE ZONES</h2>
@@ -186,7 +189,7 @@
           <select id="player-unit-filter" aria-label="Player stats format"><option value="perGame">Per Game</option><option value="total">Totals</option></select>
           <input id="player-search" type="search" placeholder="Search players…" aria-label="Search players">
         </div>
-        <div class="table-scroll"><table id="player-table"><thead><tr><th>#</th><th data-sort="name">PLAYER ↕</th><th data-sort="gp">GP ↕</th><th data-sort="min">MIN ↕</th><th data-sort="pts">PTS ↕</th><th data-sort="fg">FG% ↕</th><th data-sort="three">3P% ↕</th><th data-sort="ft">FT% ↕</th><th data-sort="reb">REB ↕</th><th data-sort="ast">AST ↕</th><th data-sort="stl">STL ↕</th><th data-sort="blk">BLK ↕</th><th data-sort="tov">TO ↕</th><th data-sort="pf">PF ↕</th></tr></thead><tbody id="players-body"></tbody></table></div>
+        <div class="table-scroll"><table id="player-table"><thead><tr><th>#</th><th data-sort="name">PLAYER ↕</th><th data-sort="gp">GP ↕</th><th data-sort="min">MIN ↕</th><th data-sort="pts">PTS ↕</th><th data-sort="fg">FG% ↕</th><th data-sort="three">3P% ↕</th><th data-sort="ft">FT% ↕</th><th data-sort="reb">REB ↕</th><th data-sort="ast">AST ↕</th><th data-sort="stl">STL ↕</th><th data-sort="blk">BLK ↕</th><th data-sort="tov">TO ↕</th><th data-sort="pf">PF ↕</th><th data-sort="eff" title="Standard Player Efficiency (EFF)">EFF ↕</th></tr></thead><tbody id="players-body"></tbody></table></div>
       </article>
       <div class="player-bottom">
         <article class="panel"><h2>PLAYER LEADERS</h2><div class="mini-tabs" id="leader-tabs"><button class="active" data-stat="pts">Points</button><button data-stat="reb">Rebounds</button><button data-stat="ast">Assists</button><button data-stat="stl">Steals</button><button data-stat="blk">Blocks</button></div><div id="player-leaders-list"></div></article>

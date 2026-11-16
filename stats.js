@@ -34,6 +34,9 @@ const pct = (made, att) => att ? 100 * made / att : 0;
 const fmt = (v, digits = 1) => Number(v).toFixed(digits);
 const escapeHTML = value => String(value ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const nameOf = p => p.name || `#${p.number || p.id || '?'}`;
+// Standard basketball efficiency; descriptive box-score measure, not adjusted plus/minus.
+const playerEFF = p => number(p.pts)+number(p.reb)+number(p.ast)+number(p.stl)+number(p.blk)-(number(p.fga)-number(p.fgm))-(number(p.fta)-number(p.ftm))-number(p.tov);
+
 
 const demoPlayers = [
   ["14","Jalen Carter",24,8,4,2,1,3,2,9,17,3,7,3,4,29],
@@ -197,6 +200,16 @@ console.log(
     events.length
 );
 
+    // Optional film detail classifications; the regular stats page works
+    // even before the Film Analysis migration has been installed.
+    let filmTagsByEvent=new Map();
+    try{
+      const {data:filmTags,error:filmError}=await supabaseClient
+        .from('apexvision_film_tags').select('event_id,shot_creation,shot_contest,turnover_cause,defence_scheme')
+        .in('game_id',gameIds);
+      if(!filmError)filmTagsByEvent=new Map((filmTags||[]).map(row=>[String(row.event_id),row]));
+    }catch(_error){/* Optional classification features unavailable. */}
+
     // 3. Fetch roster details for player names and numbers.
     let roster = [];
 
@@ -275,6 +288,13 @@ console.log(
         }
 
         const shots = [];
+        // Final-score-only games have no player tracking data.
+        // Keep them in the record/PPG, but never manufacture zero-value
+        // player box scores or treat those zeros as observed performance.
+        const hasRecordedStats=gameEvents.some(e=>[
+          'shot','free_throw','assist','offensive_rebound','defensive_rebound',
+          'steal','block','turnover','foul'
+        ].includes(e.type));
 
         const plays = [];
 
@@ -299,7 +319,9 @@ console.log(
                     team: isOurs ? "us" : "opponent",
                     period,
                     distanceMeters: event.distance_meters,
-                    distanceFeet: event.distance_feet
+                    distanceFeet: event.distance_feet,
+                    shotCreation: filmTagsByEvent.get(String(event.id))?.shot_creation||null,
+                    shotContest: filmTagsByEvent.get(String(event.id))?.shot_contest||null
                 });
             }
 
@@ -415,6 +437,19 @@ console.log(
             });
         });
 
+        // Only count an assist connection when its linked event is a made
+        // basket by a different player on the same tracked team.
+        const eventById = new Map(gameEvents.map(e => [String(e.id),e]));
+        const assistConnections = gameEvents.filter(e => e.type==='assist' &&
+            ['us','our','ours'].includes(String(e.team).toLowerCase()) && e.player_id && e.linked_event_id)
+          .map(e=>{
+            const shot=eventById.get(String(e.linked_event_id));
+            if(!shot || shot.type!=='shot' || shot.made!==true || !shot.player_id ||
+                String(shot.player_id)===String(e.player_id) ||
+                !['us','our','ours'].includes(String(shot.team).toLowerCase()))return null;
+            return {from:String(e.player_id),to:String(shot.player_id)};
+          }).filter(Boolean);
+
         return {
             id: String(game.id),
             date: String(game.date ?? "").slice(0, 10),
@@ -424,10 +459,12 @@ console.log(
             location: game.location ?? "Home",
             ourScore: Number(game.team_score) || 0,
             opponentScore: Number(game.opponent_score) || 0,
-            players: [...playerMap.values()],
+            players: hasRecordedStats ? [...playerMap.values()] : [],
+            hasRecordedStats,
             shots,
             quarters,
-            plays
+            plays,
+            assistConnections
         };
     });
 
@@ -566,6 +603,32 @@ function setView(view) {
     render();
 }
 
+// Visualize authenticated, explicitly linked assist-to-made-shot relationships.
+function renderAssistConnections(games){
+  const host=$('assist-connections');if(!host)return;
+  const counts=new Map();const ids=new Set();
+  for(const g of games)for(const pair of (g.assistConnections||[])){
+    if(!pair.from||!pair.to)continue;
+    const key=pair.from+'|'+pair.to;counts.set(key,(counts.get(key)||0)+1);
+    ids.add(pair.from);ids.add(pair.to);
+  }
+  if(!counts.size){host.innerHTML='<p class="muted">No linked assist-to-basket connections recorded for these games.</p>';return;}
+  const players=aggregatePlayers(games);
+  const names=new Map(players.map(p=>[String(p.id),`#${p.number||'?'} ${p.name||''}`]));
+  const weighted=[...ids].map(id=>[id,[...counts].reduce((n,[k,v])=>n+(k.split('|').includes(id)?v:0),0)]).sort((a,b)=>b[1]-a[1]).slice(0,8).map(x=>x[0]);
+  const n=weighted.length;const coords=new Map(weighted.map((id,i)=>[id,{x:200+135*Math.cos((i*2*Math.PI/n)-Math.PI/2),y:172+125*Math.sin((i*2*Math.PI/n)-Math.PI/2)}]));
+  const max=Math.max(...counts.values());
+  const lines=[...counts].filter(([key])=>key.split('|').every(id=>coords.has(id))).map(([key,value])=>{
+    const [from,to]=key.split('|');const a=coords.get(from),b=coords.get(to);
+    return `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="#7493c4" stroke-width="${(2+7*value/max).toFixed(1)}" stroke-linecap="round"><title>${escapeHTML(names.get(from)||from)} assisted ${escapeHTML(names.get(to)||to)} · ${value} baskets</title></line>`;
+  }).join('');
+  const circles=weighted.map(id=>{const c=coords.get(id),p=players.find(p=>String(p.id)===id);return `<g><circle cx="${c.x}" cy="${c.y}" r="25" fill="#123b78" stroke="#ffd600" stroke-width="3"/><text x="${c.x}" y="${c.y+5}" text-anchor="middle" font-size="13" fill="#fff" font-weight="bold">${escapeHTML('#'+(p?.number||'?'))}</text><title>${escapeHTML(names.get(id)||id)}</title></g>`;}).join('');
+  const list=[...counts].sort((a,b)=>b[1]-a[1]).slice(0,8).map(([key,value])=>{
+    const [from,to]=key.split('|');return `<li>${escapeHTML(names.get(from)||'Unknown')} → ${escapeHTML(names.get(to)||'Unknown')} <strong>${value}</strong></li>`;
+  }).join('');
+  host.innerHTML=`<svg viewBox="0 0 400 350" role="img" aria-label="Assist network; thicker lines mean more recorded assisted baskets">${lines}${circles}</svg><p class="muted">Directional connections: passer → scorer. Line thickness represents recorded assisted baskets.</p><ol class="apex-assist-list">${list}</ol>`;
+}
+
 function renderTeam() {
   const games=filteredGames(), t=teamTotals(games), players=aggregatePlayers(games), gp=t.gp||1;
   const overview=[['PPG',fmt(t.pts/gp)],['FG%',fmt(pct(t.fgm,t.fga))+'%'],['3P%',fmt(pct(t.threeMade,t.threeAtt))+'%'],['FT%',fmt(pct(t.ftm,t.fta))+'%'],['RPG',fmt(t.reb/gp)],['APG',fmt(t.ast/gp)],['SPG',fmt(t.stl/gp)],['BPG',fmt(t.blk/gp)]];
@@ -585,6 +648,7 @@ function renderTeam() {
   $('quarter-chart').innerHTML=q.map((x,i)=>`<div class="quarter-group"><div class="bars"><div class="bar" style="height:${x.us/max*95}%"><span>${fmt(x.us)}</span></div><div class="bar opponent" style="height:${x.op/max*95}%"><span>${fmt(x.op)}</span></div></div><span class="quarter-label">Q${i+1}</span></div>`).join('');
       // Display the team shooting zones and shot spots
   renderTeamShotProfile();
+  renderAssistConnections(games);
 }
 function fillGameOptions(id, allText='All Games') {
   const select=$(id),old=select.value;
@@ -598,6 +662,7 @@ function renderPlayerTable() {
   const value=(p,k)=>{
     if(k==='name') return p.name.toLowerCase();
     if(k==='gp') return p.gp;
+    if(k==='eff') return playerEFF(p)/(state.unit==='perGame' ? Math.max(1,p.gp):1);
     if(k==='fg') return pct(p.fgm,p.fga);
     if(k==='three') return pct(p.threeMade,p.threeAtt);
     if(k==='ft') return pct(p.ftm,p.fta);
@@ -608,7 +673,7 @@ function renderPlayerTable() {
     const compare=typeof av==='string'?av.localeCompare(bv):av-bv;
     return state.descending?-compare:compare;
   });
-  $('players-body').innerHTML=players.map(p=>`<tr><td>${escapeHTML(p.number)}</td><td>${escapeHTML(p.name)}</td><td>${p.gp}</td><td>${fmt(value(p,'min'))}</td><td>${fmt(value(p,'pts'))}</td><td>${fmt(value(p,'fg'))}%</td><td>${fmt(value(p,'three'))}%</td><td>${fmt(value(p,'ft'))}%</td><td>${fmt(value(p,'reb'))}</td><td>${fmt(value(p,'ast'))}</td><td>${fmt(value(p,'stl'))}</td><td>${fmt(value(p,'blk'))}</td><td>${fmt(value(p,'tov'))}</td><td>${fmt(value(p,'pf'))}</td></tr>`).join('')||'<tr><td colspan="14" class="empty">No player data available</td></tr>';
+  $('players-body').innerHTML=players.map(p=>`<tr><td>${escapeHTML(p.number)}</td><td>${escapeHTML(p.name)}</td><td>${p.gp}</td><td>${fmt(value(p,'min'))}</td><td>${fmt(value(p,'pts'))}</td><td>${fmt(value(p,'fg'))}%</td><td>${fmt(value(p,'three'))}%</td><td>${fmt(value(p,'ft'))}%</td><td>${fmt(value(p,'reb'))}</td><td>${fmt(value(p,'ast'))}</td><td>${fmt(value(p,'stl'))}</td><td>${fmt(value(p,'blk'))}</td><td>${fmt(value(p,'tov'))}</td><td>${fmt(value(p,'pf'))}</td><td><strong>${fmt(value(p,'eff'))}</strong></td></tr>`).join('')||'<tr><td colspan="15" class="empty">No player data available</td></tr>';
   document.querySelectorAll('#leader-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.stat===state.leaderStat));
   const leaders=[...aggregatePlayers(filteredGames())].sort((a,b)=>b[state.leaderStat]/b.gp-a[state.leaderStat]/a.gp).slice(0,5);
   $('player-leaders-list').innerHTML=leaders.map((p,i)=>`<div class="leader-line"><span>${i+1}. #${escapeHTML(p.number)} ${escapeHTML(nameOf(p))}</span><strong>${fmt(p[state.leaderStat]/p.gp)}</strong></div>`).join('')||'<div class="empty">No players yet</div>';
@@ -638,7 +703,30 @@ const STATS_COURT = {
 };
 
 
-function courtSVG(shots, mode = "full") {
+let apexTeamShotLayer='results';
+let apexPlayerShotLayer='results';
+function apexShotLayerControls(side){
+  const selected=side==='team'?apexTeamShotLayer:apexPlayerShotLayer;
+  return `<div class="apex-shot-layer-controls" role="group" aria-label="Shot chart marker style"><button type="button" data-shot-layer="results" data-shot-side="${side}" aria-pressed="${selected==='results'}">Shot Results</button><button type="button" data-shot-layer="creation" data-shot-side="${side}" aria-pressed="${selected==='creation'}">Shot Creation</button></div>`;
+}
+function apexShotMarker(shot,x,y,layer){
+  if(layer!=='creation')return shot.made
+    ? `<circle cx="${x}" cy="${y}" r="6.8" fill="#15964c"/>`
+    : `<path d="M${x-7} ${y-7} L${x+7} ${y+7} M${x+7} ${y-7} L${x-7} ${y+7}" fill="none" stroke="#df3138" stroke-width="3.4" stroke-linecap="round"/>`;
+  const kind=shot.shotCreation||'unknown',color=shot.made?'#15964c':'#df3138';
+  const fill=shot.made?color:'#fff9f1';
+  const shape=kind==='pull_up'?`<rect x="${x-7}" y="${y-7}" width="14" height="14"/>`
+    :kind==='drive'?`<polygon points="${x},${y-9} ${x+9},${y+8} ${x-9},${y+8}"/>`
+    :kind==='post'?`<polygon points="${x},${y-9} ${x+9},${y} ${x},${y+9} ${x-9},${y}"/>`
+    :kind==='putback'?`<polygon points="${[0,1,2,3,4,5].map(j=>`${x+8*Math.cos(j*Math.PI/3)},${y+8*Math.sin(j*Math.PI/3)}`).join(' ')}"/>`
+    :`<circle cx="${x}" cy="${y}" r="7"/>`;
+  const unknown=kind==='unknown'?' stroke-dasharray="3 2"':'';
+  const cross=shot.made?'':`<path d="M${x-3} ${y-3} L${x+3} ${y+3} M${x+3} ${y-3} L${x-3} ${y+3}" stroke="#df3138" stroke-width="1.8" fill="none"/>`;
+  return `<g fill="${fill}" stroke="${color}" stroke-width="2.4"${unknown}>${shape}${cross}<title>${escapeHTML(kind.replaceAll('_',' '))} · ${shot.made?'made':'missed'}</title></g>`;
+}
+function apexShotLegend(){return `<p class="apex-shot-legend">● Catch-and-shoot · ■ Pull-up · ▲ Drive · ◆ Post · ⬡ Putback · ◌ Unknown. Green = made; red outline + X = missed.</p>`;}
+
+function courtSVG(shots, mode = "full", markerLayer = 'results') {
 
     const isHalf = mode === "half";
 
@@ -671,18 +759,7 @@ function courtSVG(shots, mode = "full") {
             ) return "";
         }
 
-        if (shot.made) {
-            return `<circle cx="${x}" cy="${y}" r="6.8"
-                    fill="#15964c"/>`;
-        }
-
-        return `<path
-            d="M${x-7} ${y-7} L${x+7} ${y+7}
-               M${x+7} ${y-7} L${x-7} ${y+7}"
-            fill="none"
-            stroke="#df3138"
-            stroke-width="3.4"
-            stroke-linecap="round"/>`;
+        return apexShotMarker(shot,x,y,markerLayer);
 
     }).join("");
 
@@ -787,7 +864,7 @@ ${dots}
 let apexZoneDiagramSerial = 0;
 function apexZoneCourtMarkup(shots, mode = 'basic') {
   const builder = mode === 'distance' ? buildDistanceZoneCourt
-    : mode === 'traditional' ? buildZoneCourt : buildBasicZoneCourt;
+    : mode === 'traditional' ? buildTraditionalZoneCourt : buildBasicZoneCourt;
   const result = builder(shots);
   if (!result || typeof result.svg !== 'string') {
     return '<p class="muted">Shooting zones unavailable.</p>';
@@ -810,7 +887,7 @@ let scPlayerZoneMode='basic';
 function renderPlayerShots() {
   const games=filteredGames().filter(g=>$('shot-game-filter').value==='all'||g.id===$('shot-game-filter').value);
   const shots=shotsFor(games,$('shot-player-filter').value);
-  $('player-shot-court').innerHTML=courtSVG(shots,'full');
+  $('player-shot-court').innerHTML=apexShotLayerControls('player')+courtSVG(shots,'full',apexPlayerShotLayer)+(apexPlayerShotLayer==='creation'?apexShotLegend():'');
   const host=$('player-zones');
   if(!host)return;
   const controls=document.createElement('div');controls.className='sc-player-zone-controls';
@@ -836,7 +913,7 @@ function scoreHTML(g) {
 }
 function boxHTML(g) {
   if(!g)return '<div class="empty">No game</div>';
-  return `<div class="table-scroll"><table><thead><tr><th>#</th><th>PLAYER</th><th>MIN</th><th>PTS</th><th>FG</th><th>3PT</th><th>FT</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th><th>PF</th></tr></thead><tbody>${g.players.map(p=>`<tr><td>${escapeHTML(p.number)}</td><td>${escapeHTML(nameOf(p))}</td><td>${p.min}</td><td>${p.pts}</td><td>${p.fgm}-${p.fga}</td><td>${p.threeMade}-${p.threeAtt}</td><td>${p.ftm}-${p.fta}</td><td>${p.reb}</td><td>${p.ast}</td><td>${p.stl}</td><td>${p.blk}</td><td>${p.tov}</td><td>${p.pf}</td></tr>`).join('')||'<tr><td colspan="13">No player statistics saved</td></tr>'}</tbody></table></div>`;
+  return `<div class="table-scroll"><table><thead><tr><th>#</th><th>PLAYER</th><th>MIN</th><th>PTS</th><th>FG</th><th>3PT</th><th>FT</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th><th>PF</th><th>EFF</th></tr></thead><tbody>${g.players.map(p=>`<tr><td>${escapeHTML(p.number)}</td><td>${escapeHTML(nameOf(p))}</td><td>${p.min}</td><td>${p.pts}</td><td>${p.fgm}-${p.fga}</td><td>${p.threeMade}-${p.threeAtt}</td><td>${p.ftm}-${p.fta}</td><td>${p.reb}</td><td>${p.ast}</td><td>${p.stl}</td><td>${p.blk}</td><td>${p.tov}</td><td>${p.pf}</td><td>${playerEFF(p)}</td></tr>`).join('')||'<tr><td colspan="14">No player statistics saved</td></tr>'}</tbody></table></div>`;
 }
 function shootingHTML(g) {
   if(!g)return '';
@@ -872,9 +949,12 @@ function renderDetails(){
 }
 let activeOpponent = 'all';
 let activeOpponentGame = 'all';
-let opponentZoneMode = 'basic';
-function opponentZoneDiagram(shots){
-  return apexZoneCourtMarkup(shots,opponentZoneMode);
+const opponentZoneModes = {offence:'basic', defence:'basic'};
+function opponentZoneDiagram(shots, side){
+  return apexZoneCourtMarkup(shots,opponentZoneModes[side]);
+}
+function opponentZoneControls(side){
+  return `<div class="sc-opponent-zone-controls" role="group" aria-label="${side === 'offence' ? 'Offensive' : 'Defensive'} shooting zones">${[['basic','Basic'],['traditional','Traditional'],['distance','Distance']].map(([key,label])=>`<button type="button" data-opponent-zone-side="${side}" data-opponent-zone-mode="${key}" aria-pressed="${opponentZoneModes[side]===key}">${label}</button>`).join('')}</div>`;
 }
 
 function renderOpponents(){
@@ -945,15 +1025,12 @@ function renderOpponents(){
    <div><strong>${fmtAvg(totals.allowed)}</strong><small>Opponent PPG</small></div></div>`}
    ${heading}${bars}
    <h3>Shot locations & shooting zones</h3>
-   <div class="sc-opponent-zone-controls" aria-label="Opponent shooting zone view">
-      ${[['basic','Basic Zones'],['traditional','Traditional Zones'],['distance','Distance Zones']].map(([key,label])=>`<button type="button" data-opponent-zone-mode="${key}" aria-pressed="${opponentZoneMode===key}">${label}</button>`).join('')}
+   <div class="opponent-courts-stack">
+    <section class="opponent-full-court"><h4>Full Court · Shot Locations</h4>${courtOrOverlay}</section>
+    <section class="opponent-zone-panel"><h4>Our Offence · Zones</h4>${opponentZoneControls('offence')}${opponentZoneDiagram(our,'offence')}</section>
+    <section class="opponent-zone-panel"><h4>Our Defence · Zones</h4>${opponentZoneControls('defence')}${opponentZoneDiagram(opp,'defence')}</section>
    </div>
-   <div class="opponent-courts-row">
-    <section><h4>Full Court</h4>${courtOrOverlay}</section>
-    <section><h4>Our Offence · Zones</h4>${opponentZoneDiagram(our)}</section>
-    <section><h4>Our Defence · Zones</h4>${opponentZoneDiagram(opp)}</section>
-   </div>
-   <p class="muted">Swipe horizontally to view all courts. Our Offence shows our shooting; Our Defence shows opponent shooting against us. Unrecorded statistics are not zero.</p>`;
+   <p class="muted">Each half-court can use its own Basic, Traditional or Distance view. Our Offence shows our shots; Our Defence shows opponents' shots against us. Missing data is not zero.</p>`;
 }
 function render(){if(state.view==='team')renderTeam();if(state.view==='players')renderPlayerTable();if(state.view==='games')renderGames();if(state.view==='details')renderDetails();if(state.view==='opponents')renderOpponents();}
 
@@ -1295,7 +1372,7 @@ function renderTeamShotProfile() {
 
     // Full court showing all our shot locations
     $("team-shot-court").innerHTML =
-        courtSVG(offensiveShots, "full");
+        apexShotLayerControls('team')+courtSVG(offensiveShots, "full",apexTeamShotLayer)+(apexTeamShotLayer==='creation'?apexShotLegend():'');
 
     // Offensive efficiency zones
     $("offensive-zone-court").innerHTML =
@@ -1316,7 +1393,7 @@ function renderTeamShotProfile() {
 function init(){
   fillGameOptions('player-game-filter');fillGameOptions('shot-game-filter');
   document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
-  $('opponent-analysis')?.addEventListener('click',e=>{const button=e.target.closest('[data-opponent-zone-mode]');if(!button)return;opponentZoneMode=button.dataset.opponentZoneMode;renderOpponents();});
+  $('opponent-analysis')?.addEventListener('click',e=>{const button=e.target.closest('[data-opponent-zone-mode][data-opponent-zone-side]');if(!button)return;const side=button.dataset.opponentZoneSide;if(!Object.prototype.hasOwnProperty.call(opponentZoneModes,side))return;const mode=button.dataset.opponentZoneMode;if(!['basic','traditional','distance'].includes(mode))return;opponentZoneModes[side]=mode;renderOpponents();});
   $('opponent-select')?.addEventListener('change',e=>{activeOpponent=e.target.value;activeOpponentGame='all';renderOpponents();});
   $('opponent-game-select')?.addEventListener('change',e=>{activeOpponentGame=e.target.value;renderOpponents();});
   $('player-game-filter').addEventListener('change',e=>{state.playerGame=e.target.value;renderPlayerTable();});
@@ -1326,6 +1403,7 @@ function init(){
   document.querySelectorAll('[data-stat]').forEach(b=>b.addEventListener('click',()=>{state.leaderStat=b.dataset.stat;renderPlayerTable();}));
   $('shot-player-filter').addEventListener('change',renderPlayerShots);
   $('shot-game-filter').addEventListener('change',renderPlayerShots);
+  document.addEventListener('click',e=>{const btn=e.target.closest('[data-shot-layer][data-shot-side]');if(!btn)return;const layer=btn.dataset.shotLayer;if(!['results','creation'].includes(layer))return;if(btn.dataset.shotSide==='team'){apexTeamShotLayer=layer;renderTeamShotProfile();}else if(btn.dataset.shotSide==='player'){apexPlayerShotLayer=layer;renderPlayerShots();}});
   $('games-body').addEventListener('click',e=>{const row=e.target.closest('[data-game-id]');if(!row)return;state.selectedGame=row.dataset.gameId;renderGames();});
   document.querySelectorAll('[data-summary]').forEach(b=>b.addEventListener('click',()=>{state.summary=b.dataset.summary;renderGames();}));
   $('open-game-details').addEventListener('click',()=>{state.detail='box';setView('details');});

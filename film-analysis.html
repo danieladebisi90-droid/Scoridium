@@ -1,0 +1,7 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Film Analysis · ApexVision</title>
+<link rel="stylesheet" href="film-analysis.css"><link rel="manifest" href="manifest.webmanifest"></head>
+<body><main class="film-shell"><header><a href="gamehub.html" class="film-back">← Game Hub</a><span class="film-brand">APEXVISION</span></header>
+<h1>Advanced Film Analysis</h1><p>Classify recorded events without changing the official box score. All fields are optional.</p>
+<div class="film-toolbar"><label>Completed game<select id="film-game"><option value="">Loading games…</option></select></label><label>Event type<select id="film-type"><option value="all">Shots and turnovers</option><option value="shot">Shots</option><option value="turnover">Turnovers</option></select></label></div>
+<div class="film-alert" id="film-message" role="status" aria-live="polite">Loading…</div><section id="film-events" aria-label="Events available for analysis"></section>
+</main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="film-analysis.js" defer></script></body></html>

@@ -394,6 +394,18 @@ async function displayPreviousGame(games) {
         .sort((a, b) => b.date.localeCompare(a.date));
 
     const game = completedGames[0];
+    const scoreLink=document.getElementById('apex-add-score-link');
+    const filmLink=document.getElementById('apex-film-analysis-link');
+    if(scoreLink)scoreLink.hidden=!game;
+    if(filmLink)filmLink.hidden=true;
+    if(game){
+      if(scoreLink)scoreLink.href=`add-score.html?gameId=${encodeURIComponent(game.id)}`;
+      void scMayTrack(game).then(allowed=>{
+        if(requestId!==previousGameRequest||!filmLink)return;
+        filmLink.hidden=!allowed;
+        if(allowed)filmLink.href=`film-analysis.html?gameId=${encodeURIComponent(game.id)}`;
+      });
+    }
 
     quartersContainer.textContent = "";
     leadersContainer.textContent = "";
@@ -502,16 +514,26 @@ async function displayPreviousGame(games) {
 
     renderPreviousQuarterScores(game, events);
     renderPreviousGameLeaders(events, players || []);
+    // A score-only approved submission has no fabricated game_events.
+    // Read its original quarter breakdown as a separate verified source.
+    if(!events.some(e=>getEventPoints(e)>0)){
+      const {data:approved}=await supabaseClient.from('apexvision_score_submissions')
+        .select('quarter_scores').eq('game_id',game.id).eq('status','approved')
+        .order('reviewed_at',{ascending:false}).limit(1);
+      if(requestId===previousGameRequest && Array.isArray(approved?.[0]?.quarter_scores)){
+        renderPreviousQuarterScores(game,events,approved[0].quarter_scores);
+      }
+    }
 }
 
 
-function renderPreviousQuarterScores(game, events) {
+function renderPreviousQuarterScores(game, events, manualQuarters = null) {
     const container =
         document.getElementById("previous-quarters");
 
     container.replaceChildren();
 
-    if (!events.length) {
+    if (!events.length && !manualQuarters) {
         container.textContent = "Quarter scores not available.";
         return;
     }
@@ -544,6 +566,13 @@ function renderPreviousQuarterScores(game, events) {
         }
     }
 
+    if (!periods.size && Array.isArray(manualQuarters)) {
+        manualQuarters.forEach((quarter,index)=>{
+            const us=Number(quarter.us),opponent=Number(quarter.opponent);
+            if(Number.isInteger(us)&&us>=0&&Number.isInteger(opponent)&&opponent>=0)
+                periods.set(index+1,{us,opponent});
+        });
+    }
     if (!periods.size) {
         container.textContent = "Quarter scores not available.";
         return;

@@ -1,0 +1,13 @@
+/* ApexVision: non-disruptive role chooser around the existing primary-claim logic. */
+.apex-room-trigger{display:flex;align-items:center;max-width:max-content}
+#apex-tracking-room-open{background:var(--team-primary,#173d78);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:8px;padding:8px 12px;font-size:12px;font-weight:800;cursor:pointer}
+.apex-tracking-room{border:0;border-radius:16px;padding:22px;max-width:min(460px,calc(100vw - 24px));width:100%;box-shadow:0 22px 65px #111b3255;color:#173354;background:#fff}
+.apex-tracking-room::backdrop{background:#071e3dbb}
+.apex-room-head{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.apex-room-head h2{margin:0;font-size:22px;color:#173d78}
+#apex-room-close{background:transparent;border:0;font-size:28px;cursor:pointer;color:#31455e}
+.apex-room-intro,.apex-room-privacy{font-size:12px;line-height:1.5;color:#54677d}
+.apex-room-card{display:grid;grid-template-columns:1fr auto;gap:5px 10px;border:1px solid #d9e2ec;border-radius:10px;padding:14px;margin:12px 0}
+.apex-room-card strong{font-size:15px}.apex-room-card small{grid-column:1;color:#697a8d}
+.apex-room-card button{grid-column:2;grid-row:1 / 3;background:#173d78;color:white;border:0;border-radius:8px;padding:8px 12px;cursor:pointer}
+.apex-room-card button:disabled{background:#e0e7ef;color:#66758a;cursor:default}
