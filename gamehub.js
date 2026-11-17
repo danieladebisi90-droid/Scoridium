@@ -74,6 +74,10 @@ function renderGameCalendar() {
             String(event.event_date).slice(0, 10) === dateKey
         );
 
+        // Highlight scheduled, live and completed games regardless of venue.
+        if (gamesOnDate.length) dayButton.classList.add('sc-has-game');
+        if (gamesOnDate.some(game => game.status === 'live')) dayButton.classList.add('sc-live-date');
+
         // Preserve existing home/away game colours.
         if (gamesOnDate.some(game =>
             String(game.location || "").toLowerCase() === "home"
@@ -787,13 +791,14 @@ function displayNextGame(games){
  const {game,live}=scCurrentGameCard(games),card=document.querySelector('.next-game');if(!card)return;
  document.getElementById('sc-live-game-room')?.remove();
  card.classList.toggle('sc-is-live',live);
+ card.classList.toggle('sc-no-upcoming',!game);
  const heading=card.querySelector('.next-game-header h2'),date=document.getElementById('next-game-date');
  const home=document.getElementById('next-home-name'),away=document.getElementById('next-away-name');
  const vs=card.querySelector('.next-vs'),time=document.getElementById('next-game-time');
  const locationEl=document.getElementById('next-game-location'),action=document.getElementById('open-next-game');
  heading.textContent=live?'LIVE GAME':'NEXT GAME';vs.textContent='VS';
  const oldHome=card.querySelector('.next-home .sc-score'),oldAway=card.querySelector('.next-away .sc-score');oldHome?.remove();oldAway?.remove();
- if(!game){date.textContent='No upcoming games';home.textContent=gameHubTeamName;away.textContent='TBD';time.textContent='';locationEl.textContent='';action.disabled=true;action.textContent='No Upcoming Game';action.onclick=null;return;}
+ if(!game){date.textContent='';home.textContent='';away.textContent='';time.textContent='';locationEl.textContent='';action.disabled=true;action.textContent='No upcoming games';action.onclick=null;return;}
  const isHome=String(game.location||'').toLowerCase()==='home';
  home.textContent=isHome?gameHubTeamName:(game.opponent||'Opponent');
  away.textContent=isHome?(game.opponent||'Opponent'):gameHubTeamName;
@@ -2202,7 +2207,7 @@ function renderMobileGameCard(){
  const heading=card.querySelector('[data-mobile-game-heading]'),date=card.querySelector('[data-mobile-game-date]');
  const matchup=card.querySelector('[data-mobile-game-matchup]'),result=card.querySelector('[data-mobile-game-result]'),action=card.querySelector('[data-mobile-game-action]');
  const {game,live}=scCurrentGameCard(gameHubGames);
- card.classList.toggle('sc-is-live',live);heading.textContent=live?'LIVE GAME':'NEXT GAME';
+ card.classList.toggle('sc-is-live',live);card.classList.toggle('sc-no-upcoming',!game);heading.textContent=live?'LIVE GAME':'NEXT GAME';
  date.textContent=game?scFullDate(game.date):'No upcoming games';
  const isHome=String(game?.location||'').toLowerCase()==='home';
  const left=isHome?gameHubTeamName:(game?.opponent||'Opponent');
