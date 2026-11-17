@@ -141,10 +141,27 @@
     const completed=all.filter(g=>g.id!==game.id && g.status==='completed' &&
       norm(g.opponent)===norm(game.opponent) && String(g.date).slice(0,10)<=String(game.date).slice(0,10) &&
       Number.isFinite(Number(g.team_score)) && Number.isFinite(Number(g.opponent_score)));
-    if(!completed.length){wrap.append(muted('First meeting this season — no previous head-to-head statistics.'));return;}
+    if(!completed.length){
+      const season=all.filter(g=>g.status==='completed' &&
+        Number.isFinite(Number(g.team_score)) && Number.isFinite(Number(g.opponent_score)) &&
+        Number(g.team_score)!==Number(g.opponent_score));
+      const wins=season.filter(g=>Number(g.team_score)>Number(g.opponent_score)).length;
+      const losses=season.filter(g=>Number(g.team_score)<Number(g.opponent_score)).length;
+      const pts=season.reduce((n,g)=>n+Number(g.team_score),0);
+      const against=season.reduce((n,g)=>n+Number(g.opponent_score),0);
+      const stats=el('div','sc-season-fallback');
+      stats.append(el('h4','','Our Team · Season Stats'));
+      const metrics=[['Record',wins+'–'+losses],['Points per game',season.length?(pts/season.length).toFixed(1):'—'],
+        ['Opponent PPG',season.length?(against/season.length).toFixed(1):'—']];
+      for(const [label,value] of metrics){
+        const row=el('div','sc-season-metric');
+        row.append(el('span','',label),el('strong','',value));stats.append(row);
+      }
+      wrap.append(stats);
+      return;
+    }
     const wins=completed.filter(g=>Number(g.team_score)>Number(g.opponent_score)).length;
     const losses=completed.filter(g=>Number(g.team_score)<Number(g.opponent_score)).length;
-    const draws=completed.length-wins-losses;
     const own=completed.reduce((n,g)=>n+Number(g.team_score),0);
     const opp=completed.reduce((n,g)=>n+Number(g.opponent_score),0);
     const details = el('div','gamehub-detailed-h2h');
