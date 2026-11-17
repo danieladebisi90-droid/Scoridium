@@ -1,3 +1,4 @@
+-- Apply MIGRATION_APEXVISION_POSTGAME_TRACKING.sql before this migration.
 -- ApexVision Film Room activity status (staging first).
 -- Requires public.games, public.team_members and private.can_track_game(uuid).
 BEGIN;
@@ -18,10 +19,10 @@ USING (EXISTS (
 ));
 DROP POLICY IF EXISTS apex_room_insert ON public.apexvision_film_room_status;
 CREATE POLICY apex_room_insert ON public.apexvision_film_room_status FOR INSERT TO authenticated
-WITH CHECK(updated_by=auth.uid() AND private.can_track_game(game_id));
+WITH CHECK(updated_by=auth.uid() AND private.apexvision_can_postgame_track(game_id));
 DROP POLICY IF EXISTS apex_room_update ON public.apexvision_film_room_status;
 CREATE POLICY apex_room_update ON public.apexvision_film_room_status FOR UPDATE TO authenticated
-USING(private.can_track_game(game_id))
-WITH CHECK(updated_by=auth.uid() AND private.can_track_game(game_id));
+USING(private.apexvision_can_postgame_track(game_id))
+WITH CHECK(updated_by=auth.uid() AND private.apexvision_can_postgame_track(game_id));
 GRANT SELECT,INSERT,UPDATE ON public.apexvision_film_room_status TO authenticated;
 COMMIT;
