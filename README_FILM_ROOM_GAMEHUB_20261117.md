@@ -11,17 +11,19 @@
 - Removed unused head-to-head draw computation; completed game scores with no winner are excluded from the new season fallback.
 
 ## Required migrations: staging first
-1. `MIGRATION_APEXVISION_FILM_ROOM_STATUS.sql` (requires `private.can_track_game(uuid)` and existing tracking permission schema).
-2. `MIGRATION_APEXVISION_SCORE_SNAPSHOTS.sql`.
+1. `MIGRATION_APEXVISION_POSTGAME_TRACKING.sql` (creates authorized event/shot backfill RPCs and postgame permission check; requires `private.can_track_game(uuid)`, existing games/events/players/tracker_observations schema).
+2. `MIGRATION_APEXVISION_FILM_ROOM_STATUS.sql` (depends on the new postgame permission check).
+3. `MIGRATION_APEXVISION_SCORE_SNAPSHOTS.sql`.
 3. The **existing** `apexvision_submit_game_score` RPC must be installed and authorized before submitting final scores.
 
 The migrations are **not** deployed. The app will show informative errors until they exist.
 
 ## Important outstanding work / known limitations
-- Post-game Stat Tracking and Shot Tracking are NOT yet validated as end-to-end backfill workflows. Film Room currently routes them to the existing tracker modes, and **those modes may still enforce live-game restrictions**. Do not represent post-game event creation or shot matching as complete.
-- Stat and Shot Tracking may share the current game tracking page and persistent role selection; the recorded events must be verified for duplicate prevention before release.
+- Post-game Stat Tracking and Shot Tracking now use separate `postgame-track.html` pages (Stat and Shot modes) that do not change the live game state. New events use idempotent UUIDs; existing field-goal attempts can receive locations or corrected player attribution with version checks. The feature is **not production-verified** until migrations and browser tests are completed.
+- A live Shot Tracker observation can be matched to an existing unlocated shot, or explicitly promoted as a missing attempt by a transactionally linked RPC. Neither path silently duplicates an existing shot. Confirmed new events affect analytics, not the saved final result.
+- No playback/video upload integration, timeline checkpointing, per-user progress, or automated complex possession merging yet. Post-game event creation order reflects time entered, not video/game chronological order.
 - Film Analysis itself continues to annotate existing recorded events; it does not ingest game video or create complete shot charts.
-- Only the previous completed game's score button opens the new popup. Other game-selection contexts and the legacy `add-score.html` page remain unchanged.
+- Score popup buttons are available on the previous, next/live, and mobile current-game cards. The legacy `add-score.html` workflow is unchanged.
 - Score snapshot creation and existing official-score approval are distinct operations, so a successfully stored final snapshot may still fail to create the pending approval request. In that case the UI reports both outcomes.
 - The no-head-to-head fallback currently shows record and scoring averages derived from game records; FG% cannot be shown until the event-level stats query is integrated.
 - Existing game records with equal *final* scores are not automatically changed or deleted. Audit those separately before any data normalization.
@@ -32,3 +34,9 @@ Check migration function dependencies and RLS roles; verify that ordinary team m
 Test popup on desktop/mobile, score snapshots for all three point types, reopening timestamp, success/failure branches, and whether a tied final score is rejected.
 Confirm calendar highlighting for no-location and multiple-games-on-one-day cases, and confirm next-game empty state in desktop/mobile.
 Avoid deploying the branch or migrations to the live site until the above and post-game tracker behavior are verified.
+
+## Static checks performed
+- JavaScript syntax checked for Film Room, Post-game Track, score popup, Game Hub and tournament context: passed.
+- Compared the post-game shot-value calculator with the existing live tracker `detectShot` over 5,989 FIBA full-court coordinate samples: zero mismatches.
+- Checked Game Hub and Film Room navigation, SQL function names and loaded screen assets: passed.
+- **No Supabase migrations executed**, no device/browser checks, no score approval tests, and no deployment. These remain mandatory.
