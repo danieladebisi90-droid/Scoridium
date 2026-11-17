@@ -1,6 +1,21 @@
 -- Post-game entry API for ApexVision Film Room. Staging only until security/trigger tests pass.
 -- Prerequisites: games, game_events, players, private.can_track_game(uuid), version column on game_events.
 BEGIN;
+-- Coaches/managers retain post-game review access after a game is finalized.
+-- Other users still require the existing game-tracking authorization function.
+CREATE OR REPLACE FUNCTION private.apexvision_can_postgame_track(p_game_id uuid)
+RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path='' AS $
+ SELECT auth.uid() IS NOT NULL AND (
+   EXISTS(SELECT 1 FROM public.games g
+     JOIN public.team_members tm ON tm.team_id=g.team_id
+     WHERE g.id=p_game_id AND tm.user_id=auth.uid() AND
+       tm.role IN ('head_coach','coach','assistant_coach','manager')
+   ) OR COALESCE(private.can_track_game(p_game_id),false)
+ );
+$;
+REVOKE ALL ON FUNCTION private.apexvision_can_postgame_track(uuid) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION private.apexvision_can_postgame_track(uuid) TO authenticated;
+
 CREATE TABLE IF NOT EXISTS public.apexvision_postgame_entries (
   event_id uuid PRIMARY KEY REFERENCES public.game_events(id) ON DELETE CASCADE,
   game_id uuid NOT NULL REFERENCES public.games(id) ON DELETE CASCADE,
@@ -46,7 +61,7 @@ CREATE OR REPLACE FUNCTION public.apexvision_postgame_add_event(
 DECLARE v_game public.games%ROWTYPE;v_saved uuid;v_actual integer;v_hx numeric;
         v_dist numeric;v_owner uuid;v_after public.games%ROWTYPE;
 BEGIN
- IF auth.uid() IS NULL OR NOT private.can_track_game(p_game_id)
+ IF auth.uid() IS NULL OR NOT private.apexvision_can_postgame_track(p_game_id)
  THEN RAISE EXCEPTION 'Not authorized to track this game'; END IF;
  SELECT * INTO v_game FROM public.games WHERE id=p_game_id FOR UPDATE;
  IF NOT FOUND OR v_game.status<>'completed' THEN
@@ -107,7 +122,7 @@ CREATE OR REPLACE FUNCTION public.apexvision_postgame_assign_shot(
 DECLARE v_game public.games%ROWTYPE;v_shot public.game_events%ROWTYPE;
         v_hx numeric;v_dist numeric;v_version integer;
 BEGIN
- IF auth.uid() IS NULL OR NOT private.can_track_game(p_game_id)
+ IF auth.uid() IS NULL OR NOT private.apexvision_can_postgame_track(p_game_id)
  THEN RAISE EXCEPTION 'Not authorized to assign shots'; END IF;
  SELECT * INTO v_game FROM public.games WHERE id=p_game_id FOR UPDATE;
  IF NOT FOUND OR v_game.status<>'completed' THEN RAISE EXCEPTION 'Game must be completed'; END IF;
@@ -137,7 +152,7 @@ CREATE OR REPLACE FUNCTION public.apexvision_postgame_assign_player(
 ) RETURNS integer LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $
 DECLARE v_game public.games%ROWTYPE;v_event public.game_events%ROWTYPE;v_new integer;
 BEGIN
- IF auth.uid() IS NULL OR NOT private.can_track_game(p_game_id)
+ IF auth.uid() IS NULL OR NOT private.apexvision_can_postgame_track(p_game_id)
  THEN RAISE EXCEPTION 'Not authorized to correct game statistics'; END IF;
  SELECT * INTO v_game FROM public.games WHERE id=p_game_id FOR UPDATE;
  IF NOT FOUND OR v_game.status<>'completed' THEN RAISE EXCEPTION 'Game must be completed'; END IF;
