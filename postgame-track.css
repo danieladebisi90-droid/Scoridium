@@ -18,3 +18,5 @@
 .postgame-links-dialog{width:min(780px,calc(100vw - 24px))}
 .postgame-links-dialog .postgame-panel{box-shadow:none;margin-top:12px}
 .postgame-shot-mode #post-shot-preview{padding:4px;font-size:12px}
+
+.postgame-shot-mode .postgame-banner{display:none}.postgame-shot-mode #page-title{font-size:22px;margin-top:13px}.postgame-shot-mode #game-title{margin:2px 0;font-size:13px}.postgame-shot-mode #postgame-screen>.postgame-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));max-width:420px;gap:9px}.postgame-shot-mode #post-shot-section>p:not(.postgame-selection){display:none}
