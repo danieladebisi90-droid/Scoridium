@@ -38,7 +38,27 @@ function renderEvents(){
   const b=document.createElement('small');const p=players.find(p=>String(p.id)===String(e.player_id));
   b.textContent=e.team==='us'?(p?'#'+p.number+' '+p.first_name:'Player unassigned'):'Opponent';
   if(e.type==='shot')b.textContent+=' · '+(e.x!=null&&e.y!=null?'Location recorded':'Location missing');
-  row.append(a,b);host.append(row);
+  row.append(a,b);
+  if(e.team==='us'&&['shot','free_throw','assist','offensive_rebound','defensive_rebound','steal','turnover','block','foul'].includes(e.type)){
+   const editor=document.createElement('div');editor.className='post-player-editor';
+   const select=document.createElement('select');select.setAttribute('aria-label','Assign player for '+label(e));
+   select.add(new Option('Unassigned',''));
+   for(const p of players)select.add(new Option('#'+(p.number??'?')+' '+(p.first_name||'')+' '+(p.last_name||''),p.id));
+   select.value=e.player_id||'';
+   const save=document.createElement('button');save.type='button';save.textContent='Save player';
+   save.disabled=true;
+   select.addEventListener('change',()=>{save.disabled=select.value===(e.player_id||'');});
+   save.addEventListener('click',async()=>{
+    const value=select.value||null;
+    if(!confirm('Update the player assigned to this recorded '+e.type.replaceAll('_',' ')+'?'))return;
+    const result=await invoke('apexvision_postgame_assign_player',{
+     p_game_id:gameId,p_event_id:e.id,p_expected_version:e.version,p_player_id:value
+    },save);
+    if(result!==null)say('Player attribution updated. The game score and shot result are unchanged.');
+   });
+   editor.append(select,save);row.append(editor);
+  }
+  host.append(row);
  }
 }
 function refreshChoices(){
