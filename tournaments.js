@@ -131,17 +131,7 @@
     }
     renderHeadToHead(root,game);
   }
-  function renderHeadToHead(root,game) {
-    root.querySelectorAll('.headtohead-details').forEach(n=>n.remove());
-    const wrap=el('div','headtohead-details');
-    root.append(wrap);
-    if(!game?.opponent){wrap.append(muted('Opponent not known yet.'));return;}
-    const norm=s=>String(s||'').trim().replace(/\s+/g,' ').toLocaleLowerCase();
-    const all = typeof gameHubGames !== 'undefined' ? gameHubGames : [];
-    const completed=all.filter(g=>g.id!==game.id && g.status==='completed' &&
-      norm(g.opponent)===norm(game.opponent) && String(g.date).slice(0,10)<=String(game.date).slice(0,10) &&
-      Number.isFinite(Number(g.team_score)) && Number.isFinite(Number(g.opponent_score)));
-    if(!completed.length){
+  function renderTrackedTeamSeasonStats(wrap,all){
       const season=all.filter(g=>g.status==='completed' &&
         Number.isFinite(Number(g.team_score)) && Number.isFinite(Number(g.opponent_score)) &&
         Number(g.team_score)!==Number(g.opponent_score));
@@ -158,8 +148,19 @@
         row.append(el('span','',label),el('strong','',value));stats.append(row);
       }
       wrap.append(stats);
-      return;
-    }
+  }
+  function renderHeadToHead(root,game) {
+    root.querySelectorAll('.headtohead-details').forEach(n=>n.remove());
+    const wrap=el('div','headtohead-details');
+    root.append(wrap);
+    const all = typeof gameHubGames !== 'undefined' ? gameHubGames : [];
+    if(!game?.opponent){renderTrackedTeamSeasonStats(wrap,all);return;}
+    const norm=s=>String(s||'').trim().replace(/\s+/g,' ').toLocaleLowerCase();
+    const completed=all.filter(g=>g.id!==game.id && g.status==='completed' &&
+      norm(g.opponent)===norm(game.opponent) && String(g.date).slice(0,10)<=String(game.date).slice(0,10) &&
+      Number.isFinite(Number(g.team_score)) && Number.isFinite(Number(g.opponent_score)) &&
+      Number(g.team_score)!==Number(g.opponent_score));
+    if(!completed.length){renderTrackedTeamSeasonStats(wrap,all);return;}
     const wins=completed.filter(g=>Number(g.team_score)>Number(g.opponent_score)).length;
     const losses=completed.filter(g=>Number(g.team_score)<Number(g.opponent_score)).length;
     const own=completed.reduce((n,g)=>n+Number(g.team_score),0);
