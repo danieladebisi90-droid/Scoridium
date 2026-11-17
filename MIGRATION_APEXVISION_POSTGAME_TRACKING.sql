@@ -55,7 +55,7 @@ BEGIN
  WHERE e.event_id=p_event_id AND e.game_id=p_game_id;
  IF FOUND AND v_owner=auth.uid() THEN RETURN p_event_id; END IF;
  IF p_event_id IS NULL THEN RAISE EXCEPTION 'Event ID required'; END IF;
- IF p_team NOT IN ('us','opponent') OR p_period IS NULL OR p_period<1 OR
+ IF p_team IS NULL OR p_team NOT IN ('us','opponent') OR p_type IS NULL OR p_period IS NULL OR p_period<1 OR
     p_period>GREATEST(4,COALESCE(v_game.current_period,4))
  THEN RAISE EXCEPTION 'Invalid team or period'; END IF;
  IF p_type NOT IN ('shot','free_throw','assist','offensive_rebound','defensive_rebound',
@@ -131,10 +131,39 @@ BEGIN
  RETURN v_version;
 END;$$;
 
+-- Add or correct player attribution without changing event outcome, score or period.
+CREATE OR REPLACE FUNCTION public.apexvision_postgame_assign_player(
+ p_game_id uuid,p_event_id uuid,p_expected_version integer,p_player_id uuid
+) RETURNS integer LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $
+DECLARE v_game public.games%ROWTYPE;v_event public.game_events%ROWTYPE;v_new integer;
+BEGIN
+ IF auth.uid() IS NULL OR NOT private.can_track_game(p_game_id)
+ THEN RAISE EXCEPTION 'Not authorized to correct game statistics'; END IF;
+ SELECT * INTO v_game FROM public.games WHERE id=p_game_id FOR UPDATE;
+ IF NOT FOUND OR v_game.status<>'completed' THEN RAISE EXCEPTION 'Game must be completed'; END IF;
+ SELECT * INTO v_event FROM public.game_events WHERE id=p_event_id AND game_id=p_game_id FOR UPDATE;
+ IF NOT FOUND OR v_event.team<>'us' OR
+  v_event.type NOT IN ('shot','free_throw','assist','offensive_rebound','defensive_rebound',
+   'steal','turnover','block','foul')
+ THEN RAISE EXCEPTION 'Event does not support tracked-team player attribution'; END IF;
+ IF p_player_id IS NOT NULL AND NOT EXISTS(
+  SELECT 1 FROM public.players WHERE id=p_player_id AND team_id=v_game.team_id
+ ) THEN RAISE EXCEPTION 'Player does not belong to tracked team'; END IF;
+ IF v_event.version IS DISTINCT FROM p_expected_version
+ THEN RAISE EXCEPTION 'Event was edited elsewhere; refresh first'; END IF;
+ UPDATE public.game_events SET player_id=p_player_id,version=version+1
+ WHERE id=p_event_id AND game_id=p_game_id AND version=p_expected_version
+ RETURNING version INTO v_new;
+ IF v_new IS NULL THEN RAISE EXCEPTION 'Player update conflict'; END IF;
+ RETURN v_new;
+END;$;
+
 REVOKE ALL ON FUNCTION public.apexvision_postgame_points(numeric,numeric) FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.apexvision_postgame_points(numeric,numeric) TO authenticated;
 REVOKE ALL ON FUNCTION public.apexvision_postgame_add_event(uuid,uuid,text,text,integer,uuid,integer,boolean,numeric,numeric) FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.apexvision_postgame_add_event(uuid,uuid,text,text,integer,uuid,integer,boolean,numeric,numeric) TO authenticated;
 REVOKE ALL ON FUNCTION public.apexvision_postgame_assign_shot(uuid,uuid,integer,numeric,numeric) FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.apexvision_postgame_assign_shot(uuid,uuid,integer,numeric,numeric) TO authenticated;
+REVOKE ALL ON FUNCTION public.apexvision_postgame_assign_player(uuid,uuid,integer,uuid) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.apexvision_postgame_assign_player(uuid,uuid,integer,uuid) TO authenticated;
 COMMIT;
