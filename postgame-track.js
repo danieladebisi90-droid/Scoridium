@@ -83,7 +83,18 @@ function renderObservations(){
    const result=await invoke('scoridium_link_shot_observation',{p_game_id:gameId,p_observation_id:o.id,p_event_id:e.id,p_expected_version:Number(e.version)},match);
    if(result!==null)say('Shot location linked. No extra attempt created.');
   });
-  choices.append(select,match);
+  const promote=document.createElement('button');
+  promote.type='button';promote.textContent='Add as missing shot';
+  promote.addEventListener('click',async()=>{
+   if(matches.length){say('Match this observation to a recorded shot first.');return;}
+   if(!confirm('Create one NEW field-goal attempt from this live shot observation? Confirm it was never recorded by Stat Tracking.'))return;
+   const key='apex-postgame-promote:'+gameId+':'+o.id;
+   let id=localStorage.getItem(key);
+   if(!id){id=crypto.randomUUID();localStorage.setItem(key,id);}
+   const saved=await invoke('apexvision_postgame_promote_observation',{p_game_id:gameId,p_observation_id:o.id,p_event_id:id},promote);
+   if(saved!==null){localStorage.removeItem(key);say('Observation added as one new shot, without changing final score.');}
+  });
+  choices.append(select,match,promote);
   row.append(title,choices);host.append(row);
  }
 }
