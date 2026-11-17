@@ -6,7 +6,7 @@
  const seasonId=sessionStorage.getItem('selectedSeasonId');
  const activities=['stat','shot','film'];
  const labels={not_started:'Not Started',in_progress:'In Progress',completed:'Completed'};
- const urls={stat:'game.html',shot:'game.html',film:'film-analysis.html'};
+ const urls={stat:'postgame-track.html?mode=stat',shot:'postgame-track.html?mode=shot',film:'film-analysis.html'};
  const statusMap=new Map();
  let user=null,ready=false;
  const message=text=>{$('room-message').textContent=text;};
@@ -45,10 +45,8 @@
      const card=document.querySelector('[data-activity="'+name+'"]');
      card.querySelector('[data-open]').addEventListener('click',async()=>{
        if(!statusMap.has(name)&&!(await save(name,'in_progress')))return;
-       const dest=urls[name]+'?gameId='+encodeURIComponent(gameId);
-       // Existing tracker role selection remains in game.html. Never change game status here.
-       if(name==='shot')localStorage.setItem('scoridium-independent-role:'+gameId,'independent');
-       if(name==='stat')localStorage.setItem('scoridium-independent-role:'+gameId,'primary');
+       const dest=urls[name]+(urls[name].includes('?')?'&':'?')+'gameId='+encodeURIComponent(gameId);
+       // Post-game tracking uses its own restricted RPCs, never live-game controls.
        location.href=dest;
      });
      card.querySelector('[data-complete]').addEventListener('click',async()=>{
