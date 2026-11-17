@@ -40,3 +40,10 @@ Avoid deploying the branch or migrations to the live site until the above and po
 - Compared the post-game shot-value calculator with the existing live tracker `detectShot` over 5,989 FIBA full-court coordinate samples: zero mismatches.
 - Checked Game Hub and Film Room navigation, SQL function names and loaded screen assets: passed.
 - **No Supabase migrations executed**, no device/browser checks, no score approval tests, and no deployment. These remain mandatory.
+
+## November 17: Film Analysis and Shot Tracker layout refinement
+- **Advanced Film Analysis** uses the existing exact FIBA half-court art at left and event classifications aligned in a detail panel on the right. Each shot marker corresponds to an existing stored x/y coordinate; right-basket shots are mirrored into the standard offensive half court. A missing x/y is explicitly labelled unlocated and no marker is fabricated. An event list, quarter filter and Previous/Next actions select the highlighted shot and its form.
+- **Post-game Shot Tracker** is court-first: tapping the court opens the shot-result popup. A separate **Shot Links** dialog contains matching to existing shot attempts, unlinked observations and recorded shot history, rather than filling the main screen with controls. It still uses the existing post-game authorization RPCs.
+- These changes only update the GitHub draft branch. **No new SQL migration is needed for the Film Analysis layout changes**, which use existing `game_events` and `apexvision_film_tags`.
+- The requested **Option C hybrid post-game Stat Tracker** (full live Quick Track parity, shot-type buttons immediately after each shot, free quarter navigation and chronological insert/reorder controls) remains a separate in-progress workflow and is **not completed in this patch**. Do not imply it is tested or ready for production.
+- Film Analysis positions are based on recorded shot coordinates; no video playback, upload, frame synchronization or automatic detection is included. The operator can watch video separately while reviewing the shot map and classification fields.
