@@ -4,7 +4,7 @@ BEGIN;
 -- Coaches/managers retain post-game review access after a game is finalized.
 -- Other users still require the existing game-tracking authorization function.
 CREATE OR REPLACE FUNCTION private.apexvision_can_postgame_track(p_game_id uuid)
-RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path='' AS $
+RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path='' AS $$
  SELECT auth.uid() IS NOT NULL AND (
    EXISTS(SELECT 1 FROM public.games g
      JOIN public.team_members tm ON tm.team_id=g.team_id
@@ -12,7 +12,7 @@ RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path='' AS $
        tm.role IN ('head_coach','coach','assistant_coach','manager')
    ) OR COALESCE(private.can_track_game(p_game_id),false)
  );
-$;
+$$;
 REVOKE ALL ON FUNCTION private.apexvision_can_postgame_track(uuid) FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION private.apexvision_can_postgame_track(uuid) TO authenticated;
 
@@ -149,7 +149,7 @@ END;$$;
 -- Add or correct player attribution without changing event outcome, score or period.
 CREATE OR REPLACE FUNCTION public.apexvision_postgame_assign_player(
  p_game_id uuid,p_event_id uuid,p_expected_version integer,p_player_id uuid
-) RETURNS integer LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $
+) RETURNS integer LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
 DECLARE v_game public.games%ROWTYPE;v_event public.game_events%ROWTYPE;v_new integer;
 BEGIN
  IF auth.uid() IS NULL OR NOT private.apexvision_can_postgame_track(p_game_id)
@@ -171,13 +171,13 @@ BEGIN
  RETURNING version INTO v_new;
  IF v_new IS NULL THEN RAISE EXCEPTION 'Player update conflict'; END IF;
  RETURN v_new;
-END;$;
+END;$$;
 
 -- Convert a confirmed live shot-only observation into one canonical event
 -- without requiring Stat Tracking to have been run. Locks and links atomically.
 CREATE OR REPLACE FUNCTION public.apexvision_postgame_promote_observation(
  p_game_id uuid,p_observation_id uuid,p_event_id uuid
-) RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $
+) RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
 DECLARE v_game public.games%ROWTYPE;v_obs public.tracker_observations%ROWTYPE;
         v_hx numeric;v_dist numeric;v_owner uuid;v_saved uuid;v_after public.games%ROWTYPE;
 BEGIN
@@ -223,7 +223,7 @@ BEGIN
     v_after.opponent_score IS DISTINCT FROM v_game.opponent_score
  THEN RAISE EXCEPTION 'Official final score changed; promotion rolled back'; END IF;
  RETURN v_saved;
-END;$;
+END;$$;
 
 REVOKE ALL ON FUNCTION public.apexvision_postgame_points(numeric,numeric) FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.apexvision_postgame_points(numeric,numeric) TO authenticated;
