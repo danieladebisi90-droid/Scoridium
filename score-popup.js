@@ -1,7 +1,8 @@
 (()=>{
 'use strict';
-const $=id=>document.getElementById(id),dialog=$('apex-score-dialog'),open=$('apex-add-score-link');
-if(!dialog||!open)return;
+const $=id=>document.getElementById(id),dialog=$('apex-score-dialog');
+const openers=[...document.querySelectorAll('[data-score-popup-open]')];
+if(!dialog||!openers.length)return;
 const form=$('apex-score-form'),url=new URLSearchParams(location.search);let gameId=null,submitting=false;
 const feedback=text=>{$('apex-score-feedback').textContent=text};
 function formatDate(value){if(!value)return'Never';const d=new Date(value);return Number.isNaN(d.getTime())?'Unknown':new Intl.DateTimeFormat('en-US',{dateStyle:'long',timeStyle:'short'}).format(d);}
@@ -18,14 +19,15 @@ function selection(){const point=form.elements['apex-score-point'].value;$('apex
 form.querySelectorAll('[name=apex-score-point]').forEach(el=>el.addEventListener('change',selection));
 $('apex-score-close').addEventListener('click',()=>dialog.close());
 dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close();});
-open.addEventListener('click',async event=>{
+openers.forEach(button=>button.addEventListener('click',async event=>{
   event.preventDefault();
-  gameId=new URL(open.getAttribute('data-game-id')||open.dataset.gameId||'',location.href).searchParams.get('gameId');
+  const source=event.currentTarget;
+  gameId=new URL(source.dataset.gameId||'',location.href).searchParams.get('gameId');
   if(!gameId){feedback('Select a game first.');return;}
-  $('apex-score-matchup').textContent=open.dataset.matchup||'Selected game';
+  $('apex-score-matchup').textContent=source.dataset.matchup||'Selected game';
   $('apex-score-us').value='';$('apex-score-them').value='';feedback('');
   selection();dialog.showModal();await lastSubmitted();
-});
+}));
 form.addEventListener('submit',async event=>{
  event.preventDefault();if(submitting||!gameId)return;
  const teamScore=Number($('apex-score-us').value),opponentScore=Number($('apex-score-them').value);
