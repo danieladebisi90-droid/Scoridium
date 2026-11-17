@@ -796,6 +796,7 @@ function displayNextGame(games){
  const home=document.getElementById('next-home-name'),away=document.getElementById('next-away-name');
  const vs=card.querySelector('.next-vs'),time=document.getElementById('next-game-time');
  const locationEl=document.getElementById('next-game-location'),action=document.getElementById('open-next-game');
+ const scoreButton=document.getElementById('apex-next-score-link');if(scoreButton){scoreButton.hidden=!game;if(game){scoreButton.dataset.gameId='?gameId='+encodeURIComponent(game.id);scoreButton.dataset.matchup=gameHubTeamName+' vs '+(game.opponent||'Opponent');}}
  heading.textContent=live?'LIVE GAME':'NEXT GAME';vs.textContent='VS';
  const oldHome=card.querySelector('.next-home .sc-score'),oldAway=card.querySelector('.next-away .sc-score');oldHome?.remove();oldAway?.remove();
  if(!game){date.textContent='';home.textContent='';away.textContent='';time.textContent='';locationEl.textContent='';action.disabled=true;action.textContent='No upcoming games';action.onclick=null;return;}
@@ -2207,6 +2208,7 @@ function renderMobileGameCard(){
  const heading=card.querySelector('[data-mobile-game-heading]'),date=card.querySelector('[data-mobile-game-date]');
  const matchup=card.querySelector('[data-mobile-game-matchup]'),result=card.querySelector('[data-mobile-game-result]'),action=card.querySelector('[data-mobile-game-action]');
  const {game,live}=scCurrentGameCard(gameHubGames);
+ const scoreButton=document.getElementById('apex-mobile-score-link');if(scoreButton){scoreButton.hidden=!game;if(game){scoreButton.dataset.gameId='?gameId='+encodeURIComponent(game.id);scoreButton.dataset.matchup=gameHubTeamName+' vs '+(game.opponent||'Opponent');}}
  card.classList.toggle('sc-is-live',live);card.classList.toggle('sc-no-upcoming',!game);heading.textContent=live?'LIVE GAME':'NEXT GAME';
  date.textContent=game?scFullDate(game.date):'No upcoming games';
  const isHome=String(game?.location||'').toLowerCase()==='home';
