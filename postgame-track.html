@@ -40,7 +40,7 @@
 </form>
 </section>
 <section id="post-shot-section" class="postgame-panel" hidden>
-<h2>Record a shot location</h2>
+<div class="postgame-court-head"><h2>SHOT TRACKER</h2><button type="button" id="post-shot-links-open">Shot Links <span id="post-shot-link-count"></span></button></div>
 <p>Tap the exact FIBA full court to choose a location. Match an existing shot first whenever one was stat-tracked live.</p>
 <svg id="postgame-court" viewBox="0 0 860 470" preserveAspectRatio="xMidYMid meet" role="img" aria-label="FIBA basketball court for post-game shot location selection">
 <g id="full-court-art" pointer-events="none">
@@ -141,7 +141,7 @@
 <circle id="postgame-target" cx="-30" cy="-30" r="10" fill="#e3bd20" stroke="#10223f" stroke-width="3" pointer-events="none"/>
 </svg>
 <p id="post-shot-preview" class="postgame-selection">Tap the court to place a shot.</p>
-<form id="post-shot-form">
+<dialog id="post-shot-dialog" class="postgame-dialog"><div class="postgame-dialog-top"><strong>Record Shot</strong><button type="button" id="post-shot-dialog-close" aria-label="Close">×</button></div><form id="post-shot-form">
 <div class="postgame-controls">
 <label>Result<select id="post-shot-made"><option value="true">Made</option><option value="false">Missed</option></select></label>
 <label>Record as<select id="post-shot-action"><option value="match">Attach to an existing unlocated shot</option><option value="new">New shot that was not previously tracked</option></select></label>
@@ -149,9 +149,9 @@
 <label id="post-existing-label">Matching existing shot<select id="post-shot-existing"></select></label>
 <p class="postgame-caution" id="post-shot-warning" hidden>Creating a new field-goal attempt adds to basketball statistics. Only use this when you have verified that the shot was not already recorded by Stat Tracking.</p>
 <button type="submit" id="post-shot-save" class="film-save" disabled>Save shot location</button>
-</form>
+</form></dialog>
 </section>
-<section id="post-observation-section" class="postgame-panel" hidden>
+<dialog id="post-shot-links-dialog" class="postgame-dialog postgame-links-dialog"><div class="postgame-dialog-top"><strong>Shot Links</strong><button type="button" id="post-shot-links-close" aria-label="Close">×</button></div><section id="post-observation-section" class="postgame-panel" hidden>
 <h2>Shots recorded by a live Shot Tracker</h2>
 <p>These observations may not be in the official game statistics yet. Match them to an existing shot, or confirm a missing attempt before adding it.</p>
 <div id="post-observations" class="post-observations"></div>
@@ -160,7 +160,7 @@
 <div class="postgame-section-top"><h2>Recorded events</h2><button type="button" id="post-refresh">Refresh</button></div>
 <p class="postgame-subtitle">Review the events already associated with this game before entering missing data.</p>
 <div id="post-events"></div>
-</section>
+</section></dialog>
 </section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
