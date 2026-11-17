@@ -30,7 +30,7 @@ function updatePlayer(){
 }
 function renderEvents(){
  const host=$('post-events');host.replaceChildren();
- const filtered=events.filter(e=>Number(e.period)===currentPeriod()&&e.team===currentTeam());
+ const filtered=events.filter(e=>Number(e.period)===currentPeriod()&&e.team===currentTeam()&&(mode!=='shot'||e.type==='shot'));
  if(!filtered.length){host.textContent='No recorded events for this team and quarter.';return;}
  for(const e of filtered.slice().reverse()){
   const row=document.createElement('div');row.className='post-event';
@@ -149,6 +149,10 @@ async function refresh(){
   observationError=o.error;observations=o.data||[];
  }
  renderEvents();renderShotMarkers();refreshChoices();renderObservations();
+ if(mode==='shot'){
+ const pending=events.filter(e=>e.type==='shot'&&(e.x==null||e.y==null)).length+observations.filter(o=>!o.matched_event_id).length;
+ $('post-shot-link-count').textContent=pending?'('+pending+')':'';
+ }
 }
 async function init(){
  if(!gameId||!teamId||!seasonId){say('Open this screen from the Film Room.');return;}
@@ -159,6 +163,7 @@ async function init(){
    .eq('id',gameId).eq('team_id',teamId).eq('seasons_id',seasonId).maybeSingle();
  if(response.error||!response.data){say('Game not available to the selected team and season.');return;}
  game=response.data;
+ if(mode==='shot')document.body.classList.add('postgame-shot-mode');
  if(game.status!=='completed'){say('This post-game screen is only for completed games. Live games use the Game Tracker.');return;}
  $('back-to-room').href='film-room.html?gameId='+encodeURIComponent(gameId);
  $('page-title').textContent=mode==='shot'?'Post-game Shot Tracking':'Post-game Stat Tracking';
@@ -184,6 +189,13 @@ async function init(){
  $('post-stat-type').dispatchEvent(new Event('change'));
  $('post-shot-made').addEventListener('change',()=>{resetPending();refreshChoices();});
  $('post-shot-action').addEventListener('change',()=>{resetPending();refreshChoices();});
+ if(mode==='shot'){
+ const shotDialog=$('post-shot-dialog'),linksDialog=$('post-shot-links-dialog');
+ $('post-shot-dialog-close').onclick=()=>shotDialog.close();
+ $('post-shot-links-close').onclick=()=>linksDialog.close();
+ $('post-shot-links-open').onclick=()=>{renderEvents();renderObservations();linksDialog.showModal();};
+ for(const dlg of [shotDialog,linksDialog])dlg.addEventListener('click',e=>{if(e.target===dlg)dlg.close();});
+ }
  $('postgame-court').addEventListener('click',event=>{
   const svg=$('postgame-court'),matrix=svg.getScreenCTM();
   if(!matrix)return;
@@ -192,6 +204,7 @@ async function init(){
   if(c.x<10||c.x>850||c.y<10||c.y>460)return;
   point={x:Number(c.x.toFixed(2)),y:Number(c.y.toFixed(2)),points:shotValue(c.x,c.y)};
   resetPending();updateShotSelection();
+  if(mode==='shot'&&!$('post-shot-dialog').open)$('post-shot-dialog').showModal();
  });
  $('post-stat-form').addEventListener('submit',e=>{e.preventDefault();void saveStat();});
  $('post-shot-form').addEventListener('submit',e=>{e.preventDefault();void saveShot();});
@@ -224,13 +237,15 @@ async function saveShot(){
  if(match){
   const event=events.find(e=>e.id===eventId);
   if(!event){say('Select an existing shot to match.');return;}
-  await invoke('apexvision_postgame_assign_shot',{p_game_id:gameId,p_event_id:event.id,p_expected_version:event.version,p_x:point.x,p_y:point.y},$('post-shot-save'));
+  const done=await invoke('apexvision_postgame_assign_shot',{p_game_id:gameId,p_event_id:event.id,p_expected_version:event.version,p_x:point.x,p_y:point.y},$('post-shot-save'));
+  if(done!==null)$('post-shot-dialog').close();
  }else{
   if(!confirm('This will add a NEW field-goal attempt to the box score. Confirm this shot was not recorded by Stat Tracking or Shot Tracking.'))return;
   if(!pendingId)pendingId=crypto.randomUUID();
-  await invoke('apexvision_postgame_add_event',{p_game_id:gameId,p_event_id:pendingId,p_type:'shot',
+  const done=await invoke('apexvision_postgame_add_event',{p_game_id:gameId,p_event_id:pendingId,p_type:'shot',
    p_team:currentTeam(),p_period:currentPeriod(),p_player_id:currentPlayer(),
    p_points:point.points,p_made:currentMade(),p_x:point.x,p_y:point.y},$('post-shot-save'));
+   if(done!==null)$('post-shot-dialog').close();
  }
 }
 void init();
