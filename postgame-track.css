@@ -2,3 +2,19 @@
 .post-player-editor{display:flex;align-items:center;gap:7px;flex-wrap:wrap;flex:1 1 100%;margin-top:3px}.post-player-editor select{flex:1 1 165px;max-width:300px;border:1px solid #bac8db;border-radius:7px;background:#fff;padding:7px}.post-player-editor button{border:1px solid #173d78;background:#fff;color:#173d78;border-radius:7px;padding:7px 11px;font-weight:700}
 
 .post-observations{display:grid;gap:10px}.post-observation{padding:12px;border:1px solid #d5dfec;border-radius:9px;background:#f6f9ff;display:grid;gap:10px}.post-observation strong{font-size:13px}.post-observation-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.post-observation-controls select{flex:1 1 180px;border:1px solid #bfccdc;background:white;padding:9px;border-radius:8px}.post-observation-controls button{border:1px solid #174377;background:white;color:#174377;border-radius:8px;padding:9px 12px;font-weight:700}.post-observation-controls button:last-child{background:#173d78;color:white}
+
+/* Court-first Shot Tracker: record via court tap; reconciliation in Shot Links. */
+.postgame-shot-mode .film-shell{max-width:1200px}
+.postgame-shot-mode #post-shot-section{padding:12px;gap:8px}
+.postgame-shot-mode #postgame-court{max-height:75dvh;width:100%}
+.postgame-court-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.postgame-court-head h2{font-size:18px}
+#post-shot-links-open{background:#fff;border:1px solid #bdcbdc;border-radius:9px;padding:10px 15px;font-weight:800;color:#153c77}
+.postgame-dialog{width:min(520px,calc(100vw - 24px));max-height:90dvh;overflow:auto;background:#fff;color:#142b46;border:0;border-radius:14px;padding:20px;box-shadow:0 20px 80px #07152777}
+.postgame-dialog::backdrop{background:#091a34ab}
+.postgame-dialog-top{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:14px;font-size:19px}
+.postgame-dialog-top button{border:0;background:transparent;font-size:28px;cursor:pointer}
+.postgame-dialog form{display:grid;gap:14px}
+.postgame-links-dialog{width:min(780px,calc(100vw - 24px))}
+.postgame-links-dialog .postgame-panel{box-shadow:none;margin-top:12px}
+.postgame-shot-mode #post-shot-preview{padding:4px;font-size:12px}
