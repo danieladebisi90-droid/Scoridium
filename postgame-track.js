@@ -190,6 +190,9 @@ async function init(){
  $('post-shot-made').addEventListener('change',()=>{resetPending();refreshChoices();});
  $('post-shot-action').addEventListener('change',()=>{resetPending();refreshChoices();});
  if(mode==='shot'){
+ // The court owns the page; player attribution belongs in the shot popup.
+ const playerLabel=$('post-player').closest('label');
+ $('post-shot-form').insertBefore(playerLabel,$('post-shot-form').firstChild);
  const shotDialog=$('post-shot-dialog'),linksDialog=$('post-shot-links-dialog');
  $('post-shot-dialog-close').onclick=()=>shotDialog.close();
  $('post-shot-links-close').onclick=()=>linksDialog.close();
