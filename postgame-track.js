@@ -61,6 +61,33 @@ function renderEvents(){
   host.append(row);
  }
 }
+function renderObservations(){
+ if(mode!=='shot')return;
+ const host=$('post-observations');host.replaceChildren();
+ if(observationError){host.textContent='Live observations unavailable: '+observationError.message;return;}
+ const subset=observations.filter(o=>o.team===currentTeam()&&Number(o.period)===currentPeriod()&&!o.matched_event_id);
+ if(!subset.length){host.textContent='No unlinked live shot observations for this quarter.';return;}
+ for(const o of subset){
+  const row=document.createElement('div');row.className='post-observation';
+  const title=document.createElement('strong');
+  title.textContent=periodName(o.period)+' · '+(o.made?'Made ':'Missed ')+o.points+'PT · ('+Math.round(o.x)+', '+Math.round(o.y)+')';
+  const choices=document.createElement('div');choices.className='post-observation-controls';
+  const select=document.createElement('select');
+  select.setAttribute('aria-label','Select recorded shot to match');
+  const matches=events.filter(e=>e.type==='shot'&&e.team===o.team&&Number(e.period)===Number(o.period)&&Number(e.points)===Number(o.points)&&e.made===o.made&&e.x==null&&e.y==null);
+  for(const e of matches)select.add(new Option('Recorded shot · '+e.id.slice(0,8),e.id));
+  const match=document.createElement('button');match.type='button';match.textContent='Match existing shot';match.disabled=!select.value;
+  match.addEventListener('click',async()=>{
+   const e=events.find(x=>x.id===select.value);if(!e)return;
+   if(!confirm('Match the location to this existing shot attempt?'))return;
+   const result=await invoke('scoridium_link_shot_observation',{p_game_id:gameId,p_observation_id:o.id,p_event_id:e.id,p_expected_version:Number(e.version)},match);
+   if(result!==null)say('Shot location linked. No extra attempt created.');
+  });
+  choices.append(select,match);
+  row.append(title,choices);host.append(row);
+ }
+}
+
 function refreshChoices(){
  if(mode!=='shot')return;
  const existing=$('post-shot-existing');
