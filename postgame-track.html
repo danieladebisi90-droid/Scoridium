@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Post-game Tracking · ApexVision</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="film-analysis.css">
+<link rel="stylesheet" href="postgame-track.css">
+</head>
+<body><main class="film-shell">
+<header><a id="back-to-room" class="film-back" href="gamehub.html">← Film Room</a><span class="film-brand">APEXVISION</span></header>
+<h1 id="page-title">Post-game Tracking</h1>
+<p id="game-title">Loading completed game…</p>
+<p class="postgame-banner">This is a post-game review. Recording statistics here will not restart the game or change the official final score. Avoid recording an event that is already present.</p>
+<p id="postgame-message" class="film-alert" role="status" aria-live="polite">Loading…</p>
+<section id="postgame-screen" hidden>
+<div class="postgame-controls">
+<label>Quarter<select id="post-period"></select></label>
+<label>Team<select id="post-team"><option value="us">Tracked team</option><option value="opponent">Opponent</option></select></label>
+<label>Player (optional, tracked team only)<select id="post-player"><option value="">Unassigned / Team</option></select></label>
+</div>
+<section id="post-stat-section" class="postgame-panel" hidden>
+<h2>Record a game event</h2>
+<p>Choose an event, then save it. Existing events are listed below for review. Shot locations can be filled in separately through Shot Tracking.</p>
+<form id="post-stat-form">
+<div class="postgame-controls">
+<label>Event<select id="post-stat-type">
+<option value="shot">Field goal</option><option value="free_throw">Free throw</option>
+<option value="assist">Assist</option><option value="offensive_rebound">Offensive rebound</option>
+<option value="defensive_rebound">Defensive rebound</option><option value="steal">Steal</option>
+<option value="turnover">Turnover</option><option value="block">Block</option>
+<option value="foul">Personal foul</option>
+<option value="team_offensive_rebound">Team offensive rebound</option>
+<option value="team_defensive_rebound">Team defensive rebound</option>
+</select></label>
+<label id="post-points-wrap">Shot value<select id="post-stat-points"><option value="2">2 points</option><option value="3">3 points</option></select></label>
+<label id="post-result-wrap">Result<select id="post-stat-made"><option value="true">Made</option><option value="false">Missed</option></select></label>
+</div>
+<button type="submit" id="post-stat-save" class="film-save">Save new event</button>
+</form>
+</section>
+<section id="post-shot-section" class="postgame-panel" hidden>
+<h2>Record a shot location</h2>
+<p>Tap the exact FIBA full court to choose a location. Match an existing shot first whenever one was stat-tracked live.</p>
+<svg id="postgame-court" viewBox="0 0 860 470" preserveAspectRatio="xMidYMid meet" role="img" aria-label="FIBA basketball court for post-game shot location selection">
+<g id="full-court-art" pointer-events="none">
+    
+<!-- OUTER COURT BORDER -->
+<rect x="1.5" y="1.5" width="857" height="467"
+      rx="4"
+      fill="#D2A06D"
+      stroke="#B98556"
+      stroke-width="3"/>
+
+<!-- INNER COURT BOUNDARY -->
+<rect x="10" y="10" width="840" height="450"
+      fill="none"
+      stroke="white"
+      stroke-width="3"/>
+
+<!-- Half-court line and centre circle -->
+<line x1="430" y1="10" x2="430" y2="460"
+      stroke="white" stroke-width="3"/>
+
+<!-- CENTRE CIRCLE -->
+<circle cx="430" cy="235" r="54"
+        fill="none" stroke="white" stroke-width="3"/>
+
+<!-- LEFT PAINT -->
+<path d="M10 161.5 H184 V308.5 H10"
+      fill="none" stroke="white" stroke-width="3"/>
+
+<!-- RIGHT PAINT -->
+<path d="M850 161.5 H676 V308.5 H850"
+      fill="none" stroke="white" stroke-width="3"/>
+
+<!-- FREE THROW CIRCLES -->
+<circle cx="184" cy="235" r="54"
+        fill="none" stroke="white" stroke-width="3"/>
+
+<circle cx="676" cy="235" r="54"
+        fill="none" stroke="white" stroke-width="3"/>
+
+<!-- LEFT FIBA THREE-POINT LINE -->
+<path d="M10 37 H99.69
+         A202.5 202.5 0 0 1 99.69 433
+         H10"
+      fill="none" stroke="white" stroke-width="3"/>
+
+<!-- RIGHT FIBA THREE-POINT LINE -->
+<path d="M850 37 H760.31
+         A202.5 202.5 0 0 0 760.31 433
+         H850"
+      fill="none" stroke="white" stroke-width="3"/>
+
+<!-- BACKBOARDS -->
+<line x1="46" y1="208" x2="46" y2="262"
+      stroke="white" stroke-width="4"/>
+
+<line x1="814" y1="208" x2="814" y2="262"
+      stroke="white" stroke-width="4"/>
+
+<!-- LEFT BASKET -->
+<circle cx="57.25" cy="235" r="7"
+        fill="none" stroke="white" stroke-width="3"/>
+
+<!-- RIGHT BASKET -->
+<circle cx="802.75" cy="235" r="7"
+        fill="none" stroke="white" stroke-width="3"/>
+
+<!-- NO-CHARGE SEMICIRCLES -->
+<path d="M57.25 272.5
+         A37.5 37.5 0 0 0 57.25 197.5"
+      fill="none" stroke="white" stroke-width="3"/>
+
+<path d="M802.75 272.5
+         A37.5 37.5 0 0 1 802.75 197.5"
+      fill="none" stroke="white" stroke-width="3"/>
+
+        <text id="left-basket-label"
+      x="325" y="445"
+      text-anchor="middle"
+      font-size="28"
+      font-weight="700"
+      fill="#111"
+      opacity="0.55">
+    TEAM
+</text>
+
+<text id="right-basket-label"
+      x="525" y="445"
+      text-anchor="middle"
+      font-size="28"
+      font-weight="700"
+      fill="#111"
+      opacity="0.55">
+    TEAM
+</text>
+  </g>
+<g id="postgame-markers" pointer-events="none"></g>
+<circle id="postgame-target" cx="-30" cy="-30" r="10" fill="#e3bd20" stroke="#10223f" stroke-width="3" pointer-events="none"/>
+</svg>
+<p id="post-shot-preview" class="postgame-selection">Tap the court to place a shot.</p>
+<form id="post-shot-form">
+<div class="postgame-controls">
+<label>Result<select id="post-shot-made"><option value="true">Made</option><option value="false">Missed</option></select></label>
+<label>Record as<select id="post-shot-action"><option value="match">Attach to an existing unlocated shot</option><option value="new">New shot that was not previously tracked</option></select></label>
+</div>
+<label id="post-existing-label">Matching existing shot<select id="post-shot-existing"></select></label>
+<p class="postgame-caution" id="post-shot-warning" hidden>Creating a new field-goal attempt adds to basketball statistics. Only use this when you have verified that the shot was not already recorded by Stat Tracking.</p>
+<button type="submit" id="post-shot-save" class="film-save" disabled>Save shot location</button>
+</form>
+</section>
+<section class="postgame-panel">
+<div class="postgame-section-top"><h2>Recorded events</h2><button type="button" id="post-refresh">Refresh</button></div>
+<p class="postgame-subtitle">Review the events already associated with this game before entering missing data.</p>
+<div id="post-events"></div>
+</section>
+</section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="postgame-track.js" defer></script>
+</body>
+</html>
