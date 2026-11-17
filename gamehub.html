@@ -178,7 +178,7 @@
 
                         <a id="previous-box-score-link" href="stats.html">VIEW FULL BOX SCORE</a>
                         <div class="apex-game-actions">
-                          <a id="apex-add-score-link" href="add-score.html" hidden>Submit Score</a>
+                          <button type="button" id="apex-add-score-link" hidden>Submit Score</button>
                           <a id="apex-film-analysis-link" href="film-room.html" hidden>Film Room</a>
                         </div>
 
@@ -209,6 +209,28 @@
             </section>
         </main>
 
+<!-- Score submission snapshots are independent of official game statistics. -->
+<dialog id="apex-score-dialog" class="apex-score-dialog" aria-labelledby="apex-score-title">
+  <form id="apex-score-form" method="dialog">
+    <div class="apex-score-top"><h2 id="apex-score-title">Submit Score</h2><button type="button" id="apex-score-close" aria-label="Close">×</button></div>
+    <p id="apex-score-matchup">Game</p>
+    <div class="apex-score-pair">
+      <label>Our Score<input id="apex-score-us" type="number" min="0" max="500" step="1" required></label>
+      <label>Opponent Score<input id="apex-score-them" type="number" min="0" max="500" step="1" required></label>
+    </div>
+    <fieldset><legend>When was this score recorded?</legend>
+      <label><input type="radio" name="apex-score-point" value="quarter" checked> End of Quarter</label>
+      <label><input type="radio" name="apex-score-point" value="final"> End of Game</label>
+      <label><input type="radio" name="apex-score-point" value="random"> During Game (Random)</label>
+    </fieldset>
+    <label id="apex-score-period-wrap">Quarter
+      <select id="apex-score-period"><option value="1">Q1</option><option value="2">Q2</option><option value="3">Q3</option><option value="4">Q4</option><option value="5">Overtime</option></select>
+    </label>
+    <button id="apex-score-submit" type="submit">Submit Score</button>
+    <p id="apex-score-feedback" role="status" aria-live="polite"></p>
+    <footer id="apex-score-last">Last submitted: Never</footer>
+  </form>
+</dialog>
 <!-- MANAGE SCHEDULE MODAL -->
 <div id="schedule-modal" class="schedule-modal" hidden>
     <div class="schedule-modal-backdrop"></div>
@@ -429,6 +451,8 @@
     <script src="team-theme.js" defer></script>
 <script src="pageLayout.js" defer></script>
     <script src="gamehub.js" defer></script>
+    <script src="score-popup.js" defer></script>
+    <link rel="stylesheet" href="score-popup.css">
     <script src="calendar-subscribe.js" defer></script>
     <script src="tournaments.js" defer></script>
 

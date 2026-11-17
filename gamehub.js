@@ -403,7 +403,7 @@ async function displayPreviousGame(games) {
     if(scoreLink)scoreLink.hidden=!game;
     if(filmLink)filmLink.hidden=true;
     if(game){
-      if(scoreLink)scoreLink.href=`add-score.html?gameId=${encodeURIComponent(game.id)}`;
+      if(scoreLink){scoreLink.dataset.gameId='?gameId='+encodeURIComponent(game.id);scoreLink.dataset.matchup=gameHubTeamName+' vs '+(game.opponent||'Opponent');}
       void scMayTrack(game).then(allowed=>{
         if(requestId!==previousGameRequest||!filmLink)return;
         filmLink.hidden=!allowed;
