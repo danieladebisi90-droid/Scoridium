@@ -173,6 +173,58 @@ BEGIN
  RETURN v_new;
 END;$;
 
+-- Convert a confirmed live shot-only observation into one canonical event
+-- without requiring Stat Tracking to have been run. Locks and links atomically.
+CREATE OR REPLACE FUNCTION public.apexvision_postgame_promote_observation(
+ p_game_id uuid,p_observation_id uuid,p_event_id uuid
+) RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $
+DECLARE v_game public.games%ROWTYPE;v_obs public.tracker_observations%ROWTYPE;
+        v_hx numeric;v_dist numeric;v_owner uuid;v_saved uuid;v_after public.games%ROWTYPE;
+BEGIN
+ IF auth.uid() IS NULL OR NOT private.apexvision_can_postgame_track(p_game_id)
+ THEN RAISE EXCEPTION 'Not authorized for post-game shot review'; END IF;
+ SELECT * INTO v_game FROM public.games WHERE id=p_game_id FOR UPDATE;
+ IF NOT FOUND OR v_game.status<>'completed' THEN RAISE EXCEPTION 'Game must be completed'; END IF;
+ SELECT * INTO v_obs FROM public.tracker_observations
+ WHERE id=p_observation_id AND game_id=p_game_id FOR UPDATE;
+ IF NOT FOUND OR v_obs.kind<>'shot' OR v_obs.x IS NULL OR v_obs.y IS NULL
+ THEN RAISE EXCEPTION 'Shot observation not found'; END IF;
+ IF v_obs.matched_event_id=p_event_id THEN
+   SELECT created_by INTO v_owner FROM public.apexvision_postgame_entries
+    WHERE event_id=p_event_id AND game_id=p_game_id;
+   IF v_owner=auth.uid() THEN RETURN p_event_id; END IF;
+ END IF;
+ IF v_obs.matched_event_id IS NOT NULL
+ THEN RAISE EXCEPTION 'Observation was already linked to a shot'; END IF;
+ IF public.apexvision_postgame_points(v_obs.x,v_obs.y)<>v_obs.points
+ THEN RAISE EXCEPTION 'Observed points do not match FIBA court geometry'; END IF;
+ IF EXISTS(SELECT 1 FROM public.game_events e
+   WHERE e.game_id=p_game_id AND e.type='shot' AND e.team=v_obs.team
+    AND e.period=v_obs.period AND e.points=v_obs.points
+    AND e.made IS NOT DISTINCT FROM v_obs.made
+    AND e.x IS NULL AND e.y IS NULL)
+ THEN RAISE EXCEPTION 'An unlocated recorded shot matches; link it rather than creating another field-goal attempt'; END IF;
+ v_hx:=CASE WHEN v_obs.x<430 THEN 57.25 ELSE 802.75 END;
+ v_dist:=round((sqrt((v_obs.x-v_hx)^2+(v_obs.y-235)^2)/30)::numeric,2);
+ INSERT INTO public.game_events(
+   id,game_id,player_id,team,type,period,x,y,points,made,distance_meters,distance_feet
+ ) VALUES (
+   p_event_id,p_game_id,NULL,v_obs.team,'shot',v_obs.period,v_obs.x,v_obs.y,
+   v_obs.points,v_obs.made,v_dist,round((v_dist*3.28084)::numeric,2)
+ ) ON CONFLICT(id) DO NOTHING RETURNING id INTO v_saved;
+ IF v_saved IS NULL THEN RAISE EXCEPTION 'Shot event ID conflicts with another event'; END IF;
+ INSERT INTO public.apexvision_postgame_entries(event_id,game_id,created_by)
+ VALUES(v_saved,p_game_id,auth.uid());
+ UPDATE public.tracker_observations SET matched_event_id=v_saved
+ WHERE id=p_observation_id AND game_id=p_game_id AND matched_event_id IS NULL;
+ SELECT * INTO v_after FROM public.games WHERE id=p_game_id;
+ IF v_after.status IS DISTINCT FROM v_game.status OR
+    v_after.team_score IS DISTINCT FROM v_game.team_score OR
+    v_after.opponent_score IS DISTINCT FROM v_game.opponent_score
+ THEN RAISE EXCEPTION 'Official final score changed; promotion rolled back'; END IF;
+ RETURN v_saved;
+END;$;
+
 REVOKE ALL ON FUNCTION public.apexvision_postgame_points(numeric,numeric) FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.apexvision_postgame_points(numeric,numeric) TO authenticated;
 REVOKE ALL ON FUNCTION public.apexvision_postgame_add_event(uuid,uuid,text,text,integer,uuid,integer,boolean,numeric,numeric) FROM PUBLIC,anon;
@@ -181,4 +233,6 @@ REVOKE ALL ON FUNCTION public.apexvision_postgame_assign_shot(uuid,uuid,integer,
 GRANT EXECUTE ON FUNCTION public.apexvision_postgame_assign_shot(uuid,uuid,integer,numeric,numeric) TO authenticated;
 REVOKE ALL ON FUNCTION public.apexvision_postgame_assign_player(uuid,uuid,integer,uuid) FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.apexvision_postgame_assign_player(uuid,uuid,integer,uuid) TO authenticated;
+REVOKE ALL ON FUNCTION public.apexvision_postgame_promote_observation(uuid,uuid,uuid) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.apexvision_postgame_promote_observation(uuid,uuid,uuid) TO authenticated;
 COMMIT;
