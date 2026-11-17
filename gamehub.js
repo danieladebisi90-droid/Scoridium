@@ -407,7 +407,7 @@ async function displayPreviousGame(games) {
       void scMayTrack(game).then(allowed=>{
         if(requestId!==previousGameRequest||!filmLink)return;
         filmLink.hidden=!allowed;
-        if(allowed)filmLink.href=`film-analysis.html?gameId=${encodeURIComponent(game.id)}`;
+        if(allowed)filmLink.href=`film-room.html?gameId=${encodeURIComponent(game.id)}`;
       });
     }
 
