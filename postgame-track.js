@@ -4,7 +4,7 @@ const $=id=>document.getElementById(id);
 const params=new URLSearchParams(location.search),gameId=params.get('gameId');
 const mode=params.get('mode')==='shot'?'shot':'stat';
 const teamId=sessionStorage.getItem('selectedTeamId'),seasonId=sessionStorage.getItem('selectedSeasonId');
-let game=null,players=[],events=[],point=null,busy=false,pendingId=null;
+let game=null,players=[],events=[],observations=[],observationError=null,point=null,busy=false,pendingId=null;
 const say=s=>{$('postgame-message').textContent=s};
 const periodName=p=>p<=4?'Q'+p:'OT'+(p-4);
 const label=e=>(e.type==='shot'?(e.made?'Made ':'Missed ')+e.points+'PT':e.type==='free_throw'?(e.made?'Made FT':'Missed FT'):e.type.replaceAll('_',' '));
@@ -26,7 +26,7 @@ function updatePlayer(){
  const tracked=currentTeam()==='us';
  $('post-player').disabled=!tracked;
  if(!tracked)$('post-player').value='';
- renderEvents();refreshChoices();
+ renderEvents();refreshChoices();renderObservations();
 }
 function renderEvents(){
  const host=$('post-events');host.replaceChildren();
@@ -105,7 +105,12 @@ async function refresh(){
   results.push(...r.data||[]);
   if((r.data||[]).length<500)break;
  }
- events=results;renderEvents();renderShotMarkers();refreshChoices();
+ events=results;
+ if(mode==='shot'){
+  const o=await supabaseClient.from('tracker_observations').select('id,period,kind,team,points,made,x,y,matched_event_id').eq('game_id',gameId).eq('kind','shot').is('matched_event_id',null).limit(1000);
+  observationError=o.error;observations=o.data||[];
+ }
+ renderEvents();renderShotMarkers();refreshChoices();renderObservations();
 }
 async function init(){
  if(!gameId||!teamId||!seasonId){say('Open this screen from the Film Room.');return;}
@@ -121,12 +126,13 @@ async function init(){
  $('page-title').textContent=mode==='shot'?'Post-game Shot Tracking':'Post-game Stat Tracking';
  $('game-title').textContent='vs '+(game.opponent||'Opponent')+' · '+game.date+' · Final '+(game.team_score??'—')+'–'+(game.opponent_score??'—');
  $('post-'+mode+'-section').hidden=false;
+ if(mode==='shot')$('post-observation-section').hidden=false;
  for(let p=1;p<=Math.max(4,Number(game.current_period)||4);p++)$('post-period').add(new Option(periodName(p),String(p)));
  const roster=await supabaseClient.from('players').select('id,first_name,last_name,number').eq('team_id',teamId).order('number');
  if(roster.error){say('Unable to load roster: '+roster.error.message);return;}
  players=roster.data||[];
  for(const player of players)$('post-player').add(new Option('#'+(player.number??'?')+' '+(player.first_name||'')+' '+(player.last_name||''),player.id));
- $('post-period').addEventListener('change',()=>{resetPending();renderEvents();refreshChoices();});
+ $('post-period').addEventListener('change',()=>{resetPending();renderEvents();refreshChoices();renderObservations();});
  $('post-team').addEventListener('change',()=>{resetPending();updatePlayer();});
  $('post-player').addEventListener('change',resetPending);
  $('post-refresh').addEventListener('click',async()=>{try{await refresh();say('Event list refreshed.');}catch(e){say('Refresh failed: '+e.message);}});
