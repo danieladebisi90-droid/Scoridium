@@ -67,7 +67,7 @@ function renderPicker(){
    const meta=document.createElement('small');meta.textContent=event.type==='shot'?(halfPosition(event)?'Located':'Unlocated'):'No location';
    btn.append(name,meta);btn.addEventListener('click',()=>selectEvent(event.id));
    picker.append(btn);
-   if(event.id===selectedId)btn.scrollIntoView?.({block:'nearest'});
+
  }
 }
 function renderDetail(){
