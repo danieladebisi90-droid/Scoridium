@@ -16,16 +16,16 @@ DROP POLICY IF EXISTS apex_shot_inserts_read ON public.apexvision_postgame_shot_
 CREATE POLICY apex_shot_inserts_read ON public.apexvision_postgame_shot_inserts
  FOR SELECT TO authenticated USING(EXISTS(
  SELECT 1 FROM public.games g JOIN public.team_members tm ON tm.team_id=g.team_id
- WHERE g.id=game_id AND tm.user_id=auth.uid()));
+ WHERE g.id=public.apexvision_postgame_shot_inserts.game_id AND tm.user_id=auth.uid()));
 DROP POLICY IF EXISTS apex_shot_inserts_insert ON public.apexvision_postgame_shot_inserts;
 CREATE POLICY apex_shot_inserts_insert ON public.apexvision_postgame_shot_inserts
  FOR INSERT TO authenticated WITH CHECK(
- created_by=auth.uid() AND private.apexvision_can_postgame_track(game_id)
- AND EXISTS(SELECT 1 FROM public.games g WHERE g.id=game_id AND g.status='completed')
+ created_by=auth.uid() AND private.apexvision_can_postgame_track(public.apexvision_postgame_shot_inserts.game_id)
+ AND EXISTS(SELECT 1 FROM public.games g WHERE g.id=public.apexvision_postgame_shot_inserts.game_id AND g.status='completed')
  AND EXISTS(
- SELECT 1 FROM public.game_events e JOIN public.game_events b ON b.id=before_event_id
- WHERE e.id=event_id AND e.game_id=game_id AND e.type='shot'
- AND b.game_id=game_id AND b.type='shot' AND b.period=e.period)
+ SELECT 1 FROM public.game_events e JOIN public.game_events b ON b.id=public.apexvision_postgame_shot_inserts.before_event_id
+ WHERE e.id=public.apexvision_postgame_shot_inserts.event_id AND e.game_id=public.apexvision_postgame_shot_inserts.game_id AND e.type='shot'
+ AND b.game_id=public.apexvision_postgame_shot_inserts.game_id AND b.type='shot' AND b.period=e.period)
  );
 GRANT SELECT,INSERT ON public.apexvision_postgame_shot_inserts TO authenticated;
 COMMIT;
