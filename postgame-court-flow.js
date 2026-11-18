@@ -77,6 +77,7 @@ function render(){
 }
 function begin(location,made){
  if(saving)return;
+ if(shotMode&&document.body.classList.contains('pg-guided-on')&&!guidedTarget){api.notify('This recorded shot is already located. Choose Next or another pending shot.');return;}
  if(shotMode&&!complete()){api.notify('Finish or cancel the current shot before selecting another location.');return;}
  const team=teamAt(location.x),value=api.shotValue(location.x,location.y);
  if(shotMode&&guidedTarget){
@@ -90,7 +91,7 @@ function begin(location,made){
    shot={position:location,made:guidedTarget.made,points:value,team,guidedId:guidedTarget.id};
    const player=api.getPlayers().find(p=>String(p.id)===String(guidedTarget.player_id));
    selectedJersey=player?{id:player.id,number:player.number,label:'#'+player.number}:{label:'Unassigned'};
-   step='category';render();return;
+   step=player?'category':'jersey';render();return;
  }
  const detail={position:location,made,points:value,team};
  if(combined){
@@ -107,6 +108,7 @@ if(shotMode||combined){
   if(shotMode)clear();
   directionOverride=!directionOverride;
   selector.setAttribute('aria-pressed',String(directionOverride));
+  window.dispatchEvent(new CustomEvent('apex:review-direction-changed',{detail:{reversed:directionOverride}}));
   api.notify('Court directions switched for this review. Previously saved locations are unchanged.');
  });
  const captureClick=ev=>{
