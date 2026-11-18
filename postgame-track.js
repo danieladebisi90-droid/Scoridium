@@ -59,6 +59,11 @@ function renderEvents(){
    });
    editor.append(select,save);row.append(editor);
   }
+  if(e.type==='shot'){
+   const link=document.createElement('a');link.className='post-analysis-link';
+   link.href='film-analysis.html?gameId='+encodeURIComponent(gameId)+'&eventId='+encodeURIComponent(e.id);
+   link.textContent='Review shot analysis';row.append(link);
+  }
   host.append(row);
  }
 }
