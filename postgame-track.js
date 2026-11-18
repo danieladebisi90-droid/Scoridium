@@ -341,6 +341,13 @@ window.apexPostgame={get mode(){return mode;},get gameId(){return gameId;},getPl
    }
    return id;
  },
+ assignPlayer:async(eventId,playerId)=>{
+  await refresh();const found=events.find(e=>e.id===eventId);
+  if(!found)return false;
+  if(found.player_id===playerId)return true;
+  const saved=await invoke('apexvision_postgame_assign_player',{p_game_id:gameId,p_event_id:eventId,p_expected_version:Number(found.version),p_player_id:playerId},$('post-review-save-anchor'));
+  return saved!==null;
+ },
  linkRelated:async(childId,sourceId)=>{
    const r=await supabaseClient.rpc('apexvision_postgame_link_event',{p_game_id:gameId,p_event_id:childId,p_source_event_id:sourceId});
    if(r.error){say('Could not link related events: '+r.error.message);return false;}
