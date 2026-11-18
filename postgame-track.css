@@ -28,3 +28,5 @@
 .postgame-shot-mode:not(.pgq-stat-workflow) #post-quick-root{display:none}.pgq-stat-workflow #post-shot-links-open{display:inline-block!important}
 
 #postgame-screen[hidden],#post-stat-section[hidden],#post-shot-section[hidden],#post-observation-section[hidden]{display:none!important}.post-analysis-link{display:inline-block;color:#173d78;text-decoration:underline;font-weight:700;font-size:12px;margin-top:6px}
+
+.pgq-timeline{max-height:300px;overflow:auto}.pgq-entry{align-items:center;flex-wrap:wrap}.pgq-entry label{display:flex;align-items:center;gap:4px;font-size:10px}.pgq-entry input{max-width:77px;padding:6px;font-size:11px;border:1px solid #b9c6d9;border-radius:6px}.pgq-entry .pgq-btn{min-height:26px;padding:5px 8px}.post-quick-review-edit{border:1px solid #adc0d5;border-radius:8px;padding:7px 9px;background:#fff;color:#173d78;font-weight:700;font-size:12px}.postgame-section-top{flex-wrap:wrap}
