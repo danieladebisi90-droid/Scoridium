@@ -234,7 +234,7 @@ async function init(){
 async function touchReview(){
  const auth=await supabaseClient.auth.getUser(),uid=auth.data?.user?.id;
  if(!uid)return;
- const activity=mode==='combined'?'film':mode;
+ const activity=mode;
  const time=new Date().toISOString();
  const {error}=await supabaseClient.from('apexvision_film_room_status').update({last_reviewed_at:time,last_reviewed_by:uid,updated_at:time,updated_by:uid}).eq('game_id',gameId).eq('activity',activity);
  if(error)console.warn('Unable to update Film Room review timestamp:',error.message);
