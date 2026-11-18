@@ -54,6 +54,9 @@ function highlightGuidedHalf(event){
 }
 function runningScore(){
  const running={us:0,opponent:0},item=sequence[index];
+ for(const e of api.getEvents().filter(e=>Number(e.period)<period())){
+  if(e.made===true&&(e.type==='shot'||e.type==='free_throw'))running[e.team]=(running[e.team]||0)+(Number(e.points)||0);
+ }
  for(const e of api.getEvents().filter(e=>Number(e.period)===period()).slice().sort(sequenceOrder)){
   if(e.made===true&&(e.type==='shot'||e.type==='free_throw'))running[e.team]=(running[e.team]||0)+(Number(e.points)||0);
   if(item&&e.id===item.id)break;
@@ -73,7 +76,7 @@ function renderGuided(){
  const score=runningScore();
  const data=$('pg-guided-hint');
  if(guided&&item){
-  data.innerHTML='<small>CURRENT PLAY</small><strong>'+esc(label(item))+'</strong><span> · Running Q'+period()+' score '+score.us+'–'+score.opponent+'</span>';
+  data.innerHTML='<small>CURRENT PLAY</small><strong>'+esc(label(item))+'</strong><span> · Game score '+score.us+'–'+score.opponent+'</span>';
  }
  if(!guided){hint.textContent='';return;}
  if(!item){
@@ -82,7 +85,7 @@ function renderGuided(){
  const state=item.x!=null&&item.y!=null?'ALREADY LOCATED':'TAP LOCATION';
  const orderWarning=uncertain?' · Sequence estimated from entry order; check video.':'';
  hint.setAttribute('aria-label',state+' · '+label(item)+orderWarning);
- if(data)data.innerHTML='<small>'+esc(state)+'</small><strong>'+esc(label(item))+'</strong><span> · Q'+period()+' score '+score.us+'–'+score.opponent+'</span>'+
+ if(data)data.innerHTML='<small>'+esc(state)+'</small><strong>'+esc(label(item))+'</strong><span> · Game score '+score.us+'–'+score.opponent+'</span>'+
  (orderWarning?'<em>'+esc(orderWarning)+'</em>':'');
 
  $('pg-guided-previous').disabled=index<=0;$('pg-guided-next').disabled=index>=sequence.length-1;
@@ -206,9 +209,9 @@ function initHalfCourt(){
   const compact=media.matches;
   const half=courtView==='half'||(compact&&courtView!=='full');
   toggle.hidden=!half;
-  if(!half){court.setAttribute('viewBox','0 0 860 470');return;}
+  if(!half){court.setAttribute('viewBox','0 0 860 470');court.classList.remove('pg-half-view');return;}
   const trackedLeft=(Number(period())<=2)!==reversed;const left=opponent?!trackedLeft:trackedLeft;
-  court.setAttribute('viewBox',(left?'10':'430')+' 10 420 450');
+  court.setAttribute('viewBox',(left?'10':'430')+' 10 420 450');court.classList.add('pg-half-view');
   toggle.textContent=opponent?'Show Tracked Half':'Show Opponent Half';
   toggle.setAttribute('aria-pressed',String(opponent));
  }
