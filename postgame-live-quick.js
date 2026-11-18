@@ -203,12 +203,12 @@
     const trackedActive=mode!=='idle';
     root.innerHTML=`<div class="qv-layout">
       <section class="qv-tracked ${trackedActive?'qv-highlight':''}" aria-label="Tracked team controls">
-        <div class="qv-team-heading"><div><strong>${esc(ns.us)}</strong><small>${esc(descriptive[mode]||'Choose action')}</small></div>${teamMode?'':btn('teamPlayer','TEAM','qv-team-btn',trackedActive?'disabled':'')}</div>
+        <div class="qv-team-heading"><div><strong>${esc(ns.us)}</strong><small>${esc(descriptive[mode]||'Choose action')}</small></div>${teamMode?'':btn('teamPlayer','TEAM STAT','qv-team-btn',trackedActive?'disabled':'')}</div>
         <div class="qv-action-surface">${content}</div>
         <div class="qv-bottom">${mode!=='idle'&&mode!=='stats'&&mode!=='foul'?btn('skip','SKIP','qv-neutral'):''}${mode!=='idle'&&mode!=='stats'&&mode!=='foul'?btn('back','BACK','qv-neutral'):''}</div>
       </section>
       <section class="qv-opponent ${reboundActive?'qv-opponent-highlight':''}" aria-label="Opponent controls"><div class="qv-team-heading"><div><strong>${esc(ns.opponent)}</strong><small>Opponent team stats</small></div></div>
-      <div class="qv-opp-buttons">${[['made2','+2PT','qv-made'],['made3','+3PT','qv-made'],['to','TO',''],['miss2','2PT MISS','qv-miss'],['miss3','3PT MISS','qv-miss'],['pf','PF',''],...(reboundActive?[['reb','REB',''],['stl','STL',''],['blk','BLK','']]:[])].map(([a,label,kind])=>btn(`opp:${a}`,label,kind,(mode!=='idle'&&!(reboundActive&&(a==='reb'||(shooting==='us'&&a==='blk'))))?'disabled':'')).join('')}</div></section>
+      <div class="qv-opp-buttons">${[['made2','+2PT','qv-made'],['made3','+3PT','qv-made'],['to','TO',''],['miss2','2PT MISS','qv-miss'],['miss3','3PT MISS','qv-miss'],['pf','PF',''],...(reboundActive?[['reb','REB',''],['stl','STL',''],['blk','BLK','']]:[])].map(([a,label,kind])=>btn(`opp:${a}`,label,kind,(mode!=='idle'&&!(mode==='stats'&&teamMode)&&!(reboundActive&&(a==='reb'||(shooting==='us'&&a==='blk'))))?'disabled':'')).join('')}</div></section>
       <section class="qv-last"><small>LAST EVENT</small><strong>${esc(last)}</strong></section></div>`;
     if(api.mode==='combined'&&selectedCourtShot?.team==='opponent'){
       const panel=root.querySelector('.qv-opponent'),buttons=panel?.querySelector('.qv-opp-buttons');
@@ -241,7 +241,7 @@
       if(mode==='ft'){conclude('FT sequence incomplete — continue in review');return;}
       conclude('Recorded play • follow-up unresolved');return;
     }
-    if(a==='player'||a==='teamPlayer'){if(!active()){tell('Start or resume the game first.');return;}who=a==='teamPlayer'?null:b.dataset.player;mode='stats';render();return;}
+    if(a==='player'||a==='teamPlayer'){if(!active()){tell('Start or resume the game first.');return;}teamMode=a==='teamPlayer';who=a==='teamPlayer'?null:b.dataset.player;mode='stats';render();return;}
     if(['made2','made3','miss2','miss3','reb','ast','stl','blk','pf','to'].includes(a)){stat(a);return;}
     if(a.startsWith('opp:')){if(!active()){tell('Start or resume the game first.');return;}opponentAction(a.slice(4));return;}
     if(a==='assistPlayer'){related('assist','us',b.dataset.player);conclude(`${label(b.dataset.player)} • AST`);return;}
