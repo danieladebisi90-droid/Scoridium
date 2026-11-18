@@ -1,0 +1,70 @@
+/* Film Room v9 — iPad portrait and phone court UX, no forked event logic. */
+.pg-court-team-label{display:none}
+@media(orientation:portrait) and (max-width:1100px){
+ .postgame-fullscreen .pg-court-team-label{
+  display:block;flex:0 0 auto;margin:0;padding:5px 12px;
+  border-radius:8px;background:var(--review-primary,#063d82);color:#fff;
+  font-weight:850;font-size:12px;text-align:center;letter-spacing:.035em;
+ }
+ .postgame-fullscreen #postgame-court.pg-half-view{touch-action:pan-y}
+ .postgame-fullscreen #postgame-court{touch-action:pan-y}
+}
+/* iPad portrait: full court above the actual two reusable Quick Tracker containers. */
+@media(orientation:portrait) and (min-width:701px) and (max-width:1100px){
+ .postgame-fullscreen.pg-v3-combined .film-shell{height:100dvh!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;padding-bottom:12px!important}
+ .postgame-fullscreen.pg-v3-combined #postgame-scoreboard{flex:0 0 auto!important}
+ .postgame-fullscreen.pg-v3-combined #postgame-screen{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+ .postgame-fullscreen.pg-v3-combined #post-shot-section{flex:1 1 auto;display:flex!important;min-height:0;overflow:hidden!important;padding:0!important}
+ .postgame-fullscreen.pg-v3-combined #post-shot-section[hidden]{display:none!important}
+ .postgame-fullscreen.pg-v3-combined .pg-shot-workspace{display:flex!important;flex-direction:column!important;min-height:0!important;flex:1 1 auto;gap:6px}
+ .postgame-fullscreen.pg-v3-combined .pg-shot-court-area{display:flex!important;flex:1 1 auto!important;flex-direction:column!important;min-height:0!important;overflow:hidden!important}
+ .postgame-fullscreen.pg-v3-combined .pg-shot-court-area>.postgame-court-head,.postgame-fullscreen.pg-v3-combined .pg-shot-court-area>p{display:none!important}
+ .postgame-fullscreen.pg-v3-combined .pg-shot-court-area>.pg-court-modes{display:flex!important;flex:0 0 auto;align-self:center;gap:8px;min-height:33px;width:min(100%,330px)}
+ .postgame-fullscreen.pg-v3-combined .postgame-court-workspace{
+  display:flex!important;flex:1 1 auto!important;flex-direction:column!important;
+  height:auto!important;min-height:0!important;gap:8px!important;width:100%!important;
+  justify-content:flex-start!important;align-items:stretch!important;overflow:hidden!important
+ }
+ .postgame-fullscreen.pg-v3-combined #postgame-court{
+  display:block!important;width:auto!important;max-width:100%!important;
+  height:auto!important;max-height:min(37dvh,390px)!important;min-height:0!important;
+  flex:0 1 auto!important;align-self:center!important;aspect-ratio:860/470!important
+ }
+ .postgame-fullscreen.pg-v3-combined #postgame-court.pg-half-view{
+  max-height:min(40dvh,415px)!important;aspect-ratio:420/450!important;
+ }
+ .postgame-fullscreen.pg-v3-combined #post-quick-root{
+  display:block!important;position:static!important;flex:1 1 auto!important;
+  width:100%!important;max-width:100%!important;height:auto!important;
+  min-height:0!important;max-height:none!important;margin:0!important;
+  overflow:auto!important;padding:0!important;background:transparent!important;
+  border:0!important;box-shadow:none!important;transform:none!important
+ }
+ .postgame-fullscreen.pg-v3-combined #post-quick-root .qv-layout{
+  display:grid!important;grid-template-columns:minmax(0,1.12fr) minmax(0,1fr)!important;
+  grid-template-rows:minmax(0,1fr)!important;gap:10px!important;
+  height:100%!important;min-height:0!important;align-items:stretch!important
+ }
+ .postgame-fullscreen.pg-v3-combined #post-quick-root .qv-tracked,
+ .postgame-fullscreen.pg-v3-combined #post-quick-root .qv-opponent{
+  width:100%!important;min-width:0!important;min-height:175px!important;max-height:100%!important;
+  margin:0!important;padding:12px!important;overflow:auto!important;flex:none!important
+ }
+ .postgame-fullscreen.pg-v3-combined #post-quick-root .qv-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important}
+ .postgame-fullscreen.pg-v3-combined #post-quick-root .qv-button{min-height:42px!important;font-size:12px!important}
+ .postgame-fullscreen.pg-v3-combined #post-quick-root .qv-team-heading strong{font-size:13px!important;overflow-wrap:anywhere}
+ .postgame-fullscreen.pg-v3-combined .pg-shot-sidebar{display:none!important}
+ .postgame-fullscreen.pg-v3-combined #postgame-court-prompt:not([hidden]){
+  position:absolute;top:15%!important;left:18%!important;right:18%!important;
+  width:64%!important;max-height:62%!important;height:auto!important;z-index:30!important;
+  overflow-y:auto!important
+ }
+}
+/* Phone: whichever half is selected shows the correct opponent/team stat flow.
+   On Combined, only the matching controls appear in its contextual popover. */
+@media(orientation:portrait) and (max-width:700px){
+ .postgame-fullscreen.pg-mobile-v8 .pg-court-team-label{margin-bottom:2px;font-size:11px}
+ .postgame-fullscreen.pg-mobile-v8.pg-v3-combined.pg-v8-stat-panel.pg-view-opponent #post-quick-root .qv-tracked{display:none!important}
+ .postgame-fullscreen.pg-mobile-v8.pg-v3-combined.pg-v8-stat-panel:not(.pg-view-opponent) #post-quick-root .qv-opponent{display:none!important}
+ .postgame-fullscreen.pg-mobile-v8 #postgame-court.pg-half-view{touch-action:pan-y}
+}
