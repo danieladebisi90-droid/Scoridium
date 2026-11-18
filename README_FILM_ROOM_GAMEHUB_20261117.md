@@ -170,3 +170,13 @@ Run **`MIGRATION_APEXVISION_POSTGAME_OPPONENT_JERSEYS.sql`** ONLY in `ApexVision
 - Mobile portrait body/page scrolling is disabled. A contextual workflow may scroll inside its own overlay when necessary. Responsive DOM positioning restores original desktop controls on wider screens.
 - `postgame-mobile-v8.js` replaces `postgame-mobile-v7.js` (v7 CSS retained underneath new v8 overrides). No database migration required.
 - JS syntax / HTML ID uniqueness / CSS brace balance checked. **Runtime and iPhone Safari PWA layout unverified; test at 393×852 and rotate, inspect unfinished-play behavior. Keep draft, production untouched.**
+
+## Film Room v9 — iPad portrait + phone court navigation
+
+- iPad portrait Combined Tracking shows the existing full FIBA court **above** the original tracked-team and opponent-team Quick Tracker panels in two side-by-side columns. Full/Half Court controls are directly available. The panels use available remaining height and preserve their original event workflows.
+- Phone portrait keeps its half-court-first overlay design from v8; no second tracker is introduced.
+- On both phones and iPads in portrait Half Court view, swipe horizontally **toward the other physical half** to change the visible team offense. Gestures respect Q1–Q2 vs Q3–Q4 direction switches and the manual direction override; a swipe is never treated as a shot tap and does not alter saved coordinates.
+- A team-offense label is displayed above the court, and the existing full-court basket labels update to the current team names (including halftime). Guided play sequence remains authoritative: manual browsing does not change the selected guided shot.
+- Selecting the tracked team's basket keeps player jersey/stat prompts. Selecting the opponent's basket uses the existing team-level opponent stat buttons, **without an opponent jersey prompt** (in both shot-only and combined workflows).
+- Changes: `postgame-responsive-v9.css`, `postgame-responsive-v9.js`, updated postgame HTML, guided court controller, shot flow, and original Quick Tracker adapter.
+- Static JS syntax, HTML ID uniqueness and CSS block counts passed. **No actual pointer/touch, tablet layout or Supabase event-persistence test yet.** Keep draft and production untouched.
