@@ -5,10 +5,10 @@
 <title>Post-game Tracking · ApexVision</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="stylesheet" href="film-analysis.css">
-<link rel="stylesheet" href="quick-track.css"><link rel="stylesheet" href="postgame-track.css?v=film-v4">
+<link rel="stylesheet" href="quick-track.css"><link rel="stylesheet" href="postgame-track.css?v=film-v5"><link rel="stylesheet" href="postgame-layout-v5.css?v=film-v5">
 </head>
 <body class="postgame-fullscreen"><main class="film-shell">
-<div class="postgame-topline"><a id="back-to-room" class="film-back" href="gamehub.html">← Film Room</a><strong id="page-title">Post-game Tracking</strong><span id="game-title">Loading completed game…</span></div>
+<header class="postgame-topline" aria-label="Film Room navigation"><a id="back-to-room" class="film-back" href="gamehub.html"><span aria-hidden="true">←</span> Film Room</a><strong id="page-title">Post-game Tracking</strong><span id="game-title">Loading completed game…</span></header>
 <p class="postgame-banner">This is a post-game review. Recording statistics here will not restart the game or change the official final score. Avoid recording an event that is already present.</p>
 <section id="postgame-scoreboard" class="postgame-scoreboard" aria-label="Shared tracked score">
 <div class="pg-score-team"><small id="pg-score-team-name">TRACKED TEAM</small><strong id="pg-score-us">0</strong></div>
@@ -16,12 +16,13 @@
 <div class="pg-score-team"><small id="pg-score-opponent-name">OPPONENT</small><strong id="pg-score-opponent">0</strong></div></section>
 <p id="postgame-message" class="film-alert" role="status" aria-live="polite">Loading…</p>
 <section id="postgame-screen" hidden>
+<div class="pg-review-toolbar" aria-label="Review navigation">
 <div class="postgame-controls">
 <label>Quarter<select id="post-period"></select></label>
 <label>Team<select id="post-team"><option value="us">Tracked team</option><option value="opponent">Opponent</option></select></label>
 <label>Player (optional, tracked team only)<select id="post-player"><option value="">Unassigned / Team</option></select></label>
 </div>
-<div class="postgame-quarter-actions"><button type="button" id="post-switch-direction" hidden>Switch Directions</button><button type="button" id="post-next-quarter">Next Quarter</button><button type="button" id="post-end-review" title="Finish the review without changing the official completed game">Finish Review</button></div><section id="post-stat-section" class="postgame-panel" hidden>
+<div class="postgame-quarter-actions"><button type="button" id="post-switch-direction" hidden>Switch Directions</button><button type="button" id="post-next-quarter">Next Quarter</button><button type="button" id="post-end-review" title="Finish the review without changing the official completed game">Finish Review</button></div></div><section id="post-stat-section" class="postgame-panel" hidden>
 <div class="postgame-section-top"><h2>QUICK TRACK</h2><button type="button" id="quick-team-mode" aria-pressed="false" hidden>Player Mode</button><button type="button" id="post-quick-review">Play-by-Play</button></div><div id="post-quick-root" class="post-quick-root"></div><button id="post-review-save-anchor" type="button" hidden aria-hidden="true"></button><details class="post-legacy-form"><summary>Advanced manual entry</summary><h3>Record a game event</h3>
 <p>Choose an event, then save it. Existing events are listed below for review. Shot locations can be filled in separately through Shot Tracking.</p>
 <form id="post-stat-form">
@@ -166,6 +167,6 @@
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
-<script src="postgame-track.js?v=film-v4" defer></script><script src="postgame-live-quick.js?v=film-v4" defer></script><script src="postgame-court-flow.js?v=film-v4" defer></script>
+<script src="postgame-track.js?v=film-v5" defer></script><script src="postgame-live-quick.js?v=film-v5" defer></script><script src="postgame-court-flow.js?v=film-v5" defer></script>
 </body>
 </html>
