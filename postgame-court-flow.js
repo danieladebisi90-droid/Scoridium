@@ -127,7 +127,7 @@ async function finalize(match){
     &&e.x!=null&&e.y!=null&&Math.hypot(Number(e.x)-shot.position.x,Number(e.y)-shot.position.y)<10&&e.made===shot.made);
    if(similar.length&&!confirm('A similar recorded shot already exists here. Is this definitely a different attempt?'))return;
    eventId=await api.saveEvent({type:'shot',team:shot.team,playerId:shot.team==='us'?selectedJersey?.id:null,
-    points:shot.points,made:shot.made,position:shot.position,confirmed:false},$('post-review-save-anchor'));
+    points:shot.points,made:shot.made,position:shot.position,confirmed:true},$('post-review-save-anchor'));
    if(!eventId)throw new Error('The shot was not saved.');
   }
   if(shot.category){
