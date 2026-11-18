@@ -11,9 +11,11 @@ const more=$('pg-mobile-more'),drawer=$('pg-mobile-extra');
 const reviewTools=toolbar.querySelector('.pg-review-tools'),steps=screen.querySelector('.pg-floating-steps');
 const shotSection=$('post-shot-section'),workspace=shotSection?.querySelector('.pg-shot-workspace');
 const side=shotSection?.querySelector('.pg-shot-sidebar'),courtArea=shotSection?.querySelector('.pg-shot-court-area');
-const courtWrap=shotSection?.querySelector('.postgame-court-workspace'),court=$('postgame-court'),quick=$('post-quick-root');
+let courtWrap=shotSection?.querySelector('.postgame-court-workspace');
+const court=$('postgame-court'),quick=$('post-quick-root');
 const buttons=reviewTools?[...reviewTools.children]:[];
 const original=new Map(),mobileNodes=[];
+let currentVersion=0;
 const remember=el=>{if(el&&!original.has(el)){const mark=document.createComment('original position '+(el.id||el.className||''));el.parentNode?.insertBefore(mark,el);original.set(el,mark);}return el;};
 const move=(el,parent)=>{if(el&&parent){remember(el);parent.appendChild(el);}};
 function restore(){
@@ -39,12 +41,16 @@ function openMore(open){
 function updateLastShot(){
  if(!mobile.matches||!info||mode==='stat')return;
  const guided=$('pg-guided-enable')?.getAttribute('aria-pressed')==='true';
+ const hint=$('pg-guided-hint');
+ if(hint&&hint.parentElement!==info)info.appendChild(hint);
  if(mode==='shot'&&guided){
-  const hint=$('pg-guided-hint');
   info.hidden=false;
-  if(hint)info.replaceChildren(hint);
+  if(hint)hint.hidden=false;
+  const last=info.querySelector('.pg-v8-last');
+  if(last)last.hidden=true;
   return;
  }
+ if(hint)hint.hidden=true;
  info.hidden=false;
  const events=window.apexPostgame?.getEvents?.()||[];
  const period=window.apexPostgame?.getPeriod?.();
@@ -55,6 +61,7 @@ function updateLastShot(){
  let target=info.querySelector('.pg-v8-last');
  if(!target){target=make('div','pg-v8-last');info.appendChild(target);}
  target.textContent=text;
+ target.hidden=false;
 }
 function layout(){
  if(!mobile.matches){
@@ -62,6 +69,12 @@ function layout(){
   return;
  }
  if(body.classList.contains('pg-mobile-v8'))return;
+ // postgame-track.js creates the SVG workspace AFTER its initial async refresh.
+ // Do not mark the mobile layout initialized until that wrapper actually exists.
+ if(mode!=='stat'){
+  courtWrap=shotSection?.querySelector('.postgame-court-workspace');
+  if(!workspace||!courtArea||!side||!courtWrap)return;
+ }
  body.classList.add('pg-mobile-v8');
  // Review controls: original elements and event listeners remain attached.
  const bar=make('div','pg-v8-review-bar');
@@ -83,9 +96,8 @@ function layout(){
  stage.appendChild(dock);
  // Existing guided/free mode buttons are frequent-use controls.
  if(mode==='shot'){
-  modeBar=make('div','pg-v8-mode-bar');
-  move(side.querySelector('.pg-guided-options'),modeBar);
-  dock.appendChild(modeBar);
+  // Free/Guided selector lives in More, as requested. Original buttons retained.
+  move(side.querySelector('.pg-guided-options'),drawer);
   const nav=side.querySelector('.pg-guided-navigation');
   move(nav,dock);
   const add=side.querySelector('.pg-insert-actions');
@@ -100,7 +112,7 @@ function layout(){
   move($('pg-shot-sequence'),drawer);
   move($('pg-guided-hint'),info);
   // Force the existing, precise FIBA half-court view by invoking its original control.
-  $('pg-court-half')?.click();
+  // On phones the shared view controller defaults to half court.
  }else if(mode==='combined'){
   // The original Quick Tracker, including both teams and stat workflows,
   // remains mounted and becomes a contextual overlay on the court.
@@ -117,7 +129,8 @@ function layout(){
   move(side.querySelector('.pg-court-modes'),drawer);
   move($('pg-half-toggle'),dock);
   move($('pg-guided-hint'),info);
-  $('pg-court-half')?.click();
+  // The shared controller sets phone portrait to half court at load.
+  // Avoid an early click before its data and event handlers are initialized.
   showStats(false);
  }
  updateLastShot();
@@ -127,7 +140,7 @@ drawer?.addEventListener('click',e=>{if(e.target.closest('button'))openMore(fals
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){openMore(false);if(mode==='combined')showStats(false);}});
 document.addEventListener('click',e=>{if(!mobile.matches||drawer.hidden)return;if(!drawer.contains(e.target)&&e.target!==more)openMore(false);});
 mobile.addEventListener('change',layout);
-window.addEventListener('apex:postgame-ready',()=>{layout();updateLastShot();});
+window.addEventListener('apex:postgame-ready',()=>{layout();queueMicrotask(updateLastShot);});
 window.addEventListener('apex:postgame-events-updated',updateLastShot);
 window.addEventListener('apex:shot-review-saved',()=>{queueMicrotask(updateLastShot);});
 window.addEventListener('apex:guided-shot-selected',()=>queueMicrotask(updateLastShot));
