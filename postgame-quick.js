@@ -18,10 +18,10 @@ function chooseAction(a){
  if(a==='player'){player=root.querySelector('[data-action="player"]:focus')?.dataset.player||null;state='stats';render();return;}
  if(a==='shoot'){state='shot';render();return;}
 }
-async function save(type,{points=null,made=null,position=null}={},buttonElement){
+async function save(type,{points=null,made=null,position=null,linkedEventId=null}={},buttonElement){
  if(busy)return null;
  busy=true;
- try{return await api.saveEvent({type,team,playerId:team==='us'?player:null,points,made,position},buttonElement);}
+ try{return await api.saveEvent({type,team,playerId:team==='us'?player:null,points,made,position,linkedEventId},buttonElement);}
  finally{busy=false;}
 }
 async function finishShot(buttonElement){
@@ -99,16 +99,16 @@ root.addEventListener('click',async e=>{
  source=id;selectedPoint=null;last='New shot added';state=team==='us'?(shot.made?'assist':'rebound'):'players';render();return;
  }
  if(a==='noAssist'){reset('Shot recorded without an assist attribution.');return;}
- if(a==='assistPlayer'){const name=b.dataset.player;const prior=player;player=name;const id=await save('assist',{},b);player=prior;if(id)reset('Assist recorded');else render();return;}
+ if(a==='assistPlayer'){const name=b.dataset.player;const prior=player;player=name;const id=await save('assist',{linkedEventId:source},b);player=prior;if(id)reset('Assist recorded');else render();return;}
  if(a.startsWith('reb:')){
   const val=a.slice(4);
-  if(val==='block'){const id=await save('block',{},b);if(id)state='rebound';render();return;}
-  if(val.startsWith('team_')){const prior=player;player=null;const id=await save(val,{},b);player=prior;if(id)reset('Team rebound recorded');else render();return;}
+  if(val==='block'){const id=await save('block',{linkedEventId:source},b);if(id)state='rebound';render();return;}
+  if(val.startsWith('team_')){const prior=player;player=null;const id=await save(val,{linkedEventId:source},b);player=prior;if(id)reset('Team rebound recorded');else render();return;}
   shot={...shot,reboundType:val};state='reboundPlayer';render();return;
  }
  if(a==='reboundPlayer'||a==='reboundTeam'){
   const prior=player;player=a==='reboundPlayer'?b.dataset.player:null;
-  const id=await save(shot.reboundType,{},b);player=prior;
+  const id=await save(shot.reboundType,{linkedEventId:source},b);player=prior;
   if(id)reset('Rebound recorded');else render();return;
  }
  if(a==='done'){reset('Review next play');return;}
