@@ -1,0 +1,72 @@
+/* Film Room v9 — phone/tablet court gestures and orientation layout.
+   No new shot coordinates or stat controls: existing SVG & Quick Track remain authoritative. */
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+const court=$('postgame-court'),api=window.apexPostgame;
+if(!court||!api||api.mode==='stat')return;
+const compact=window.matchMedia('(orientation: portrait) and (max-width: 1100px)');
+const ipad=window.matchMedia('(orientation: portrait) and (min-width: 701px) and (max-width: 1100px)');
+const area=document.querySelector('.pg-shot-court-area');
+const wrap=document.querySelector('.postgame-court-workspace');
+const original=document.createComment('Original iPad court view control');
+let picker=null,pickerParent=null,active=null;
+function deviceSetup(){
+ if(ipad.matches&&api.mode==='combined'){
+  const group=$('pg-court-full')?.closest('.pg-court-modes');
+  if(group&&area&&!picker){
+   picker=group;pickerParent=group.parentNode;
+   pickerParent.insertBefore(original,picker);
+   area.insertBefore(picker,wrap||area.firstChild);
+  }
+ }else if(picker){
+  if(original.parentNode)original.replaceWith(picker);
+  else pickerParent?.appendChild(picker);
+  picker=null;
+ }
+}
+function labels(){
+ const current=$('pg-court-team-label');
+ if(!current)return;
+ const ctl=window.apexFilmCourtView;
+ const g=api.getGame?.()||{};
+ const name=ctl?.currentTeam?.()==='opponent'?(g.opponent||'Opponent'):(g.team_name||'Tracked Team');
+ current.textContent=ctl?.isHalf?.()?name+' OFFENSE':'FULL COURT';
+}
+function courtSwipable(){
+ return compact.matches&&window.apexFilmCourtView?.isHalf?.()&&
+ !window.apexCourtReview?.isBusy?.()&&
+ !(window.apexPostgameQuick?.hasPending?.());
+}
+function start(e){
+ if(!courtSwipable()||!e.isPrimary)return;
+ active={id:e.pointerId,x:e.clientX,y:e.clientY};
+}
+function finish(e){
+ if(!active||e.pointerId!==active.id)return;
+ const dx=e.clientX-active.x,dy=e.clientY-active.y;
+ active=null;
+ if(Math.abs(dx)<52||Math.abs(dx)<Math.abs(dy)*1.35)return;
+ if(!courtSwipable())return;
+ const ctl=window.apexFilmCourtView;
+ const selected=ctl.currentTeam();
+ const currentIsTrackedLeft=(Number(api.getPeriod?.()||1)<=2)!==
+  Boolean(document.getElementById('post-switch-direction')?.getAttribute('aria-pressed')==='true');
+ const currentLeft=selected==='us'?currentIsTrackedLeft:!currentIsTrackedLeft;
+ // Swipe left to reveal the physical right half; swipe right to reveal the left.
+ const towardsOther=currentLeft?dx<0:dx>0;
+ if(!towardsOther)return;
+ window.__apexCourtSwipeUntil=Date.now()+500;
+ ctl.swipeTo(selected==='us'?'opponent':'us');
+}
+court.addEventListener('pointerdown',start,{passive:true});
+court.addEventListener('pointerup',finish,{passive:true});
+court.addEventListener('pointercancel',()=>{active=null;},{passive:true});
+court.addEventListener('click',e=>{if(Date.now()<(window.__apexCourtSwipeUntil||0)){e.preventDefault();e.stopImmediatePropagation();}},true);
+ipad.addEventListener('change',deviceSetup);
+window.addEventListener('apex:postgame-ready',()=>{deviceSetup();labels();});
+window.addEventListener('apex:court-view-updated',labels);
+window.addEventListener('apex:review-direction-changed',labels);
+$('post-period')?.addEventListener('change',()=>queueMicrotask(labels));
+deviceSetup();
+})();
