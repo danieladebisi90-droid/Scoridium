@@ -83,7 +83,7 @@ function begin(location,made){
  if(shotMode&&insertedShot){
   if(team!==insertedShot.team||value!==insertedShot.points){api.notify('Choose the '+insertedShot.points+'PT area on the selected team’s basket.');return;}
   shot={position:location,made:insertedShot.made,points:value,team,inserted:true};
-  selectedJersey=null;step='jersey';render();return;
+  selectedJersey=null;step=team==='opponent'?'category':'jersey';render();return;
  }
  if(shotMode&&guidedTarget){
    if(team!==guidedTarget.team||value!==Number(guidedTarget.points)){
@@ -96,14 +96,14 @@ function begin(location,made){
    shot={position:location,made:guidedTarget.made,points:value,team,guidedId:guidedTarget.id};
    const player=api.getPlayers().find(p=>String(p.id)===String(guidedTarget.player_id));
    selectedJersey=player?{id:player.id,number:player.number,label:'#'+player.number}:{label:'Unassigned'};
-   step=player?'category':'jersey';render();return;
+   step=team==='opponent'||player?'category':'jersey';render();return;
  }
  const detail={position:location,made,points:value,team};
  if(combined){
   window.dispatchEvent(new CustomEvent('apex:postgame-court-shot',{detail}));
   return;
  }
- shot=detail;step='jersey';selectedJersey=null;render();
+ shot=detail;step=team==='opponent'?'category':'jersey';selectedJersey=null;render();
 }
 if(shotMode||combined){
  const selector=$('post-switch-direction');
@@ -118,6 +118,7 @@ if(shotMode||combined){
  });
  const captureClick=ev=>{
   ev.stopImmediatePropagation();ev.preventDefault();
+  if(Date.now()<(window.__apexCourtSwipeUntil||0))return;
   const point=courtPoint(ev);if(!point)return;
   if(shotMode&&insertedShot){if(timer){clearTimeout(timer);timer=null;}begin(point,insertedShot.made);return;}
   if(shotMode&&guidedTarget){if(timer){clearTimeout(timer);timer=null;}begin(point,guidedTarget.made);return;}
@@ -208,7 +209,7 @@ prompt?.addEventListener('click',async ev=>{
  const control=ev.target.closest('button[data-flow]');if(!control||saving)return;
  const action=control.dataset.flow;
  if(action==='cancel'){clear();if(insertedShot){insertedShot=null;window.dispatchEvent(new CustomEvent('apex:insert-shot-cancelled'));}return;}
- if(action==='back'){step='jersey';render();return;}
+ if(action==='back'){if(shot?.team==='opponent'){clear();return;}step='jersey';render();return;}
  if(action==='manualJersey'){
   const n=Number($('post-opp-jersey')?.value);
   if(!Number.isInteger(n)||n<0||n>99){api.notify('Select a jersey between 0 and 99.');return;}
