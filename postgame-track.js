@@ -260,7 +260,7 @@ async function init(){
  });
  $('post-stat-form').addEventListener('submit',e=>{e.preventDefault();void saveStat();});
  $('post-shot-form').addEventListener('submit',e=>{e.preventDefault();void saveShot();});
- try{await refresh();$('postgame-screen').hidden=false;say('Ready. Review recorded events before adding new ones.');}
+ try{await refresh();$('postgame-screen').hidden=false;window.dispatchEvent(new CustomEvent('apex:postgame-ready'));say('Ready. Review recorded events before adding new ones.');}
  catch(e){say('Unable to load existing events: '+e.message);}
 }
 async function touchReview(){
