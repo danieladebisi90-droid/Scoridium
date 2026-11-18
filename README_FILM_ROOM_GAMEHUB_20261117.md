@@ -78,3 +78,12 @@ Run these **after the previous three migrations**, in this order, in **ApexVisio
 - Review timestamp updates are best-effort metadata; an event can save even if its Last Reviewed update fails. This must be checked in staging.
 - **Static checks only** have been completed for the new code. Browser usability, authorization, database triggers, reconciliation, responsiveness and assisted event linking remain unverified. Keep PR draft until tested.
 - Local `supabase-config.js` in the development branch may still point to the original project; use a **separate local test copy** with **ApexVision-Test** project URL and publishable key. Never use the service-role secret in frontend code. Do not deploy the branch against production to test.
+
+## Film Room UX consolidation — latest review (November 17)
+- From Game Hub's completed-game card, Film Room now opens in a **compact modal over Game Hub**; Game Hub stays visible beneath the dimmed backdrop. The modal reuses the existing `film-room.html` three-mode chooser in an iframe, preserving independent statuses and Last Reviewed.
+- Selecting any mode leaves the picker and opens `postgame-track.html?mode=...` as a **full browser viewport** page, not in the ApexVision shell. The app navigation/header is deliberately omitted. Each review mode can have its own page, per the latest approval.
+- Each postgame tracker has a minimal Game Hub back link, compact game details, quarter selector, **Next Quarter** and **End Game** buttons. End Game only **closes review / returns to Game Hub** after confirmation and does not change the official final score or the recorded game's completed status. Next Quarter changes only the selected review quarter.
+- **Stat & Shot Tracking uses one continuous full-court Quick Track workflow**, not separate Stat vs Shot Analysis sub-tabs. Optional shot creation and defensive pressure remain built into the Quick Track shot flow.
+- Internal event IDs remain stored for correct matching and linking, but are hidden from visible shot selection labels.
+- No SQL schema changes were needed in this UX revision. The three additional staging migrations from the previous phase remain prerequisites for review dates, event linking, and footage timeline.
+- Latest UX changes are code-only and have **syntax / DOM reference static checks** but have **not undergone manual cross-device browser tests**, particularly the Game Hub modal inside the shared app-shell iframe. Keep this PR draft until staging passes.
