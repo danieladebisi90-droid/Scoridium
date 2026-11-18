@@ -231,20 +231,40 @@ async function resolvePending(o,action,matchId=null){
 function initHalfCourt(){
  if(!hasCourt)return;
  const court=$('postgame-court'),toggle=$('pg-half-toggle');
- const media=window.matchMedia('(orientation: portrait) and (max-width: 900px)');
+ const media=window.matchMedia('(orientation: portrait) and (max-width: 700px)');
+ const tablet=window.matchMedia('(orientation: portrait) and (min-width: 701px) and (max-width: 1100px)');
  let opponent=false;
  function show(){
   if(!court||!toggle)return;
   const compact=media.matches;
   const half=courtView==='half'||(compact&&courtView!=='full');
   toggle.hidden=!half;
-  if(!half){court.setAttribute('viewBox','0 0 860 470');court.classList.remove('pg-half-view');return;}
+  if(!half){court.setAttribute('viewBox','0 0 860 470');court.classList.remove('pg-half-view');publish();return;}
   const trackedLeft=(Number(period())<=2)!==reversed;const left=opponent?!trackedLeft:trackedLeft;
   court.setAttribute('viewBox',(left?'10':'430')+' 10 420 450');court.classList.add('pg-half-view');
   toggle.textContent=opponent?'Show Tracked Half':'Show Opponent Half';
   toggle.setAttribute('aria-pressed',String(opponent));
+  publish();
+ }
+ function publish(){
+  const team=opponent?'opponent':'us';
+  document.body.classList.toggle('pg-view-opponent',courtView==='half'&&opponent);
+  const game=api.getGame();
+  const title=team==='us'?(game?.team_name||'Tracked Team'):(game?.opponent||'Opponent');
+  const heading=document.getElementById('pg-court-team-label');
+  if(heading)heading.textContent=courtView==='half'?title+' OFFENSE':'FULL COURT';
+  const trackedLeft=(Number(period())<=2)!==reversed;
+  const labels=[document.getElementById('left-basket-label'),document.getElementById('right-basket-label')];
+  for(let i=0;i<2;i++)if(labels[i])labels[i].textContent=(i===0?trackedLeft:!trackedLeft)?(game?.team_name||'Tracked Team'):(game?.opponent||'Opponent');
+  window.dispatchEvent(new CustomEvent('apex:court-view-updated',{detail:{team,half:courtView==='half',reversed}}));
  }
  toggle?.addEventListener('click',()=>{if(window.apexCourtReview?.isBusy())return;opponent=!opponent;show();});
+ window.apexFilmCourtView={
+  isHalf:()=>courtView==='half', currentTeam:()=>opponent?'opponent':'us',
+  setHalf:team=>{if(window.apexCourtReview?.isBusy())return false;courtView='half';opponent=team==='opponent';$('pg-court-full')?.setAttribute('aria-pressed','false');$('pg-court-half')?.setAttribute('aria-pressed','true');show();return true;},
+  swipeTo:team=>{if(courtView!=='half'||window.apexCourtReview?.isBusy())return false;opponent=team==='opponent';show();return true;},
+  showFull:()=>{if(window.apexCourtReview?.isBusy())return false;setCourtView('full');return true;}
+ };
  showCourt=show;
  function setCourtView(value){
   if(window.apexCourtReview?.isBusy()){api.notify('Finish or cancel the active shot before changing court views.');return;}
@@ -255,7 +275,8 @@ function initHalfCourt(){
  }
  $('pg-court-full')?.addEventListener('click',()=>setCourtView('full'));
  $('pg-court-half')?.addEventListener('click',()=>setCourtView('half'));
- media.addEventListener('change',show);
+ media.addEventListener('change',()=>{if(media.matches&&courtView==='full'){courtView='half';$('pg-court-full')?.setAttribute('aria-pressed','false');$('pg-court-half')?.setAttribute('aria-pressed','true');}show();});
+ tablet.addEventListener('change',show);
  window.addEventListener('apex:review-direction-changed',ev=>{reversed=!!ev.detail?.reversed;show();highlightGuidedHalf(sequence[index]);});
  window.addEventListener('apex:guided-shot-selected',ev=>{if(ev.detail?.guided&&!insertActive){opponent=ev.detail.team==='opponent';show();}});
  window.addEventListener('apex:insert-shot-focus',ev=>{opponent=ev.detail.team==='opponent';show();});
