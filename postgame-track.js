@@ -180,9 +180,16 @@ async function init(){
  if(response.error||!response.data){say('Game not available to the selected team and season.');return;}
  game=response.data;
  try{
+  const cached=sessionStorage.getItem('scoridium:team-preview:'+teamId);
+  if(cached){const theme=JSON.parse(cached);game.team_name=[theme.school_name||theme.club_name,theme.mascot].filter(Boolean).join(' ')||'Tracked team';
+    if(/^#[a-f0-9]{6}$/i.test(theme.primary_color||''))document.documentElement.style.setProperty('--review-primary',theme.primary_color);
+    if(/^#[a-f0-9]{6}$/i.test(theme.secondary_color||''))document.documentElement.style.setProperty('--review-secondary',theme.secondary_color);
+  }
+ }catch(error){console.warn('Stored team theme unavailable',error);}
+ try{
   const teamRes=await supabaseClient.from('teams').select('name,primary_color,secondary_color').eq('id',teamId).maybeSingle();
   if(teamRes.data){
-   game.team_name=teamRes.data.name||'Tracked Team';
+   game.team_name=teamRes.data.name||game.team_name||'Tracked Team';
    if(/^#[a-f0-9]{6}$/i.test(teamRes.data.primary_color||''))document.documentElement.style.setProperty('--review-primary',teamRes.data.primary_color);
    if(/^#[a-f0-9]{6}$/i.test(teamRes.data.secondary_color||''))document.documentElement.style.setProperty('--review-secondary',teamRes.data.secondary_color);
   }
@@ -235,6 +242,7 @@ async function init(){
  const court=$('postgame-court');const parent=court.parentElement;
  const wrap=document.createElement('div');wrap.className='postgame-court-workspace';parent.insertBefore(wrap,court);wrap.appendChild(court);
  const quick=$('post-quick-root');if(mode==='combined'&&quick)wrap.appendChild(quick);
+ const flowPrompt=$('postgame-court-prompt');if(flowPrompt)wrap.appendChild(flowPrompt);
  $('post-shot-links-close').onclick=()=>linksDialog.close();
  $('post-shot-links-open').onclick=()=>{renderEvents();renderObservations();linksDialog.showModal();};
  for(const dlg of [shotDialog,linksDialog])dlg.addEventListener('click',e=>{if(e.target===dlg)dlg.close();});
