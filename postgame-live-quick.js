@@ -307,14 +307,24 @@
   });
   window.apexPostgameQuick={ready:()=>unresolved===0,flush:()=>writeQueue,reset,hasPending:()=>!!selectedCourtShot||!!pendingCourtShot||unresolved>0,
     selectingLocation:()=>!!pendingCourtShot,abort:()=>{selectedCourtShot=null;pendingCourtShot=null;reset();}};
-  let tries=0;
-  const hydrate=async()=>{
-    if(!api.getPlayers().length&&++tries<60){setTimeout(hydrate,150);return;}
+  // Render immediately even before asynchronous roster hydration. This avoids
+  // a blank combined-mode column while the parent page is loading.
+  const hydrate=()=>{
     players=api.getPlayers();
     teamMode=false;
     const g=api.getGame?.()||{};
-    teamName=g.team_name||'Tracked team';currentGame={opponent:g.opponent||'Opponent'};
+    teamName=g.team_name||'Tracked team';
+    currentGame={opponent:g.opponent||'Opponent'};
     render();
   };
   hydrate();
+  window.addEventListener('apex:postgame-ready',hydrate);
+  // A later roster response must also update the jersey grid without a mode tap.
+  let tries=0;
+  const rosterCheck=()=>{
+    if(players.length||++tries>80)return;
+    if(api.getPlayers().length){hydrate();return;}
+    setTimeout(rosterCheck,150);
+  };
+  rosterCheck();
 })();
