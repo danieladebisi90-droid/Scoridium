@@ -1,19 +1,27 @@
 <!doctype html>
-<html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Film Room · ApexVision</title><link rel="manifest" href="manifest.webmanifest">
 <link rel="stylesheet" href="film-analysis.css"><link rel="stylesheet" href="film-room.css"></head>
-<body><main class="film-shell">
-<header><a id="room-back" href="gamehub.html" class="film-back">← Game Hub</a><span class="film-brand">APEXVISION</span></header>
+<body><main class="film-shell room-shell">
+<header><a href="gamehub.html" class="film-back">← Game Hub</a><span class="film-brand">APEXVISION</span></header>
 <h1>Film Room</h1><p id="room-matchup">Loading game…</p>
 <div id="room-message" class="film-alert" role="status" aria-live="polite"></div>
-<section id="room-cards" aria-label="Tracking activities" hidden>
-<article class="room-card" data-activity="stat"><div class="room-card-heading"><h2>Stat Tracking</h2><span class="room-status">Not Started</span></div>
-<p>Record and review points, assists, rebounds, fouls, steals and turnovers.</p><div class="room-actions"><button type="button" data-open>Start</button><button type="button" class="room-complete" data-complete hidden>Mark Completed</button></div></article>
-<article class="room-card" data-activity="shot"><div class="room-card-heading"><h2>Shot Tracking</h2><span class="room-status">Not Started</span></div>
-<p>Capture shot locations, makes and misses independently of Stat Tracking.</p><div class="room-actions"><button type="button" data-open>Start</button><button type="button" class="room-complete" data-complete hidden>Mark Completed</button></div></article>
-<article class="room-card" data-activity="film"><div class="room-card-heading"><h2>Film Analysis</h2><span class="room-status">Not Started</span></div>
-<p>Review recorded events and add detailed shot and defensive classifications.</p><div class="room-actions"><button type="button" data-open>Start</button><button type="button" class="room-complete" data-complete hidden>Mark Completed</button></div></article>
+<section id="room-cards" aria-label="Review workflows" hidden>
+<article class="room-card" data-activity="stat">
+<div class="room-card-main"><span class="room-icon" aria-hidden="true">▤</span><div class="room-copy"><h2>Stat Tracking</h2>
+<p>Complete player and team statistics with Quick Track.</p><small class="room-reviewed">Last Reviewed: Not reviewed yet</small></div>
+<span class="room-status">Not Started</span></div>
+<div class="room-actions"><button type="button" data-open>Start</button><button type="button" class="room-complete" data-complete hidden>Mark Completed</button></div></article>
+<article class="room-card" data-activity="shot">
+<div class="room-card-main"><span class="room-icon" aria-hidden="true">◎</span><div class="room-copy"><h2>Shot Tracking</h2>
+<p>Place shots on the full court and link recorded attempts.</p><small class="room-reviewed">Last Reviewed: Not reviewed yet</small></div>
+<span class="room-status">Not Started</span></div>
+<div class="room-actions"><button type="button" data-open>Start</button><button type="button" class="room-complete" data-complete hidden>Mark Completed</button></div></article>
+<article class="room-card" data-activity="film">
+<div class="room-card-main"><span class="room-icon" aria-hidden="true">▦</span><div class="room-copy"><h2>Stat &amp; Shot Tracking</h2>
+<p>Complete stats, court locations and optional shot analysis together.</p><small class="room-reviewed">Last Reviewed: Not reviewed yet</small></div>
+<span class="room-status">Not Started</span></div>
+<div class="room-actions"><button type="button" data-open>Start</button><button type="button" class="room-complete" data-complete hidden>Mark Completed</button></div></article>
 </section>
-<p class="room-note">Each activity has its own status. The completed game remains final; opening a tracker must not restart the live game.</p>
+<p class="room-note">All options use the same game data. You can return to any workflow without starting over. A completed game keeps its official final score.</p>
 </main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="film-room.js" defer></script></body></html>
