@@ -180,3 +180,14 @@ Run **`MIGRATION_APEXVISION_POSTGAME_OPPONENT_JERSEYS.sql`** ONLY in `ApexVision
 - Selecting the tracked team's basket keeps player jersey/stat prompts. Selecting the opponent's basket uses the existing team-level opponent stat buttons, **without an opponent jersey prompt** (in both shot-only and combined workflows).
 - Changes: `postgame-responsive-v9.css`, `postgame-responsive-v9.js`, updated postgame HTML, guided court controller, shot flow, and original Quick Tracker adapter.
 - Static JS syntax, HTML ID uniqueness and CSS block counts passed. **No actual pointer/touch, tablet layout or Supabase event-persistence test yet.** Keep draft and production untouched.
+
+## Film Room v10 — phone bug fixes and full-width iPad portrait (November 18, 2026)
+
+- Fixed root cause of missing mobile Shot Tracking controls: `postgame-mobile-v8.js` had treated the page as initialized before the async creation of `.postgame-court-workspace`; it now waits for the wrapper and performs the DOM arrangement at `apex:postgame-ready`.
+- Phone Stat Tracking uses one explicit full-width column: tracked team, opponent team, then Last Event. Removes narrow side-by-side compression and word-by-word team names. Maintains original Quick Tracker buttons and workflows.
+- Phone Shot Tracking and Combined use correctly proportioned FIBA SVG `viewBox` for half-court views, with transparent unused wrapper space rather than forced tan SVG background. Guided/Free Tracking buttons live in **More** (same existing controls). Previous/Skip/Next are displayed on the tracking surface only in Guided Mode. Shot info above court, navigation/Add Shot below.
+- iPad portrait: full-width court in both Shot Tracking and Combined. Combined keeps the original tracked/opponent Quick Tracker containers side-by-side under the court, with optional full/half toggle.
+- One coherent review toolbar for phone/iPad portrait: quarter selector, Next Quarter, Finish Review, More. iPad reuses existing button nodes/listeners; secondary review options open from More.
+- Court team labels shortened and positioned within the correct offensive half to prevent oversized SVG text. Maintains halftime switching and existing swipe-to-switch.
+- Added `postgame-responsive-v10.css` and cache version update in tracking HTML. No SQL required.
+- Static JavaScript parse, unique HTML IDs, and balanced CSS blocks passed. **Visual iPhone/iPad and Supabase/touch validation still pending. Do not merge the draft PR into main before regression testing.**
