@@ -1,0 +1,78 @@
+/* ApexVision Film Room v5 — screen-filling review layout.
+   Adapt existing tracker containers and exact FIBA SVG; no forked controls. */
+:root{--pg-surface:#fff;--pg-edge:#c8d5e6;--pg-shadow:0 6px 20px #092d5914}
+.postgame-fullscreen{background:#eaf1f9;min-height:100dvh}
+.postgame-fullscreen .film-shell{width:min(100%,2100px)!important;max-width:none!important;margin:0 auto;padding:10px clamp(10px,1.7vw,34px) 30px!important}
+.postgame-fullscreen .postgame-topline{display:flex!important;align-items:center;gap:clamp(9px,1.4vw,22px);min-height:52px!important;padding:8px clamp(12px,1.5vw,24px)!important;margin:0 0 12px!important;background:var(--review-primary,#063d82);border:0!important;border-radius:11px;color:#fff;box-shadow:var(--pg-shadow)}
+.postgame-fullscreen .postgame-topline #back-to-room{flex:none;color:white!important;border:1px solid #ffffff66;border-radius:8px;padding:8px 12px;text-decoration:none;font-size:13px;white-space:nowrap}
+.postgame-fullscreen .postgame-topline #back-to-room:hover{background:#ffffff25}
+.postgame-fullscreen .postgame-topline #page-title{font-weight:900!important;color:#fff!important;font-size:clamp(15px,1.6vw,22px)!important;line-height:1.2}
+.postgame-fullscreen .postgame-topline #game-title{margin-left:auto;color:#e1ebfa;font-size:clamp(10px,.95vw,13px);text-align:right;line-height:1.4}
+.postgame-fullscreen .postgame-banner{display:none!important}
+.postgame-fullscreen #postgame-scoreboard{min-height:96px!important;max-width:none!important;width:100%;padding:12px clamp(15px,2vw,34px)!important;margin:0 0 9px!important;border-radius:13px!important}
+.postgame-fullscreen .pg-score-team strong{font-size:clamp(32px,4.5vw,55px)!important}
+.postgame-fullscreen #postgame-message{margin:4px 2px 9px!important;min-height:16px!important;font-size:12px!important}
+.postgame-fullscreen #postgame-screen>.pg-review-toolbar{display:flex!important;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:#fff;border:1px solid var(--pg-edge);box-shadow:var(--pg-shadow);border-radius:12px;margin:0 0 13px;padding:9px 13px}
+.postgame-fullscreen .pg-review-toolbar>.postgame-controls{display:flex!important;float:none!important;max-width:none!important;width:auto!important;margin:0!important;flex:none}
+.postgame-fullscreen .pg-review-toolbar>.postgame-controls>label{display:none!important}
+.postgame-fullscreen .pg-review-toolbar>.postgame-controls>label:first-child{display:flex!important;align-items:center;gap:8px;white-space:nowrap;margin:0}
+.postgame-fullscreen .pg-review-toolbar #post-period{margin:0!important;min-width:86px;padding:10px}
+.postgame-fullscreen .pg-review-toolbar>.postgame-quarter-actions{display:flex!important;align-items:center;justify-content:space-between;flex:1;gap:14px;flex-wrap:wrap;margin:0!important;padding:0!important;min-height:0!important}
+.postgame-fullscreen .pg-review-tools,.postgame-fullscreen .pg-review-steps{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.postgame-fullscreen .pg-review-tools button,.postgame-fullscreen .pg-review-steps button{font-size:12px;font-weight:850;min-height:41px;padding:8px 13px;border-radius:8px;background:#f6f9fe;color:var(--review-primary,#063d82);border:1px solid #b9c9dc}
+.postgame-fullscreen .pg-review-tools button:hover,.postgame-fullscreen .pg-review-steps button:hover{filter:brightness(.94)}
+.postgame-fullscreen .pg-review-tools button[hidden]{display:none!important}
+.postgame-fullscreen #post-end-review{background:var(--review-primary,#063d82)!important;color:#fff!important}
+.postgame-fullscreen.pg-v3-stat #post-switch-direction,
+.postgame-fullscreen.pg-v3-stat #post-shot-links-open,
+.postgame-fullscreen.pg-v3-shot #post-quick-review{display:none!important}
+.postgame-fullscreen #post-stat-section,.postgame-fullscreen #post-shot-section{width:100%!important;max-width:none!important;margin:0!important}
+.postgame-fullscreen #post-stat-section>.postgame-section-top,.postgame-fullscreen #post-shot-section>.postgame-court-head{display:flex!important;align-items:center;min-height:34px!important;margin:0 0 8px!important;padding:0 3px!important}
+.postgame-fullscreen #post-stat-section>.postgame-section-top h2,.postgame-fullscreen #post-shot-section>.postgame-court-head h2{font-size:clamp(14px,1.2vw,18px)!important;margin:0!important;letter-spacing:.3px;color:var(--review-primary,#063d82)}
+.postgame-fullscreen.pg-v3-stat .qv-layout{display:grid!important;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)!important;grid-template-rows:auto auto!important;align-items:stretch;gap:clamp(10px,1.2vw,24px)!important;min-height:0!important;height:auto!important}
+.postgame-fullscreen.pg-v3-stat .qv-tracked,.postgame-fullscreen.pg-v3-stat .qv-opponent{min-height:clamp(370px,52dvh,660px)!important;padding:clamp(14px,1.5vw,26px)!important;border-radius:13px;background:#fff!important;box-shadow:var(--pg-shadow);border-top:5px solid var(--review-primary,#063d82)!important}
+.postgame-fullscreen.pg-v3-stat .qv-tracked.qv-highlight,.postgame-fullscreen.pg-v3-stat .qv-opponent.qv-opponent-highlight{border:3px solid var(--review-secondary,#e7b537)!important}
+.postgame-fullscreen.pg-v3-stat .qv-action-surface{flex:1;padding-top:clamp(15px,2.5dvh,36px);display:flex;flex-direction:column;justify-content:flex-start!important}
+.postgame-fullscreen.pg-v3-stat .qv-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:clamp(7px,.9vw,14px)!important}
+.postgame-fullscreen.pg-v3-stat .qv-button{min-height:clamp(49px,6dvh,75px)!important;font-size:clamp(14px,1.35vw,20px)!important}
+.postgame-fullscreen.pg-v3-stat .qv-last{grid-column:1/-1!important;margin:0!important;padding:11px 16px!important;border-radius:10px;background:#fff!important;box-shadow:var(--pg-shadow)}
+.postgame-fullscreen .postgame-court-workspace{position:relative!important;width:100%!important;min-height:0!important}
+.postgame-fullscreen.pg-v3-shot #post-shot-section{width:min(100%,1770px)!important;margin:0 auto!important}
+.postgame-fullscreen.pg-v3-shot #postgame-court{width:100%;min-height:0!important;height:auto!important;max-height:calc(100dvh - 320px)!important;display:block;margin:0 auto}
+.postgame-fullscreen.pg-v3-combined #post-stat-section>.postgame-section-top{display:none!important}
+.postgame-fullscreen.pg-v3-combined #post-shot-section>.postgame-court-head{display:none!important}
+.postgame-fullscreen.pg-v3-combined .postgame-court-workspace{display:grid!important;grid-template-columns:minmax(0,1.38fr) minmax(365px,.95fr)!important;gap:clamp(12px,1.5vw,25px)!important;align-items:start;min-height:0!important}
+.postgame-fullscreen.pg-v3-combined #postgame-court{display:block;grid-column:1;grid-row:1;width:100%;min-height:0!important;max-height:calc(100dvh - 305px)!important}
+.postgame-fullscreen.pg-v3-combined #post-quick-root{grid-column:2;grid-row:1;display:block!important;overflow:auto!important;min-height:0!important;max-height:calc(100dvh - 300px)!important;width:100%!important}
+.postgame-fullscreen.pg-v3-combined .qv-layout{display:flex!important;flex-direction:column;gap:10px!important;min-height:0!important}
+.postgame-fullscreen.pg-v3-combined .qv-tracked,.postgame-fullscreen.pg-v3-combined .qv-opponent{flex:none!important;min-height:0!important;padding:clamp(12px,1vw,20px)!important;background:#fff!important;box-shadow:var(--pg-shadow);border-radius:11px}
+.postgame-fullscreen.pg-v3-combined .qv-button{min-height:clamp(42px,5vh,55px)!important}
+.postgame-fullscreen.pg-v3-combined .qv-grid{gap:7px!important}
+.postgame-fullscreen.pg-v3-combined .qv-last{display:none!important}
+.postgame-fullscreen.pg-v3-combined .qv-tracked{border-left:5px solid var(--review-secondary,#e7b537)}
+.postgame-fullscreen.pg-v3-combined .qv-opponent{border-left:5px solid var(--review-primary,#063d82)}
+.postgame-fullscreen .post-legacy-form{display:none!important}
+#pg-guided-toolbar{display:none}
+.postgame-fullscreen.pg-v3-shot #pg-guided-toolbar{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap;background:#fff;border:1px solid var(--pg-edge);border-radius:11px;padding:9px 13px;margin:0 0 12px;box-shadow:var(--pg-shadow)}
+.pg-guided-options{display:flex;gap:7px}
+.pg-guided-options button,.pg-guided-navigation button{background:#f3f7fd;color:#092d5b;border:1px solid #a8bdd8;padding:8px 12px;border-radius:7px;font-size:12px;font-weight:850;min-height:37px}
+.pg-guided-options button[aria-pressed=true]{background:var(--review-primary,#063d82);color:#fff}
+.pg-guided-navigation{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+#pg-guided-status{font-size:12px;font-weight:750;color:#24466a}
+#pg-guided-hint{display:none}
+.postgame-fullscreen.pg-guided-on #pg-guided-hint{display:block;background:var(--review-primary,#063d82);color:#fff;border-left:5px solid var(--review-secondary,#e7b537);border-radius:10px;padding:12px 16px;margin:0 0 10px;font-weight:800}
+.postgame-fullscreen.pg-guided-on #postgame-court{outline:2px solid var(--review-secondary,#e7b537);outline-offset:2px}
+.postgame-fullscreen.pg-guided-on #post-shot-preview{font-size:12px}
+#pg-review-queue-dialog{max-width:min(650px,94vw);border:0;border-radius:14px;padding:18px;box-shadow:0 20px 65px #031d4380}
+#pg-review-queue-dialog::backdrop{background:#001a39aa}
+#pg-review-queue-list{display:grid;gap:8px;max-height:56dvh;overflow-y:auto;margin:14px 0}
+.pg-review-item{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:12px;border:1px solid var(--pg-edge);border-radius:9px;background:#f8fbff}
+.pg-review-item small{display:block;color:#576a80}
+.pg-review-item button{font-size:12px;font-weight:800;padding:8px 10px;border:1px solid #a8bdd8;border-radius:7px;background:#fff}
+@media(max-width:1120px){.postgame-fullscreen.pg-v3-combined .postgame-court-workspace{grid-template-columns:minmax(0,1.1fr) minmax(290px,.9fr)!important;gap:12px!important}}
+@media(max-width:800px){.postgame-fullscreen .postgame-topline #game-title{max-width:260px}.postgame-fullscreen .pg-review-toolbar>.postgame-quarter-actions{flex:1 1 100%}.postgame-fullscreen.pg-v3-combined .postgame-court-workspace{grid-template-columns:minmax(0,1fr) minmax(280px,.95fr)!important}.postgame-fullscreen.pg-v3-combined #postgame-court{max-height:65dvh!important}}
+@media(max-width:680px){.postgame-fullscreen .postgame-topline{flex-wrap:wrap;row-gap:6px}.postgame-fullscreen .postgame-topline #game-title{margin-left:0;flex:1 1 100%;text-align:left}.postgame-fullscreen .postgame-scoreboard{min-height:76px!important;padding:8px!important}.postgame-fullscreen .pg-score-team strong{font-size:clamp(25px,8vw,38px)!important}.postgame-fullscreen .pg-review-toolbar>.postgame-quarter-actions{flex:1 1 100%}.postgame-fullscreen .pg-review-steps{margin-left:auto}.postgame-fullscreen .pg-review-tools button,.postgame-fullscreen .pg-review-steps button{min-height:38px;padding:7px 9px}.postgame-fullscreen.pg-v3-stat .qv-layout{display:flex!important;flex-direction:column}.postgame-fullscreen.pg-v3-stat .qv-tracked,.postgame-fullscreen.pg-v3-stat .qv-opponent{min-height:200px!important;padding:12px!important}.postgame-fullscreen.pg-v3-combined .postgame-court-workspace{display:flex!important;flex-direction:column}.postgame-fullscreen.pg-v3-combined #postgame-court{width:100%;max-height:55dvh!important}.postgame-fullscreen.pg-v3-combined #post-quick-root{width:100%!important;max-height:none!important}.postgame-fullscreen.pg-v3-shot #postgame-court{max-height:57dvh!important}}
+@media(orientation:landscape) and (max-height:600px){.postgame-fullscreen .postgame-topline{min-height:42px!important;padding:5px 12px!important}.postgame-fullscreen #postgame-scoreboard{min-height:64px!important;padding:5px 12px!important}.postgame-fullscreen .pg-score-team strong{font-size:27px!important}.postgame-fullscreen .pg-review-toolbar{padding:5px 9px!important;margin-bottom:7px!important}.postgame-fullscreen.pg-v3-shot #postgame-court,.postgame-fullscreen.pg-v3-combined #postgame-court{max-height:calc(100dvh - 215px)!important}}
+
+.postgame-fullscreen.pg-v3-stat #pg-unmatched-open{display:none!important}
+@media(orientation:portrait) and (max-width:900px){.postgame-fullscreen #pg-half-toggle:not([hidden]){display:inline-flex!important}.postgame-fullscreen .postgame-court-workspace #postgame-court{touch-action:manipulation}}

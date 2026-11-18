@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Post-game Tracking · ApexVision</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="film-analysis.css">
+<link rel="stylesheet" href="quick-track.css"><link rel="stylesheet" href="postgame-track.css?v=film-v5"><link rel="stylesheet" href="postgame-layout-v5.css?v=film-v6"><link rel="stylesheet" href="postgame-layout-v6.css?v=film-v6"><link rel="stylesheet" href="postgame-mobile-v7.css?v=film-v7"><link rel="stylesheet" href="postgame-mobile-v8.css?v=film-v8"><link rel="stylesheet" href="postgame-responsive-v9.css?v=film-v9"><link rel="stylesheet" href="postgame-responsive-v10.css?v=film-v10">
+</head>
+<body class="postgame-fullscreen"><main class="film-shell">
+<header class="postgame-topline" aria-label="Film Room navigation"><a id="back-to-room" class="film-back" href="gamehub.html"><span aria-hidden="true">←</span> Film Room</a><strong id="page-title">Post-game Tracking</strong><span id="game-title">Loading completed game…</span></header>
+<p class="postgame-banner">This is a post-game review. Recording statistics here will not restart the game or change the official final score. Avoid recording an event that is already present.</p>
+<section id="postgame-scoreboard" class="postgame-scoreboard" aria-label="Shared tracked score">
+<div class="pg-score-team"><small id="pg-score-team-name">TRACKED TEAM</small><strong id="pg-score-us">0</strong></div>
+<div class="pg-score-center"><small id="pg-score-period">Q1 REVIEW</small><span>TRACKED SCORE</span><small id="pg-score-official">OFFICIAL FINAL —</small></div>
+<div class="pg-score-team"><small id="pg-score-opponent-name">OPPONENT</small><strong id="pg-score-opponent">0</strong></div></section>
+<p id="postgame-message" class="film-alert" role="status" aria-live="polite">Loading…</p>
+<section id="postgame-screen" hidden><button type="button" id="pg-mobile-more" aria-expanded="false" aria-controls="pg-mobile-extra">More tools</button><div id="pg-mobile-extra" hidden></div>
+<div class="pg-review-toolbar" aria-label="Review navigation">
+<div class="postgame-controls">
+<label><span class="pg-visually-hidden">Quarter</span><select id="post-period" aria-label="Review quarter"></select></label>
+<label>Team<select id="post-team"><option value="us">Tracked team</option><option value="opponent">Opponent</option></select></label>
+<label>Player (optional, tracked team only)<select id="post-player"><option value="">Unassigned / Team</option></select></label>
+</div>
+<div class="postgame-quarter-actions"><div class="pg-review-tools"><button type="button" id="post-switch-direction" hidden>Switch Directions</button><button type="button" id="post-quick-review">Play-by-Play</button><button type="button" id="post-shot-links-open">Shot Links <span id="post-shot-link-count"></span></button><button type="button" id="pg-unmatched-open">Unmatched Shots <span id="pg-unmatched-count"></span></button><button type="button" id="pg-half-toggle" hidden>Show Opponent Half</button></div></div></div><div class="pg-review-steps pg-floating-steps"><button type="button" id="post-next-quarter">Next Quarter</button><button type="button" id="post-end-review" title="Finish the review without changing the official completed game">Finish Review</button></div><section id="post-stat-section" class="postgame-panel" hidden>
+<div class="postgame-section-top"><h2 class="pg-quick-heading">QUICK TRACK</h2><button type="button" id="quick-team-mode" aria-pressed="false" hidden>Player Mode</button></div><div id="post-quick-root" class="post-quick-root"></div><button id="post-review-save-anchor" type="button" hidden aria-hidden="true"></button><details class="post-legacy-form"><summary>Advanced manual entry</summary><h3>Record a game event</h3>
+<p>Choose an event, then save it. Existing events are listed below for review. Shot locations can be filled in separately through Shot Tracking.</p>
+<form id="post-stat-form">
+<div class="postgame-controls">
+<label>Event<select id="post-stat-type">
+<option value="shot">Field goal</option><option value="free_throw">Free throw</option>
+<option value="assist">Assist</option><option value="offensive_rebound">Offensive rebound</option>
+<option value="defensive_rebound">Defensive rebound</option><option value="steal">Steal</option>
+<option value="turnover">Turnover</option><option value="block">Block</option>
+<option value="foul">Personal foul</option>
+<option value="team_offensive_rebound">Team offensive rebound</option>
+<option value="team_defensive_rebound">Team defensive rebound</option>
+</select></label>
+<label id="post-points-wrap">Shot value<select id="post-stat-points"><option value="2">2 points</option><option value="3">3 points</option></select></label>
+<label id="post-result-wrap">Result<select id="post-stat-made"><option value="true">Made</option><option value="false">Missed</option></select></label>
+</div>
+<button type="submit" id="post-stat-save" class="film-save">Save new event</button>
+</form></details></section>
+<section id="post-shot-section" class="postgame-panel" hidden>
+<div class="pg-shot-workspace"><div class="pg-mobile-combined-tabs" role="group" aria-label="Combined tracking view"><button type="button" id="pg-mobile-court-tab" aria-pressed="true">Court</button><button type="button" id="pg-mobile-stats-tab" aria-pressed="false">Stat Tracker</button></div>
+<aside class="pg-shot-sidebar" aria-label="Shot tracking controls">
+<div id="pg-guided-toolbar" aria-label="Shot Tracking mode">
+ <div class="pg-guided-options">
+  <button type="button" id="pg-guided-free" aria-pressed="true">Free Tracking</button>
+  <button type="button" id="pg-guided-enable" aria-pressed="false">Guided Tracking</button>
+ </div>
+ <div id="pg-guided-status" role="status">Choose how to track shots.</div>
+ <div class="pg-guided-navigation">
+  <button type="button" id="pg-guided-previous">Previous</button>
+  <button type="button" id="pg-guided-skip">Skip</button>
+  <button type="button" id="pg-guided-next">Next</button>
+ </div>
+</div>
+<div class="pg-court-modes" role="group" aria-label="Court view">
+<button type="button" id="pg-court-full" aria-pressed="true">Full Court</button>
+<button type="button" id="pg-court-half" aria-pressed="false">Half Court</button>
+</div>
+<div id="pg-guided-hint" aria-live="polite"></div>
+<div class="pg-insert-actions"><button type="button" id="pg-add-shot">+ Record a Shot</button></div>
+<form id="pg-add-shot-form" hidden>
+<strong>Insert a missing shot</strong>
+<label>Team<select id="pg-add-shot-team"><option value="us">Tracked team</option><option value="opponent">Opponent</option></select></label>
+<label>Result<select id="pg-add-shot-made"><option value="false">Missed</option><option value="true">Made</option></select></label>
+<label>Shot value<select id="pg-add-shot-value"><option value="2">2PT</option><option value="3">3PT</option></select></label>
+<div class="pg-add-shot-buttons"><button type="submit">Choose Location</button><button type="button" id="pg-add-shot-cancel">Cancel</button></div>
+</form>
+<div id="pg-shot-sequence" class="pg-shot-sequence" aria-live="polite"></div>
+</aside>
+<div class="pg-shot-court-area">
+<div class="postgame-court-head"><h2>SHOT TRACKER</h2></div>
+<p>Tap the exact FIBA full court to choose a location. Match an existing shot first whenever one was stat-tracked live.</p>
+<div id="pg-court-team-label" class="pg-court-team-label" role="status">FULL COURT</div>
+<svg id="postgame-court" viewBox="0 0 860 470" preserveAspectRatio="xMidYMid meet" role="img" aria-label="FIBA basketball court for post-game shot location selection">
+<g id="full-court-art" pointer-events="none">
+    
+<!-- OUTER COURT BORDER -->
+<rect x="1.5" y="1.5" width="857" height="467"
+      rx="4"
+      fill="#D2A06D"
+      stroke="#B98556"
+      stroke-width="3"/>
+
+<!-- INNER COURT BOUNDARY -->
+<rect x="10" y="10" width="840" height="450"
+      fill="none"
+      stroke="white"
+      stroke-width="3"/>
+
+<!-- Half-court line and centre circle -->
+<line x1="430" y1="10" x2="430" y2="460"
+      stroke="white" stroke-width="3"/>
+
+<!-- CENTRE CIRCLE -->
+<circle cx="430" cy="235" r="54"
+        fill="none" stroke="white" stroke-width="3"/>
+
+<!-- LEFT PAINT -->
+<path d="M10 161.5 H184 V308.5 H10"
+      fill="none" stroke="white" stroke-width="3"/>
+
+<!-- RIGHT PAINT -->
+<path d="M850 161.5 H676 V308.5 H850"
+      fill="none" stroke="white" stroke-width="3"/>
+
+<!-- FREE THROW CIRCLES -->
+<circle cx="184" cy="235" r="54"
+        fill="none" stroke="white" stroke-width="3"/>
+
+<circle cx="676" cy="235" r="54"
+        fill="none" stroke="white" stroke-width="3"/>
+
+<!-- LEFT FIBA THREE-POINT LINE -->
+<path d="M10 37 H99.69
+         A202.5 202.5 0 0 1 99.69 433
+         H10"
+      fill="none" stroke="white" stroke-width="3"/>
+
+<!-- RIGHT FIBA THREE-POINT LINE -->
+<path d="M850 37 H760.31
+         A202.5 202.5 0 0 0 760.31 433
+         H850"
+      fill="none" stroke="white" stroke-width="3"/>
+
+<!-- BACKBOARDS -->
+<line x1="46" y1="208" x2="46" y2="262"
+      stroke="white" stroke-width="4"/>
+
+<line x1="814" y1="208" x2="814" y2="262"
+      stroke="white" stroke-width="4"/>
+
+<!-- LEFT BASKET -->
+<circle cx="57.25" cy="235" r="7"
+        fill="none" stroke="white" stroke-width="3"/>
+
+<!-- RIGHT BASKET -->
+<circle cx="802.75" cy="235" r="7"
+        fill="none" stroke="white" stroke-width="3"/>
+
+<!-- NO-CHARGE SEMICIRCLES -->
+<path d="M57.25 272.5
+         A37.5 37.5 0 0 0 57.25 197.5"
+      fill="none" stroke="white" stroke-width="3"/>
+
+<path d="M802.75 272.5
+         A37.5 37.5 0 0 1 802.75 197.5"
+      fill="none" stroke="white" stroke-width="3"/>
+
+        <text id="left-basket-label"
+      x="325" y="445"
+      text-anchor="middle"
+      font-size="28"
+      font-weight="700"
+      fill="#111"
+      opacity="0.55">
+    TEAM
+</text>
+
+<text id="right-basket-label"
+      x="525" y="445"
+      text-anchor="middle"
+      font-size="28"
+      font-weight="700"
+      fill="#111"
+      opacity="0.55">
+    TEAM
+</text>
+  </g>
+<g id="postgame-markers" pointer-events="none"></g>
+<circle id="postgame-target" cx="-30" cy="-30" r="10" fill="#e3bd20" stroke="#10223f" stroke-width="3" pointer-events="none"/>
+</svg>
+<p id="post-shot-preview" class="postgame-selection">Single click = make · Double click = miss</p><div id="postgame-court-prompt" class="postgame-court-prompt" hidden aria-live="polite"></div></div></div>
+<dialog id="post-shot-dialog" class="postgame-dialog"><div class="postgame-dialog-top"><strong>Record Shot</strong><button type="button" id="post-shot-dialog-close" aria-label="Close">×</button></div><form id="post-shot-form">
+<div class="postgame-controls">
+<label>Result<select id="post-shot-made"><option value="true">Made</option><option value="false">Missed</option></select></label>
+<label>Record as<select id="post-shot-action"><option value="match">Attach to an existing unlocated shot</option><option value="new">New shot that was not previously tracked</option></select></label>
+</div>
+<label id="post-existing-label">Matching existing shot<select id="post-shot-existing"></select></label><fieldset id="post-shot-analysis" hidden><legend>Optional analysis</legend><label>Shot creation<select id="post-shot-creation"><option value="">Not classified</option><option value="catch_shoot">Catch &amp; Shoot</option><option value="pull_up">Pull-Up</option><option value="drive">Drive / Layup</option><option value="post">Post Move</option><option value="putback">Putback</option><option value="other">Other</option></select></label><label>Defensive pressure<select id="post-shot-pressure"><option value="">Not classified</option><option value="open">Open</option><option value="contested">Contested</option><option value="unknown">Unknown</option></select></label></fieldset>
+<p class="postgame-caution" id="post-shot-warning" hidden>Creating a new field-goal attempt adds to basketball statistics. Only use this when you have verified that the shot was not already recorded by Stat Tracking.</p>
+<button type="submit" id="post-shot-save" class="film-save" disabled>Save shot location</button>
+</form></dialog>
+</section>
+<dialog id="pg-review-queue-dialog" aria-label="Unresolved shot matching" class="postgame-dialog">
+ <div class="postgame-dialog-top"><strong>Unmatched Shots</strong><button type="button" id="pg-review-queue-close" aria-label="Close unmatched shots">×</button></div>
+ <p>Review ambiguous shots when convenient. Pending observations are not counted as extra attempts or points.</p>
+ <div id="pg-review-queue-list" role="list"></div>
+</dialog>
+<dialog id="post-shot-links-dialog" class="postgame-dialog postgame-links-dialog"><div class="postgame-dialog-top"><strong>Shot Links</strong><button type="button" id="post-shot-links-close" aria-label="Close">×</button></div><section id="post-observation-section" class="postgame-panel" hidden>
+<h2>Shots recorded by a live Shot Tracker</h2>
+<p>These observations may not be in the official game statistics yet. Match them to an existing shot, or confirm a missing attempt before adding it.</p>
+<div id="post-observations" class="post-observations"></div>
+</section>
+<section class="postgame-panel">
+<div class="postgame-section-top"><h2>Recorded events</h2><button type="button" id="post-refresh">Refresh</button></div>
+<p class="postgame-subtitle">Review the events already associated with this game before entering missing data.</p>
+<div id="post-events"></div>
+</section></dialog>
+</section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="postgame-track.js?v=film-v6" defer></script><script src="postgame-live-quick.js?v=film-v6" defer></script><script src="postgame-court-flow.js?v=film-v6" defer></script><script src="postgame-guided.js?v=film-v10" defer></script>
+<script src="postgame-mobile-v8.js?v=film-v10" defer></script><script src="postgame-responsive-v9.js?v=film-v10" defer></script>
+</body>
+</html>
