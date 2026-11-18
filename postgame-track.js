@@ -159,6 +159,17 @@ async function refresh(){
  $('post-shot-link-count').textContent=pending?'('+pending+')':'';
  }
 }
+function setupAnalysisButtons(){
+ for(const selectId of ['post-shot-creation','post-shot-pressure']){
+  const select=$(selectId),group=document.createElement('div');group.className='post-analysis-buttons';
+  const redraw=()=>{for(const b of group.querySelectorAll('button'))b.setAttribute('aria-pressed',String(b.dataset.value===select.value));};
+  for(const option of [...select.options]){
+   const b=document.createElement('button');b.type='button';b.dataset.value=option.value;b.textContent=option.textContent;
+   b.addEventListener('click',()=>{select.value=option.value;redraw();});group.append(b);
+  }
+  select.hidden=true;select.after(group);redraw();
+ }
+}
 async function init(){
  if(!gameId||!teamId||!seasonId){say('Open this screen from the Film Room.');return;}
  if(typeof supabaseClient==='undefined'){say('Supabase unavailable.');return;}
@@ -200,6 +211,7 @@ async function init(){
  $('post-stat-form').addEventListener('change',resetPending);
  $('post-stat-type').dispatchEvent(new Event('change'));
  $('post-shot-analysis').hidden=mode!=='combined';
+ if(mode==='combined')setupAnalysisButtons();
  $('post-shot-made').addEventListener('change',()=>{resetPending();refreshChoices();});
  $('post-shot-action').addEventListener('change',()=>{resetPending();refreshChoices();});
  {
@@ -316,6 +328,6 @@ window.apexPostgame={get mode(){return mode;},get gameId(){return gameId;},getPl
  saveClassification:async(id,creation,pressure)=>{
    if(!id||!creation&&!pressure)return true;
    return await mergeClassification(id,creation,pressure);
- },notify:say,refresh};
+ },notify:say,refresh,touchReview};
 void init();
 })();
