@@ -238,6 +238,8 @@ function initHalfCourt(){
   if(!court||!toggle)return;
   const compact=media.matches;
   const half=courtView==='half'||(compact&&courtView!=='full');
+  // The SVG's CSS box must match its viewBox aspect ratio exactly.
+  // A full-court-sized box around a half-court viewBox caused blank hardwood bars.
   toggle.hidden=!half;
   if(!half){court.setAttribute('viewBox','0 0 860 470');court.classList.remove('pg-half-view');publish();return;}
   const trackedLeft=(Number(period())<=2)!==reversed;const left=opponent?!trackedLeft:trackedLeft;
@@ -255,7 +257,13 @@ function initHalfCourt(){
   if(heading)heading.textContent=courtView==='half'?title+' OFFENSE':'FULL COURT';
   const trackedLeft=(Number(period())<=2)!==reversed;
   const labels=[document.getElementById('left-basket-label'),document.getElementById('right-basket-label')];
-  for(let i=0;i<2;i++)if(labels[i])labels[i].textContent=(i===0?trackedLeft:!trackedLeft)?(game?.team_name||'Tracked Team'):(game?.opponent||'Opponent');
+  for(let i=0;i<2;i++)if(labels[i]){
+   const name=(i===0?trackedLeft:!trackedLeft)?(game?.team_name||'Tracked Team'):(game?.opponent||'Opponent');
+   labels[i].textContent=String(name).length>21?String(name).slice(0,18)+'…':name;
+   labels[i].setAttribute('font-size','15');
+   labels[i].setAttribute('x',i===0?'220':'640');
+   labels[i].setAttribute('y','430');
+  }
   window.dispatchEvent(new CustomEvent('apex:court-view-updated',{detail:{team,half:courtView==='half',reversed}}));
  }
  toggle?.addEventListener('click',()=>{if(window.apexCourtReview?.isBusy())return;opponent=!opponent;show();});
