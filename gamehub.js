@@ -2241,3 +2241,23 @@ document.addEventListener('DOMContentLoaded',()=>{
  dlg.addEventListener('click',event=>{if(event.target===dlg)dlg.close();});
  dlg.addEventListener('close',()=>{frame.removeAttribute('src');});
 });
+
+/* Return from a review page to the same Game Hub + Film Room chooser. */
+document.addEventListener('DOMContentLoaded',()=>{
+ const gameId=new URLSearchParams(location.search).get('filmRoomGameId');
+ if(!gameId)return;
+ let attempts=0,finished=false;
+ const resume=setInterval(async()=>{
+  if(finished){clearInterval(resume);return;}
+  if(++attempts>48){clearInterval(resume);return;}
+  const dialog=document.getElementById('apex-film-room-modal'),frame=document.getElementById('apex-film-room-frame');
+  if(!dialog||!frame||dialog.open)return;
+  const listed=gameHubGames.find(g=>String(g.id)===String(gameId)&&g.status==='completed');
+  if(!listed)return;
+  finished=true;clearInterval(resume);
+  const allowed=await scMayTrack(listed);
+  if(!allowed)return;
+  frame.src='film-room.html?gameId='+encodeURIComponent(gameId);
+  dialog.showModal();
+ },250);
+});
