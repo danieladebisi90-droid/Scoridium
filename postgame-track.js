@@ -117,7 +117,6 @@ function refreshChoices(){
  $('post-shot-save').disabled=!point||(match&&!existing.value);
 }
 function renderShotMarkers(){
- if(mode==='stat')return;
  const host=$('postgame-markers');host.replaceChildren();
  for(const event of events){
    if(event.type!=='shot'||event.x==null||event.y==null)continue;
@@ -280,6 +279,10 @@ window.apexPostgame={get mode(){return mode;},get gameId(){return gameId;},getPl
    if(!confirm(prompt))return null;
    const result=await invoke('apexvision_postgame_add_event',{p_game_id:gameId,p_event_id:id,p_type:type,p_team:team,p_period:currentPeriod(),p_player_id:playerId,p_points:points,p_made:made,p_x:position?.x??null,p_y:position?.y??null},button);
    return result===null?null:id;
+ },
+ linkShot:async(event,position,button)=>{
+   const saved=await invoke('apexvision_postgame_assign_shot',{p_game_id:gameId,p_event_id:event.id,p_expected_version:Number(event.version),p_x:position.x,p_y:position.y},button);
+   return saved!==null;
  },
  saveClassification:async(id,creation,pressure)=>{
    if(!id||!creation&&!pressure)return true;
