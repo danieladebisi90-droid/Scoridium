@@ -19,8 +19,8 @@
 <label>Team<select id="post-team"><option value="us">Tracked team</option><option value="opponent">Opponent</option></select></label>
 <label>Player (optional, tracked team only)<select id="post-player"><option value="">Unassigned / Team</option></select></label>
 </div>
-<section id="post-stat-section" class="postgame-panel" hidden>
-<h2>Record a game event</h2>
+<nav id="postgame-mode-tabs" class="postgame-mode-tabs" hidden><button type="button" id="post-tab-stat">Stat Tracking</button><button type="button" id="post-tab-shot">Shot Tracking + Analysis</button></nav><section id="post-stat-section" class="postgame-panel" hidden>
+<div class="postgame-section-top"><h2>QUICK TRACK</h2><button type="button" id="post-quick-review">Play-by-Play</button></div><div id="post-quick-root" class="post-quick-root"></div><details class="post-legacy-form"><summary>Advanced manual entry</summary><h3>Record a game event</h3>
 <p>Choose an event, then save it. Existing events are listed below for review. Shot locations can be filled in separately through Shot Tracking.</p>
 <form id="post-stat-form">
 <div class="postgame-controls">
@@ -37,8 +37,7 @@
 <label id="post-result-wrap">Result<select id="post-stat-made"><option value="true">Made</option><option value="false">Missed</option></select></label>
 </div>
 <button type="submit" id="post-stat-save" class="film-save">Save new event</button>
-</form>
-</section>
+</form></details></section>
 <section id="post-shot-section" class="postgame-panel" hidden>
 <div class="postgame-court-head"><h2>SHOT TRACKER</h2><button type="button" id="post-shot-links-open">Shot Links <span id="post-shot-link-count"></span></button></div>
 <p>Tap the exact FIBA full court to choose a location. Match an existing shot first whenever one was stat-tracked live.</p>
@@ -146,7 +145,7 @@
 <label>Result<select id="post-shot-made"><option value="true">Made</option><option value="false">Missed</option></select></label>
 <label>Record as<select id="post-shot-action"><option value="match">Attach to an existing unlocated shot</option><option value="new">New shot that was not previously tracked</option></select></label>
 </div>
-<label id="post-existing-label">Matching existing shot<select id="post-shot-existing"></select></label>
+<label id="post-existing-label">Matching existing shot<select id="post-shot-existing"></select></label><fieldset id="post-shot-analysis" hidden><legend>Optional analysis</legend><label>Shot creation<select id="post-shot-creation"><option value="">Not classified</option><option value="catch_shoot">Catch &amp; Shoot</option><option value="pull_up">Pull-Up</option><option value="drive">Drive / Layup</option><option value="post">Post Move</option><option value="putback">Putback</option><option value="other">Other</option></select></label><label>Defensive pressure<select id="post-shot-pressure"><option value="">Not classified</option><option value="open">Open</option><option value="contested">Contested</option><option value="unknown">Unknown</option></select></label></fieldset>
 <p class="postgame-caution" id="post-shot-warning" hidden>Creating a new field-goal attempt adds to basketball statistics. Only use this when you have verified that the shot was not already recorded by Stat Tracking.</p>
 <button type="submit" id="post-shot-save" class="film-save" disabled>Save shot location</button>
 </form></dialog>
@@ -165,6 +164,6 @@
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
-<script src="postgame-track.js" defer></script>
+<script src="postgame-track.js" defer></script><script src="postgame-quick.js" defer></script>
 </body>
 </html>
