@@ -121,3 +121,12 @@
 @media(min-width:900px) and (orientation:landscape) and (min-height:580px){
  .postgame-fullscreen.pg-v3-shot .pg-shot-court-area .postgame-court-workspace:has(.pg-half-view){max-height:calc(100dvh - 240px)!important}
 }
+
+/* Combined room reuses its original full-court + Quick Tracker workspace.
+   The stat section is only the original data/hidden save anchor once it moves. */
+.postgame-fullscreen.pg-v3-combined #post-stat-section{display:none!important}
+.postgame-fullscreen:not(.pg-v3-shot) .pg-shot-sidebar{display:none!important}
+.postgame-fullscreen.pg-v3-combined .pg-shot-court-area{min-height:0;display:flex;flex-direction:column;flex:1}
+.postgame-fullscreen.pg-v3-combined .pg-shot-workspace{display:flex;flex:1;min-height:0}
+.postgame-fullscreen.pg-v3-combined .postgame-court-workspace{width:100%;flex:1;min-height:0}
+.postgame-fullscreen.pg-v3-shot .pg-shot-court-area>p:not(#post-shot-preview){display:none!important}
