@@ -210,15 +210,11 @@
       <section class="qv-opponent ${reboundActive?'qv-opponent-highlight':''}" aria-label="Opponent controls"><div class="qv-team-heading"><div><strong>${esc(ns.opponent)}</strong><small>Opponent team stats</small></div></div>
       <div class="qv-opp-buttons">${[['made2','+2PT','qv-made'],['made3','+3PT','qv-made'],['to','TO',''],['miss2','2PT MISS','qv-miss'],['miss3','3PT MISS','qv-miss'],['pf','PF',''],...(reboundActive?[['reb','REB',''],['stl','STL',''],['blk','BLK','']]:[])].map(([a,label,kind])=>btn(`opp:${a}`,label,kind,(mode!=='idle'&&!(mode==='stats'&&teamMode)&&!(reboundActive&&(a==='reb'||(shooting==='us'&&a==='blk'))))?'disabled':'')).join('')}</div></section>
       <section class="qv-last"><small>LAST EVENT</small><strong>${esc(last)}</strong></section></div>`;
+    // Opponent court workflow is team-level: no jersey prompt.
+    // Keep the original opponent stat buttons, and associate the selected
+    // shot location with whichever matching stat action is chosen.
     if(api.mode==='combined'&&selectedCourtShot?.team==='opponent'){
-      const panel=root.querySelector('.qv-opponent'),buttons=panel?.querySelector('.qv-opp-buttons');
-      if(panel){panel.classList.add('qv-selection-required');}
-      if(buttons&&opponentJersey===null){
-       buttons.innerHTML='<div class="pg-opponent-jerseys"><strong>SELECT OPPONENT JERSEY</strong><div class="pg-opponent-grid">'+
-        Array.from({length:40},(_,i)=>'<button type="button" data-opponent-jersey="'+i+'">#'+i+'</button>').join('')+
-        '</div><label>Other # <input type="number" min="0" max="99" id="pg-opponent-manual"><button type="button" data-opponent-manual="1">Use</button></label></div>';
-      }
-      if(opponentJersey!==null)panel?.querySelector('.qv-team-heading small')?.replaceChildren(document.createTextNode('Selected #'+opponentJersey+' · Choose stat'));
+      root.querySelector('.qv-opponent')?.classList.add('qv-selection-required');
     }
     if(api.mode==='combined'&&selectedCourtShot?.team==='us')root.querySelector('.qv-tracked')?.classList.add('qv-selection-required');
     document.body.classList.toggle('pg-awaiting-location',!!pendingCourtShot);
