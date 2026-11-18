@@ -226,13 +226,32 @@ async function init(){
  try{await refresh();$('postgame-screen').hidden=false;say('Ready. Review recorded events before adding new ones.');}
  catch(e){say('Unable to load existing events: '+e.message);}
 }
+async function touchReview(){
+ const auth=await supabaseClient.auth.getUser(),uid=auth.data?.user?.id;
+ if(!uid)return;
+ const activity=mode==='combined'?'film':mode;
+ const time=new Date().toISOString();
+ const {error}=await supabaseClient.from('apexvision_film_room_status').update({last_reviewed_at:time,last_reviewed_by:uid,updated_at:time,updated_by:uid}).eq('game_id',gameId).eq('activity',activity);
+ if(error)console.warn('Unable to update Film Room review timestamp:',error.message);
+}
+async function mergeClassification(eventId,creation,pressure){
+ if(!creation&&!pressure)return true;
+ const existing=await supabaseClient.from('apexvision_film_tags').select('shot_creation,shot_contest,turnover_cause,defence_scheme').eq('event_id',eventId).maybeSingle();
+ if(existing.error){say('Could not load previous analysis: '+existing.error.message);return false;}
+ const prior=existing.data||{};
+ const res=await supabaseClient.rpc('apexvision_save_film_tag',{p_event_id:eventId,
+  p_shot_creation:creation||prior.shot_creation||null,p_shot_contest:pressure||prior.shot_contest||null,
+  p_turnover_cause:prior.turnover_cause||null,p_defence_scheme:prior.defence_scheme||null});
+ if(res.error){say('Could not save shot classification: '+res.error.message);return false;}
+ await touchReview();return true;
+}
 async function invoke(name,args,button){
  if(busy)return null;busy=true;button.disabled=true;
  say('Saving…');
  try{
   const r=await supabaseClient.rpc(name,args);
   if(r.error)throw r.error;
-  resetPending();await refresh();say('Saved to game statistics. The official final score is unchanged.');return r.data;
+  resetPending();await refresh();await touchReview();say('Saved to game statistics. The official final score is unchanged.');return r.data;
  }catch(e){say('Could not save: '+(e.message||'Unknown error')+'. No unconfirmed event has been added locally.');return null;}
  finally{busy=false;button.disabled=false;refreshChoices();}
 }
@@ -267,8 +286,7 @@ async function saveShotAnalysis(eventId){
  if(mode!=='combined'||!eventId)return;
  const creation=$('post-shot-creation').value||null,pressure=$('post-shot-pressure').value||null;
  if(!creation&&!pressure)return;
- const result=await supabaseClient.rpc('apexvision_save_film_tag',{p_event_id:eventId,p_shot_creation:creation,p_shot_contest:pressure,p_turnover_cause:null,p_defence_scheme:null});
- if(result.error)say('Shot saved, but analysis was not saved: '+result.error.message);
+ await mergeClassification(eventId,creation,pressure);
 }
 window.apexPostgame={get mode(){return mode;},get gameId(){return gameId;},getPlayers:()=>players.slice(),getEvents:()=>events.slice(),getPeriod:currentPeriod,getTeam:currentTeam,getPoint:()=>point,
  setPlayer:id=>{$('post-player').value=id||'';},setTeam:team=>{$('post-team').value=team;$('post-team').dispatchEvent(new Event('change'));},
@@ -286,8 +304,7 @@ window.apexPostgame={get mode(){return mode;},get gameId(){return gameId;},getPl
  },
  saveClassification:async(id,creation,pressure)=>{
    if(!id||!creation&&!pressure)return true;
-   const r=await supabaseClient.rpc('apexvision_save_film_tag',{p_event_id:id,p_shot_creation:creation||null,p_shot_contest:pressure||null,p_turnover_cause:null,p_defence_scheme:null});
-   if(r.error){say('Event saved but analysis did not save: '+r.error.message);return false;}return true;
+   return await mergeClassification(id,creation,pressure);
  },notify:say,refresh};
 void init();
 })();
