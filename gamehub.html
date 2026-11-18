@@ -20,7 +20,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <link rel="stylesheet" href="gamehub.css">
-    <link rel="stylesheet" href="gamehub-mobile.css">
+    <link rel="stylesheet" href="gamehub-mobile.css?v=mobile-previous-v1">
     <link rel="stylesheet" href="pageLayout.css">
     <link rel="stylesheet" href="calendar-subscribe.css">
     <link rel="stylesheet" href="tournaments.css">
@@ -149,6 +149,17 @@
                         <p data-mobile-game-result></p>
                         <button type="button" data-mobile-game-action disabled>OPEN GAME TRACKER</button>
                         <button type="button" id="apex-mobile-score-link" data-score-popup-open hidden>Submit Score</button>
+                    </section>
+                    <section id="apex-mobile-previous-game" class="apex-mobile-previous-game" aria-label="Previous game summary">
+                      <div class="apex-mobile-previous-head"><h2>PREVIOUS GAME</h2><span id="apex-mobile-previous-date">—</span></div>
+                      <div class="apex-mobile-previous-matchup"><span id="apex-mobile-previous-home">HOME</span><span class="apex-mobile-previous-final">FINAL</span><span id="apex-mobile-previous-away">AWAY</span></div>
+                      <div class="apex-mobile-previous-score"><strong id="apex-mobile-previous-home-score">—</strong><span>–</span><strong id="apex-mobile-previous-away-score">—</strong></div>
+                      <p id="apex-mobile-previous-note">Your latest completed game will appear here.</p>
+                      <div class="apex-mobile-previous-actions">
+                        <button type="button" id="apex-mobile-previous-submit" data-score-popup-open hidden>Submit Score</button>
+                        <a href="film-room.html" id="apex-mobile-previous-film" hidden>Film Room</a>
+                        <a href="stats.html" id="apex-mobile-previous-box" hidden>Box Score</a>
+                      </div>
                     </section>
                     <div class="previous-game">
                         <div class="previous-game-header">
@@ -464,7 +475,7 @@
     <script src="supabase-config.js"></script>
     <script src="team-theme.js" defer></script>
 <script src="pageLayout.js" defer></script>
-    <script src="gamehub.js?v=film-v4" defer></script>
+    <script src="gamehub.js?v=mobile-previous-v1" defer></script>
     <script src="score-popup.js" defer></script>
     <link rel="stylesheet" href="score-popup.css">
     <script src="calendar-subscribe.js" defer></script>
