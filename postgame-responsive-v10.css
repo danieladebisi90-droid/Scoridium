@@ -189,3 +189,57 @@
   display:block!important;grid-column:1/-1!important;grid-row:2!important
  }
 }
+@media (orientation:portrait) and (min-width:701px) and (max-width:1100px){
+ /* Shot-only room: use available full width for the court rather than
+    keeping the narrow desktop sidebar/court split. */
+ body.postgame-fullscreen.pg-v3-shot #post-shot-section{
+  display:flex!important;flex-direction:column!important;
+  flex:1 1 auto!important;min-height:0!important;overflow:hidden!important
+ }
+ body.postgame-fullscreen.pg-v3-shot .pg-shot-workspace{
+  display:flex!important;flex-direction:column!important;min-height:0!important;
+  height:100%!important;flex:1 1 auto!important;gap:8px!important
+ }
+ body.postgame-fullscreen.pg-v3-shot .pg-shot-court-area{
+  order:1!important;display:flex!important;flex:1 1 auto!important;
+  min-height:0!important;align-items:center!important;justify-content:center!important;overflow:hidden!important
+ }
+ body.postgame-fullscreen.pg-v3-shot .pg-shot-court-area .postgame-court-workspace{
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  flex:1 1 auto!important;width:100%!important;min-height:0!important;
+  max-height:100%!important;overflow:hidden!important;background:transparent!important
+ }
+ body.postgame-fullscreen.pg-v3-shot #postgame-court:not(.pg-half-view){
+  width:100%!important;max-width:100%!important;height:auto!important;
+  max-height:100%!important;min-height:0!important;aspect-ratio:860/470!important;
+  background:transparent!important;align-self:center!important
+ }
+ body.postgame-fullscreen.pg-v3-shot #postgame-court.pg-half-view{
+  width:auto!important;max-width:100%!important;height:auto!important;
+  max-height:100%!important;aspect-ratio:420/450!important;background:transparent!important
+ }
+ body.postgame-fullscreen.pg-v3-shot .pg-shot-sidebar{
+  order:2!important;display:flex!important;flex-direction:column!important;
+  flex:0 1 auto!important;min-height:0!important;max-height:27dvh!important;
+  overflow:auto!important;padding:9px!important;gap:7px!important
+ }
+ body.postgame-fullscreen.pg-v3-shot .pg-shot-sidebar #pg-guided-toolbar{
+  display:flex!important;flex-direction:row!important;align-items:center!important;
+  gap:10px!important;flex-wrap:wrap!important
+ }
+ body.postgame-fullscreen.pg-v3-shot .pg-shot-sidebar .pg-guided-options{
+  display:flex!important;flex:0 0 auto!important
+ }
+ body.postgame-fullscreen.pg-v3-shot .pg-shot-sidebar .pg-guided-navigation{
+  flex:1 1 auto!important;display:flex!important;gap:7px!important
+ }
+ body.postgame-fullscreen.pg-v3-shot .pg-shot-sidebar .pg-guided-navigation button{flex:1!important}
+ body.postgame-fullscreen.pg-v3-shot .pg-shot-sidebar #pg-guided-hint{
+  max-height:85px!important;overflow:auto!important
+ }
+ body.postgame-fullscreen.pg-v3-shot .pg-shot-sidebar .pg-insert-actions{
+  max-width:240px!important
+ }
+ body.postgame-fullscreen.pg-v3-shot .pg-shot-court-area>.postgame-court-head,
+ body.postgame-fullscreen.pg-v3-shot .pg-shot-court-area>p{display:none!important}
+}
