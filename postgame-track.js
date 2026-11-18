@@ -2,7 +2,8 @@
 'use strict';
 const $=id=>document.getElementById(id);
 const params=new URLSearchParams(location.search),gameId=params.get('gameId');
-const mode=params.get('mode')==='shot'?'shot':'stat';
+const mode=['shot','stat','combined'].includes(params.get('mode'))?params.get('mode'):'stat';
+let activeWorkflow=mode==='combined'?'stat':mode;
 const teamId=sessionStorage.getItem('selectedTeamId'),seasonId=sessionStorage.getItem('selectedSeasonId');
 let game=null,players=[],events=[],observations=[],observationError=null,point=null,busy=false,pendingId=null;
 const say=s=>{$('postgame-message').textContent=s};
@@ -62,7 +63,7 @@ function renderEvents(){
  }
 }
 function renderObservations(){
- if(mode!=='shot')return;
+ if(mode==='stat')return;
  const host=$('post-observations');host.replaceChildren();
  if(observationError){host.textContent='Live observations unavailable: '+observationError.message;return;}
  const subset=observations.filter(o=>o.team===currentTeam()&&Number(o.period)===currentPeriod()&&!o.matched_event_id);
@@ -100,7 +101,7 @@ function renderObservations(){
 }
 
 function refreshChoices(){
- if(mode!=='shot')return;
+ if(mode==='stat')return;
  const existing=$('post-shot-existing');
  const selected=existing.value;
  existing.replaceChildren();
@@ -116,7 +117,7 @@ function refreshChoices(){
  $('post-shot-save').disabled=!point||(match&&!existing.value);
 }
 function renderShotMarkers(){
- if(mode!=='shot')return;
+ if(mode==='stat')return;
  const host=$('postgame-markers');host.replaceChildren();
  for(const event of events){
    if(event.type!=='shot'||event.x==null||event.y==null)continue;
@@ -144,12 +145,12 @@ async function refresh(){
   if((r.data||[]).length<500)break;
  }
  events=results;
- if(mode==='shot'){
+ if(mode!=='stat'){
   const o=await supabaseClient.from('tracker_observations').select('id,period,kind,team,points,made,x,y,matched_event_id').eq('game_id',gameId).eq('kind','shot').is('matched_event_id',null).limit(1000);
   observationError=o.error;observations=o.data||[];
  }
  renderEvents();renderShotMarkers();refreshChoices();renderObservations();
- if(mode==='shot'){
+ if(mode!=='stat'){
  const pending=events.filter(e=>e.type==='shot'&&(e.x==null||e.y==null)).length+observations.filter(o=>!o.matched_event_id).length;
  $('post-shot-link-count').textContent=pending?'('+pending+')':'';
  }
@@ -163,13 +164,19 @@ async function init(){
    .eq('id',gameId).eq('team_id',teamId).eq('seasons_id',seasonId).maybeSingle();
  if(response.error||!response.data){say('Game not available to the selected team and season.');return;}
  game=response.data;
- if(mode==='shot')document.body.classList.add('postgame-shot-mode');
+ if(mode!=='stat')document.body.classList.add('postgame-shot-mode');
  if(game.status!=='completed'){say('This post-game screen is only for completed games. Live games use the Game Tracker.');return;}
  $('back-to-room').href='film-room.html?gameId='+encodeURIComponent(gameId);
- $('page-title').textContent=mode==='shot'?'Post-game Shot Tracking':'Post-game Stat Tracking';
+ $('page-title').textContent=mode==='shot'?'Post-game Shot Tracking':mode==='combined'?'Post-game Stat & Shot Tracking':'Post-game Stat Tracking';
  $('game-title').textContent='vs '+(game.opponent||'Opponent')+' · '+game.date+' · Final '+(game.team_score??'—')+'–'+(game.opponent_score??'—');
- $('post-'+mode+'-section').hidden=false;
- if(mode==='shot')$('post-observation-section').hidden=false;
+ $('post-stat-section').hidden=mode==='shot';
+ $('post-shot-section').hidden=mode!=='shot';
+ if(mode==='combined'){
+  $('postgame-mode-tabs').hidden=false;
+  const activate=next=>{activeWorkflow=next;$('post-stat-section').hidden=next!=='stat';$('post-shot-section').hidden=next!=='shot';$('post-tab-stat').classList.toggle('active',next==='stat');$('post-tab-shot').classList.toggle('active',next==='shot');};
+  $('post-tab-stat').onclick=()=>activate('stat');$('post-tab-shot').onclick=()=>activate('shot');activate('stat');
+ }
+ if(mode!=='stat')$('post-observation-section').hidden=false;
  for(let p=1;p<=Math.max(4,Number(game.current_period)||4);p++)$('post-period').add(new Option(periodName(p),String(p)));
  const roster=await supabaseClient.from('players').select('id,first_name,last_name,number').eq('team_id',teamId).order('number');
  if(roster.error){say('Unable to load roster: '+roster.error.message);return;}
@@ -187,9 +194,10 @@ async function init(){
  });
  $('post-stat-form').addEventListener('change',resetPending);
  $('post-stat-type').dispatchEvent(new Event('change'));
+ $('post-shot-analysis').hidden=mode!=='combined';
  $('post-shot-made').addEventListener('change',()=>{resetPending();refreshChoices();});
  $('post-shot-action').addEventListener('change',()=>{resetPending();refreshChoices();});
- if(mode==='shot'){
+ if(mode!=='stat'){
  // The court owns the page; player attribution belongs in the shot popup.
  const playerLabel=$('post-player').closest('label');
  $('post-shot-form').insertBefore(playerLabel,$('post-shot-form').firstChild);
@@ -207,7 +215,7 @@ async function init(){
   if(c.x<10||c.x>850||c.y<10||c.y>460)return;
   point={x:Number(c.x.toFixed(2)),y:Number(c.y.toFixed(2)),points:shotValue(c.x,c.y)};
   resetPending();updateShotSelection();
-  if(mode==='shot'&&!$('post-shot-dialog').open)$('post-shot-dialog').showModal();
+  if((mode==='shot'||mode==='combined'&&activeWorkflow==='shot')&&!$('post-shot-dialog').open)$('post-shot-dialog').showModal();
  });
  $('post-stat-form').addEventListener('submit',e=>{e.preventDefault();void saveStat();});
  $('post-shot-form').addEventListener('submit',e=>{e.preventDefault();void saveShot();});
@@ -241,15 +249,37 @@ async function saveShot(){
   const event=events.find(e=>e.id===eventId);
   if(!event){say('Select an existing shot to match.');return;}
   const done=await invoke('apexvision_postgame_assign_shot',{p_game_id:gameId,p_event_id:event.id,p_expected_version:event.version,p_x:point.x,p_y:point.y},$('post-shot-save'));
-  if(done!==null)$('post-shot-dialog').close();
+  if(done!==null){await saveShotAnalysis(event.id);$('post-shot-dialog').close();}
  }else{
   if(!confirm('This will add a NEW field-goal attempt to the box score. Confirm this shot was not recorded by Stat Tracking or Shot Tracking.'))return;
   if(!pendingId)pendingId=crypto.randomUUID();
   const done=await invoke('apexvision_postgame_add_event',{p_game_id:gameId,p_event_id:pendingId,p_type:'shot',
    p_team:currentTeam(),p_period:currentPeriod(),p_player_id:currentPlayer(),
    p_points:point.points,p_made:currentMade(),p_x:point.x,p_y:point.y},$('post-shot-save'));
-   if(done!==null)$('post-shot-dialog').close();
+   if(done!==null){await saveShotAnalysis(done);$('post-shot-dialog').close();}
  }
 }
+async function saveShotAnalysis(eventId){
+ if(mode!=='combined'||!eventId)return;
+ const creation=$('post-shot-creation').value||null,pressure=$('post-shot-pressure').value||null;
+ if(!creation&&!pressure)return;
+ const result=await supabaseClient.rpc('apexvision_save_film_tag',{p_event_id:eventId,p_shot_creation:creation,p_shot_contest:pressure,p_turnover_cause:null,p_defence_scheme:null});
+ if(result.error)say('Shot saved, but analysis was not saved: '+result.error.message);
+}
+window.apexPostgame={get mode(){return mode;},get gameId(){return gameId;},getPlayers:()=>players.slice(),getEvents:()=>events.slice(),getPeriod:currentPeriod,getTeam:currentTeam,getPoint:()=>point,
+ setPlayer:id=>{$('post-player').value=id||'';},setTeam:team=>{$('post-team').value=team;$('post-team').dispatchEvent(new Event('change'));},
+ saveEvent:async({type,team='us',playerId=null,points=null,made=null,position=null},button)=>{
+   const id=crypto.randomUUID();
+   const same=events.filter(e=>e.type===type&&e.team===team&&Number(e.period)===currentPeriod()&&(type!=='shot'||e.points===points&&e.made===made));
+   const prompt=same.length?'There are '+same.length+' events like this in the quarter. Confirm this is an additional missing play.':'Confirm this event was missing from the game.';
+   if(!confirm(prompt))return null;
+   const result=await invoke('apexvision_postgame_add_event',{p_game_id:gameId,p_event_id:id,p_type:type,p_team:team,p_period:currentPeriod(),p_player_id:playerId,p_points:points,p_made:made,p_x:position?.x??null,p_y:position?.y??null},button);
+   return result===null?null:id;
+ },
+ saveClassification:async(id,creation,pressure)=>{
+   if(!id||!creation&&!pressure)return true;
+   const r=await supabaseClient.rpc('apexvision_save_film_tag',{p_event_id:id,p_shot_creation:creation||null,p_shot_contest:pressure||null,p_turnover_cause:null,p_defence_scheme:null});
+   if(r.error){say('Event saved but analysis did not save: '+r.error.message);return false;}return true;
+ },notify:say,refresh};
 void init();
 })();
