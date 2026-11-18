@@ -179,14 +179,22 @@ async function init(){
    .eq('id',gameId).eq('team_id',teamId).eq('seasons_id',seasonId).maybeSingle();
  if(response.error||!response.data){say('Game not available to the selected team and season.');return;}
  game=response.data;
- document.body.classList.add('postgame-shot-mode');
+ try{
+  const teamRes=await supabaseClient.from('teams').select('name,primary_color,secondary_color').eq('id',teamId).maybeSingle();
+  if(teamRes.data){
+   game.team_name=teamRes.data.name||'Tracked Team';
+   if(/^#[a-f0-9]{6}$/i.test(teamRes.data.primary_color||''))document.documentElement.style.setProperty('--review-primary',teamRes.data.primary_color);
+   if(/^#[a-f0-9]{6}$/i.test(teamRes.data.secondary_color||''))document.documentElement.style.setProperty('--review-secondary',teamRes.data.secondary_color);
+  }
+ }catch(error){console.warn('Team theme unavailable',error);}
+ document.body.classList.add('postgame-shot-mode','pg-v3-'+mode);
  document.body.classList.toggle('pgq-stat-workflow',mode!=='shot');
  if(game.status!=='completed'){say('This post-game screen is only for completed games. Live games use the Game Tracker.');return;}
- $('back-to-room').href='gamehub.html';
+ $('back-to-room').href='app.html?page='+encodeURIComponent('gamehub.html?filmRoomGameId='+gameId);
  $('page-title').textContent=mode==='shot'?'Post-game Shot Tracking':mode==='combined'?'Post-game Stat & Shot Tracking':'Post-game Stat Tracking';
  $('game-title').textContent='vs '+(game.opponent||'Opponent')+' · '+game.date+' · Final '+(game.team_score??'—')+'–'+(game.opponent_score??'—');
  $('post-stat-section').hidden=mode==='shot';
- $('post-shot-section').hidden=false;
+ $('post-shot-section').hidden=mode==='stat';
  // Combined mode puts stat-entry and optional shot analysis in one court flow.
  $('post-observation-section').hidden=false;
  for(let p=1;p<=Math.max(4,Number(game.current_period)||4);p++)$('post-period').add(new Option(periodName(p),String(p)));
@@ -196,7 +204,7 @@ async function init(){
   else say('Final recorded period reached. End Game Review returns to Game Hub.');
  });
  $('post-end-review').addEventListener('click',()=>{
-  if(confirm('Finish reviewing and return to Game Hub? Saved events remain unchanged.'))location.href='gamehub.html';
+  if(confirm('Finish review and return to Film Room? Saved events remain unchanged.'))location.href='app.html?page='+encodeURIComponent('gamehub.html?filmRoomGameId='+gameId);
  });
  const roster=await supabaseClient.from('players').select('id,first_name,last_name,number').eq('team_id',teamId).order('number');
  if(roster.error){say('Unable to load roster: '+roster.error.message);return;}
@@ -226,7 +234,7 @@ async function init(){
  $('post-shot-dialog-close').onclick=()=>shotDialog.close();
  const court=$('postgame-court');const parent=court.parentElement;
  const wrap=document.createElement('div');wrap.className='postgame-court-workspace';parent.insertBefore(wrap,court);wrap.appendChild(court);
- const quick=$('post-quick-root');if(quick)wrap.appendChild(quick);
+ const quick=$('post-quick-root');if(mode==='combined'&&quick)wrap.appendChild(quick);
  $('post-shot-links-close').onclick=()=>linksDialog.close();
  $('post-shot-links-open').onclick=()=>{renderEvents();renderObservations();linksDialog.showModal();};
  for(const dlg of [shotDialog,linksDialog])dlg.addEventListener('click',e=>{if(e.target===dlg)dlg.close();});
@@ -309,13 +317,13 @@ async function saveShotAnalysis(eventId){
  if(!creation&&!pressure)return;
  await mergeClassification(eventId,creation,pressure);
 }
-window.apexPostgame={get mode(){return mode;},get gameId(){return gameId;},getPlayers:()=>players.slice(),getEvents:()=>events.slice(),getPeriod:currentPeriod,getTeam:currentTeam,getPoint:()=>point,
+window.apexPostgame={get mode(){return mode;},get gameId(){return gameId;},getPlayers:()=>players.slice(),getEvents:()=>events.slice(),getPeriod:currentPeriod,getTeam:currentTeam,getPoint:()=>point,getGame:()=>game?{...game}:null,shotValue,
  setPlayer:id=>{$('post-player').value=id||'';},setTeam:team=>{$('post-team').value=team;$('post-team').dispatchEvent(new Event('change'));},
- saveEvent:async({type,team='us',playerId=null,points=null,made=null,position=null,linkedEventId=null},button)=>{
-   const id=crypto.randomUUID();
+ saveEvent:async({type,team='us',playerId=null,points=null,made=null,position=null,linkedEventId=null,fixedId=null,confirmed=false},button)=>{
+   const id=fixedId||crypto.randomUUID();
    const same=events.filter(e=>e.type===type&&e.team===team&&Number(e.period)===currentPeriod()&&(type!=='shot'||e.points===points&&e.made===made));
    const prompt=same.length?'There are '+same.length+' events like this in the quarter. Confirm this is an additional missing play.':'Confirm this event was missing from the game.';
-   if(!confirm(prompt))return null;
+   if(!confirmed&&!confirm(prompt))return null;
    const result=await invoke('apexvision_postgame_add_event',{p_game_id:gameId,p_event_id:id,p_type:type,p_team:team,p_period:currentPeriod(),p_player_id:playerId,p_points:points,p_made:made,p_x:position?.x??null,p_y:position?.y??null},button);
    if(result===null)return null;
    if(linkedEventId){
@@ -324,6 +332,11 @@ window.apexPostgame={get mode(){return mode;},get gameId(){return gameId;},getPl
     else await touchReview();
    }
    return id;
+ },
+ linkRelated:async(childId,sourceId)=>{
+   const r=await supabaseClient.rpc('apexvision_postgame_link_event',{p_game_id:gameId,p_event_id:childId,p_source_event_id:sourceId});
+   if(r.error){say('Could not link related events: '+r.error.message);return false;}
+   await touchReview();return true;
  },
  linkShot:async(event,position,button)=>{
    const saved=await invoke('apexvision_postgame_assign_shot',{p_game_id:gameId,p_event_id:event.id,p_expected_version:Number(event.version),p_x:position.x,p_y:position.y},button);
