@@ -9,7 +9,7 @@ const court=$('postgame-court'),prompt=$('postgame-court-prompt');
 const escapeHTML=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const categories=[['catch_shoot','Catch & Shoot'],['pull_up','Dribble Pull-Up'],['drive','Drive / Layup'],['post','Post Move'],['putback','Putback'],['other','Other']];
 let shot=null,selectedJersey=null,step='idle',timer=null,directionOverride=false,saving=false,periodStamp=0;
-let guidedTarget=null;
+let guidedTarget=null,insertedShot=null;
 let teamName='Tracked Team';
 const opponentName=()=>api.getGame()?.opponent||'Opponent';
 const period=()=>api.getPeriod();
@@ -77,9 +77,14 @@ function render(){
 }
 function begin(location,made){
  if(saving)return;
- if(shotMode&&document.body.classList.contains('pg-guided-on')&&!guidedTarget){api.notify('This recorded shot is already located. Choose Next or another pending shot.');return;}
+ if(shotMode&&!insertedShot&&document.body.classList.contains('pg-guided-on')&&!guidedTarget){api.notify('This recorded shot is already located. Choose Next or another pending shot.');return;}
  if(shotMode&&!complete()){api.notify('Finish or cancel the current shot before selecting another location.');return;}
  const team=teamAt(location.x),value=api.shotValue(location.x,location.y);
+ if(shotMode&&insertedShot){
+  if(team!==insertedShot.team||value!==insertedShot.points){api.notify('Choose the '+insertedShot.points+'PT area on the selected team’s basket.');return;}
+  shot={position:location,made:insertedShot.made,points:value,team,inserted:true};
+  selectedJersey=null;step='jersey';render();return;
+ }
  if(shotMode&&guidedTarget){
    if(team!==guidedTarget.team||value!==Number(guidedTarget.points)){
      api.notify('This play is '+guidedTarget.team+' '+guidedTarget.points+'PT. Choose a matching location on that team’s basket, or use Switch Directions.');
@@ -114,6 +119,7 @@ if(shotMode||combined){
  const captureClick=ev=>{
   ev.stopImmediatePropagation();ev.preventDefault();
   const point=courtPoint(ev);if(!point)return;
+  if(shotMode&&insertedShot){if(timer){clearTimeout(timer);timer=null;}begin(point,insertedShot.made);return;}
   if(shotMode&&guidedTarget){if(timer){clearTimeout(timer);timer=null;}begin(point,guidedTarget.made);return;}
   if(timer){clearTimeout(timer);timer=null;begin(point,false);return;}
   if(ev.detail>=2){begin(point,false);return;}
@@ -132,7 +138,7 @@ async function saveShotLinkOrNew(){
    &&Number(e.points)===shot.points&&e.made===shot.made&&(e.x==null||e.y==null));
  // A player-confirmed unique candidate is safe to match. Never guess between
  // multiple similar attempts or infer identity from shot value alone.
- const direct=candidates.length===1&&selectedJersey?.id&&
+ const direct=!shot.inserted&&candidates.length===1&&selectedJersey?.id&&
   String(candidates[0].player_id)===String(selectedJersey.id);
  if(direct){await finalize(candidates[0]);return;}
  const locatedDuplicate=api.getEvents().some(e=>e.type==='shot'&&e.team===shot.team
@@ -152,7 +158,7 @@ async function savePending(){
    category:shot.category||null,opponent_jersey:shot.team==='opponent'?selectedJersey?.number??null:null,created_by:uid};
   const result=await supabaseClient.from('apexvision_postgame_pending_shots').insert(record);
   if(result.error)throw result.error;
-  clear();api.notify('Uncertain shot saved to Unmatched Shots. No duplicate attempt or points were added.');
+  clear();insertedShot=null;api.notify('Uncertain shot saved to Unmatched Shots. No duplicate attempt or points were added.');
   window.dispatchEvent(new CustomEvent('apex:pending-shot-added'));
  }catch(error){api.notify('Could not save pending shot: '+error.message+' (check staging migration).');}
  finally{saving=false;}
@@ -191,9 +197,9 @@ async function finalize(match){
     if(result.error)api.notify('Shot saved, but opponent jersey attribution needs review: '+result.error.message);
    }
   }
-  const wasGuided=!!shot.guidedId;
-  await api.refresh();updateScoreboard();clear();
-  window.dispatchEvent(new CustomEvent('apex:shot-review-saved',{detail:{eventId,wasGuided}}));
+  const wasGuided=!!shot.guidedId,wasInserted=!!shot.inserted;
+  await api.refresh();updateScoreboard();clear();insertedShot=null;
+  window.dispatchEvent(new CustomEvent('apex:shot-review-saved',{detail:{eventId,wasGuided,wasInserted}}));
   api.notify(wasGuided?'Guided shot located. Moving to the next recorded attempt.':'Shot recorded. Ready for the next shot.');
  }catch(error){api.notify('Could not complete shot: '+(error.message||error));render();}
  finally{saving=false;}
@@ -201,7 +207,7 @@ async function finalize(match){
 prompt?.addEventListener('click',async ev=>{
  const control=ev.target.closest('button[data-flow]');if(!control||saving)return;
  const action=control.dataset.flow;
- if(action==='cancel'){clear();return;}
+ if(action==='cancel'){clear();if(insertedShot){insertedShot=null;window.dispatchEvent(new CustomEvent('apex:insert-shot-cancelled'));}return;}
  if(action==='back'){step='jersey';render();return;}
  if(action==='manualJersey'){
   const n=Number($('post-opp-jersey')?.value);
@@ -247,6 +253,13 @@ next?.addEventListener('click',reviewLeaveGuard,true);
 finish?.addEventListener('click',reviewLeaveGuard,true);
 back?.addEventListener('click',reviewLeaveGuard,true);
 window.apexCourtReview={
+ startInsertedShot:info=>{
+  if(!shotMode||saving||!complete())return false;
+  insertedShot={team:info.team,made:!!info.made,points:Number(info.points)};
+  return true;
+ },
+ cancelInsertedShot:()=>{insertedShot=null;clear();},
+ isInserting:()=>!!insertedShot,
  setGuidedTarget:event=>{
   if(!shotMode||saving||!complete())return false;
   guidedTarget=event||null;
@@ -255,9 +268,9 @@ window.apexCourtReview={
  },
  getGuidedTarget:()=>guidedTarget,
  isBusy:()=>saving||!complete(),
- reset:()=>{guidedTarget=null;clear();document.body.classList.remove('pg-guided-on');}
+ reset:()=>{guidedTarget=null;insertedShot=null;clear();document.body.classList.remove('pg-guided-on');}
 };
-$('post-period')?.addEventListener('change',()=>{periodStamp++;guidedTarget=null;document.body.classList.remove('pg-guided-on');clear();updateScoreboard();});
+$('post-period')?.addEventListener('change',()=>{periodStamp++;guidedTarget=null;insertedShot=null;document.body.classList.remove('pg-guided-on');clear();updateScoreboard();});
 window.addEventListener('apex:postgame-events-updated',updateScoreboard);
 window.addEventListener('focus',()=>void refreshScoreboard());
 setInterval(()=>{if(!document.hidden)void refreshScoreboard();},7000);
