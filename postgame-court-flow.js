@@ -175,6 +175,24 @@ prompt?.addEventListener('click',async ev=>{
   if(action.startsWith('match:'))await finalize(shot.candidates[Number(action.slice(6))]);
  }
 });
+const next=$('post-next-quarter'),finish=$('post-end-review'),back=$('back-to-room');
+function reviewLeaveGuard(event){
+ const quick=window.apexPostgameQuick;
+ if(!(shotMode&&!complete()||quick?.hasPending()))return;
+ if(!confirm('There is an unfinished play or an event still saving. Leave it? Unsaved selections will be discarded, but saved events remain.')){
+   event.preventDefault();event.stopImmediatePropagation();return;
+ }
+ // Never navigate while server saves are still in flight.
+ if(quick&&!quick.ready()){
+   event.preventDefault();event.stopImmediatePropagation();
+   api.notify('Finishing the saved event. Try again once the save completes.');return;
+ }
+ if(shotMode&&!complete())clear();
+ if(quick?.hasPending())quick.abort();
+}
+next?.addEventListener('click',reviewLeaveGuard,true);
+finish?.addEventListener('click',reviewLeaveGuard,true);
+back?.addEventListener('click',reviewLeaveGuard,true);
 $('post-period')?.addEventListener('change',()=>{periodStamp++;clear();updateScoreboard();});
 window.addEventListener('apex:postgame-events-updated',updateScoreboard);
 window.addEventListener('focus',()=>void refreshScoreboard());
