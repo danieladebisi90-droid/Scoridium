@@ -5,7 +5,7 @@
 <title>Post-game Tracking · ApexVision</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="stylesheet" href="film-analysis.css">
-<link rel="stylesheet" href="quick-track.css"><link rel="stylesheet" href="postgame-track.css?v=film-v5"><link rel="stylesheet" href="postgame-layout-v5.css?v=film-v6"><link rel="stylesheet" href="postgame-layout-v6.css?v=film-v6"><link rel="stylesheet" href="postgame-mobile-v7.css?v=film-v7"><link rel="stylesheet" href="postgame-mobile-v8.css?v=film-v8">
+<link rel="stylesheet" href="quick-track.css"><link rel="stylesheet" href="postgame-track.css?v=film-v5"><link rel="stylesheet" href="postgame-layout-v5.css?v=film-v6"><link rel="stylesheet" href="postgame-layout-v6.css?v=film-v6"><link rel="stylesheet" href="postgame-mobile-v7.css?v=film-v7"><link rel="stylesheet" href="postgame-mobile-v8.css?v=film-v8"><link rel="stylesheet" href="postgame-responsive-v9.css?v=film-v9">
 </head>
 <body class="postgame-fullscreen"><main class="film-shell">
 <header class="postgame-topline" aria-label="Film Room navigation"><a id="back-to-room" class="film-back" href="gamehub.html"><span aria-hidden="true">←</span> Film Room</a><strong id="page-title">Post-game Tracking</strong><span id="game-title">Loading completed game…</span></header>
@@ -74,6 +74,7 @@
 <div class="pg-shot-court-area">
 <div class="postgame-court-head"><h2>SHOT TRACKER</h2></div>
 <p>Tap the exact FIBA full court to choose a location. Match an existing shot first whenever one was stat-tracked live.</p>
+<div id="pg-court-team-label" class="pg-court-team-label" role="status">FULL COURT</div>
 <svg id="postgame-court" viewBox="0 0 860 470" preserveAspectRatio="xMidYMid meet" role="img" aria-label="FIBA basketball court for post-game shot location selection">
 <g id="full-court-art" pointer-events="none">
     
@@ -203,6 +204,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script src="postgame-track.js?v=film-v6" defer></script><script src="postgame-live-quick.js?v=film-v6" defer></script><script src="postgame-court-flow.js?v=film-v6" defer></script><script src="postgame-guided.js?v=film-v6" defer></script>
-<script src="postgame-mobile-v8.js?v=film-v8" defer></script>
+<script src="postgame-mobile-v8.js?v=film-v8" defer></script><script src="postgame-responsive-v9.js?v=film-v9" defer></script>
 </body>
 </html>
