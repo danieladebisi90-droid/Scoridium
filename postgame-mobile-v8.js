@@ -90,6 +90,9 @@ function layout(){
   move(nav,dock);
   const add=side.querySelector('.pg-insert-actions');
   move(add,dock);
+  // In Free Tracking, switching the visible shooting half is a frequent action.
+  // Keep the original button accessible, not buried behind More.
+  move($('pg-half-toggle'),dock);
   // The original add-shot form floats over the court; no second form.
   move($('pg-add-shot-form'),courtWrap);
   move(side.querySelector('.pg-court-modes'),drawer);
