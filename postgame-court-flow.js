@@ -118,6 +118,10 @@ async function finalize(match){
   if(match){
    const ok=await api.linkShot(match,shot.position,$('post-review-save-anchor'));
    if(!ok)throw new Error('Existing attempt could not be linked.');
+   if(shot.team==='us'&&selectedJersey?.id&&!match.player_id){
+    const assigned=await api.assignPlayer(eventId,selectedJersey.id);
+    if(!assigned)api.notify('Shot linked, but player attribution needs a review.');
+   }
   }else{
    const similar=api.getEvents().filter(e=>e.type==='shot'&&e.team===shot.team&&Number(e.period)===period()
     &&e.x!=null&&e.y!=null&&Math.hypot(Number(e.x)-shot.position.x,Number(e.y)-shot.position.y)<10&&e.made===shot.made);
@@ -196,6 +200,7 @@ back?.addEventListener('click',reviewLeaveGuard,true);
 $('post-period')?.addEventListener('change',()=>{periodStamp++;clear();updateScoreboard();});
 window.addEventListener('apex:postgame-events-updated',updateScoreboard);
 window.addEventListener('focus',()=>void refreshScoreboard());
+setInterval(()=>{if(!document.hidden)void refreshScoreboard();},7000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)void refreshScoreboard();});
 const wait=async()=>{
  for(let n=0;n<90;n++){
