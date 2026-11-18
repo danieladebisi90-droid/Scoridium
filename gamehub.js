@@ -2225,3 +2225,19 @@ function renderMobileGameCard(){
   action.onclick=()=>location.href=`${canTrack?'game':'watch-game'}.html?gameId=${encodeURIComponent(game.id)}`;
  });
 }
+
+/* Film Room mode selection overlays Game Hub; trackers use full pages. */
+document.addEventListener('DOMContentLoaded',()=>{
+ const link=document.getElementById('apex-film-analysis-link');
+ const dlg=document.getElementById('apex-film-room-modal'),frame=document.getElementById('apex-film-room-frame');
+ if(!link||!dlg||!frame)return;
+ link.addEventListener('click',event=>{
+  event.preventDefault();
+  if(link.hidden)return;
+  frame.src=link.href;
+  dlg.showModal();
+ });
+ document.getElementById('apex-film-room-close')?.addEventListener('click',()=>dlg.close());
+ dlg.addEventListener('click',event=>{if(event.target===dlg)dlg.close();});
+ dlg.addEventListener('close',()=>{frame.removeAttribute('src');});
+});
