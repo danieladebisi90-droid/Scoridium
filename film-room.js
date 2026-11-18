@@ -45,15 +45,24 @@ async function init(){
  if(game.error||!game.data){message('Game not available for the selected team and season.');return;}
  if(game.data.status!=='completed'){message('Post-game Film Room requires a completed game.');return;}
  $('room-matchup').textContent='vs '+(game.data.opponent||'Opponent')+' · '+game.data.date+' · Final';
+ // The workflows are available for any authorized completed game. Review metadata
+ // is supplementary and must never be a prerequisite for displaying the cards.
+ ready=true;display();$('room-cards').hidden=false;
  const result=await supabaseClient.from('apexvision_film_room_status').select('activity,status,last_reviewed_at,last_reviewed_by,updated_at').eq('game_id',gameId);
- if(result.error){message('Film Room review-date migration may be missing: '+result.error.message);return;}
- for(const row of result.data||[])if(activities.includes(row.activity))records.set(row.activity,row);
- ready=true;display();$('room-cards').hidden=false;message('');
+ if(result.error){
+  message('Review status could not load ('+result.error.message+'). Tracking options are shown, but saving review status may be unavailable.');
+  console.error('ApexVision Film Room status load:',result.error);
+ }else{
+  for(const row of result.data||[])if(activities.includes(row.activity))records.set(row.activity,row);
+  display();message('');
+ }
  for(const activity of activities){
   const card=document.querySelector('[data-activity="'+activity+'"]');
   card.querySelector('[data-open]').addEventListener('click',async()=>{
    const previous=records.get(activity),status=previous?.status||'in_progress';
-   if(!(await update(activity,status,{reviewed:false})))return;
+   // Failed status writes must not block a tracking workflow: its RPCs
+   // independently enforce team membership and post-game permissions.
+   await update(activity,status,{reviewed:false});
    location.href=destinations[activity]+'&gameId='+encodeURIComponent(gameId);
   });
   card.querySelector('[data-complete]').addEventListener('click',async()=>{
