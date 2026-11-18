@@ -7,7 +7,7 @@ if(!api)return;
 const shotMode=api.mode==='shot',hasCourt=api.mode!=='stat';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
 let guided=false,sequence=[],index=0,timeline=new Map(),pending=[],queueReady=false,loading=false;
-let reversed=false,courtView='full',insertActive=false,manualOpponent=false;
+let reversed=false,courtView='full',insertActive=false,manualOpponent=false,insertBeforeId=null,insertRows=[];
 let showCourt=()=>{};
 const period=()=>api.getPeriod();
 const label=e=>(e.team==='us'?(api.getGame()?.team_name||'Tracked Team'):(api.getGame()?.opponent||'Opponent'))+
@@ -21,10 +21,38 @@ function sequenceOrder(a,b){
  if(at!=null)return -1;if(bt!=null)return 1;
  return String(a.created_at||'').localeCompare(String(b.created_at||''))||a.id.localeCompare(b.id);
 }
+function orderedShots(rows){
+ const sorted=rows.slice().sort(sequenceOrder);
+ for(const record of insertRows){
+  const position=sorted.findIndex(e=>e.id===record.event_id);
+  if(position<0)continue;
+  const [item]=sorted.splice(position,1);
+  const before=sorted.findIndex(e=>e.id===record.before_event_id);
+  sorted.splice(before<0?sorted.length:before,0,item);
+ }
+ return sorted;
+}
+async function loadInsertions(){
+ if(!shotMode)return;
+ const r=await supabaseClient.from('apexvision_postgame_shot_inserts')
+  .select('event_id,before_event_id,created_at').eq('game_id',api.gameId).order('created_at');
+ if(r.error){insertRows=[];console.warn('Guided inserted-shot order unavailable; staging migration required:',r.error.message);return;}
+ insertRows=r.data||[];
+}
+async function saveInsertionOrder(eventId){
+ if(!insertBeforeId)return;
+ const auth=await supabaseClient.auth.getUser(),user=auth.data?.user;
+ if(!user)return;
+ const r=await supabaseClient.from('apexvision_postgame_shot_inserts').insert({
+  event_id:eventId,game_id:api.gameId,before_event_id:insertBeforeId,created_by:user.id
+ });
+ if(r.error)api.notify('Shot saved, but its position in Guided Tracking could not be kept across sessions. Apply the shot-inserts staging migration.');
+ insertBeforeId=null;
+}
 function selectGuidedItem(preferredId=null){
  if(!shotMode)return;
  const old=preferredId||sequence[index]?.id;
- sequence=api.getEvents().filter(e=>e.type==='shot'&&Number(e.period)===period()).slice().sort(sequenceOrder);
+ sequence=orderedShots(api.getEvents().filter(e=>e.type==='shot'&&Number(e.period)===period()));
  if(!sequence.length){index=0;window.apexCourtReview?.setGuidedTarget(null);renderGuided();return;}
  const match=sequence.findIndex(e=>e.id===old);index=match>=0?match:Math.max(0,sequence.findIndex(e=>e.x==null||e.y==null));
  if(index<0)index=0;
@@ -243,6 +271,7 @@ $('pg-add-shot')?.addEventListener('click',()=>{
  if(insertActive){$('pg-add-shot-form').requestSubmit();return;}
  if(window.apexCourtReview?.isBusy()){api.notify('Finish the current shot first.');return;}
  insertShow(true);
+ insertBeforeId=sequence[index]?.id||null;
  $('pg-add-shot-team').value=sequence[index]?.team||'us';
 });
 $('pg-add-shot-form')?.addEventListener('submit',event=>{
@@ -260,10 +289,10 @@ $('pg-add-shot-form')?.addEventListener('submit',event=>{
  api.notify('Choose a '+request.points+'PT location for the '+(request.team==='us'?'tracked team':'opponent')+'. Then select the shooter and category.');
 });
 $('pg-add-shot-cancel')?.addEventListener('click',()=>{
- window.apexCourtReview?.cancelInsertedShot();insertShow(false);
+ window.apexCourtReview?.cancelInsertedShot();insertBeforeId=null;insertShow(false);
  document.body.classList.remove('pg-insert-shot');selectGuidedItem();
 });
-window.addEventListener('apex:insert-shot-cancelled',()=>{insertShow(false);document.body.classList.remove('pg-insert-shot');selectGuidedItem();});
+window.addEventListener('apex:insert-shot-cancelled',()=>{insertBeforeId=null;insertShow(false);document.body.classList.remove('pg-insert-shot');selectGuidedItem();});
 $('pg-guided-free')?.addEventListener('click',()=>setMode(false));
 $('pg-guided-enable')?.addEventListener('click',()=>setMode(true));
 $('pg-guided-previous')?.addEventListener('click',()=>move(-1));
@@ -278,7 +307,11 @@ $('pg-review-queue-list')?.addEventListener('click',async e=>{
  await resolvePending(o,btn.dataset.pendingAction,row.querySelector('[data-pending-match]')?.value);
 });
 window.addEventListener('apex:shot-review-saved',async e=>{
- if(e.detail?.wasInserted){insertShow(false);document.body.classList.remove('pg-insert-shot');}
+ if(e.detail?.wasInserted){
+  insertShow(false);document.body.classList.remove('pg-insert-shot');
+  await saveInsertionOrder(e.detail.eventId);
+  await loadInsertions();
+ }
  await api.refresh();
  const previous=sequence[index]?.id;
  selectGuidedItem(previous);
@@ -291,13 +324,13 @@ window.addEventListener('apex:shot-review-saved',async e=>{
  }
  await reloadPending();
 });
-window.addEventListener('apex:pending-shot-added',()=>{insertShow(false);document.body.classList.remove('pg-insert-shot');void reloadPending();selectGuidedItem();});
+window.addEventListener('apex:pending-shot-added',()=>{insertBeforeId=null;insertShow(false);document.body.classList.remove('pg-insert-shot');void reloadPending();selectGuidedItem();});
 $('post-period')?.addEventListener('change',()=>{if(shotMode)selectGuidedItem(null);void reloadPending();});
 let ready=false;
 window.addEventListener('apex:postgame-ready',async()=>{
  if(ready)return;ready=true;
  initHalfCourt();
- if(shotMode){await loadTimeline();selectGuidedItem(null);if(sequence.some(e=>e.x==null||e.y==null))setMode(true);}
+ if(shotMode){await Promise.all([loadTimeline(),loadInsertions()]);selectGuidedItem(null);if(sequence.some(e=>e.x==null||e.y==null))setMode(true);}
  if(hasCourt)await reloadPending();
 });
 })();
