@@ -6,10 +6,12 @@ CREATE OR REPLACE FUNCTION public.apexvision_postgame_link_event(
  p_game_id uuid,p_event_id uuid,p_source_event_id uuid
 ) RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
 DECLARE v_child public.game_events%ROWTYPE;v_source public.game_events%ROWTYPE;
+        v_game public.games%ROWTYPE;v_after public.games%ROWTYPE;
 BEGIN
  IF auth.uid() IS NULL OR NOT private.apexvision_can_postgame_track(p_game_id)
  THEN RAISE EXCEPTION 'Not authorized to link events for this game'; END IF;
- IF NOT EXISTS (SELECT 1 FROM public.games WHERE id=p_game_id AND status='completed')
+ SELECT * INTO v_game FROM public.games WHERE id=p_game_id FOR UPDATE;
+ IF NOT FOUND OR v_game.status<>'completed'
  THEN RAISE EXCEPTION 'Game must be completed'; END IF;
  SELECT * INTO v_child FROM public.game_events
  WHERE id=p_event_id AND game_id=p_game_id FOR UPDATE;
@@ -18,8 +20,9 @@ BEGIN
  WHERE id=p_source_event_id AND game_id=p_game_id;
  IF NOT FOUND THEN RAISE EXCEPTION 'Source event was not found'; END IF;
  IF NOT EXISTS (SELECT 1 FROM public.apexvision_postgame_entries
-   WHERE game_id=p_game_id AND event_id=p_event_id AND created_by=auth.uid())
- THEN RAISE EXCEPTION 'Only events created in this post-game session may be linked here'; END IF;
+   WHERE game_id=p_game_id AND event_id=p_event_id)
+ THEN RAISE EXCEPTION 'Only authorized post-game additions may be linked with this function'; END IF;
+ IF v_child.period<>v_source.period THEN RAISE EXCEPTION 'Related events must be in the same quarter'; END IF;
  IF NOT (
    (v_source.type='shot' AND v_child.type IN ('assist','offensive_rebound',
       'defensive_rebound','team_offensive_rebound','team_defensive_rebound','block'))
@@ -35,6 +38,9 @@ BEGIN
   UPDATE public.game_events SET linked_event_id=p_source_event_id
   WHERE id=p_event_id AND game_id=p_game_id;
  END IF;
+ SELECT * INTO v_after FROM public.games WHERE id=p_game_id;
+ IF v_after.team_score IS DISTINCT FROM v_game.team_score OR v_after.opponent_score IS DISTINCT FROM v_game.opponent_score OR v_after.status IS DISTINCT FROM v_game.status
+ THEN RAISE EXCEPTION 'Event link changed the official score or status; rolled back'; END IF;
  RETURN p_event_id;
 END;$$;
 REVOKE ALL ON FUNCTION public.apexvision_postgame_link_event(uuid,uuid,uuid) FROM PUBLIC,anon;
