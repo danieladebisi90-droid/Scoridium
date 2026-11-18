@@ -68,3 +68,17 @@
  .postgame-fullscreen.pg-mobile-v8.pg-v3-combined.pg-v8-stat-panel:not(.pg-view-opponent) #post-quick-root .qv-opponent{display:none!important}
  .postgame-fullscreen.pg-mobile-v8 #postgame-court.pg-half-view{touch-action:pan-y}
 }
+
+@media(orientation:portrait) and (min-width:701px) and (max-width:1100px){
+ .postgame-fullscreen.pg-v3-combined #post-quick-root .qv-last{
+  grid-column:1/-1!important;grid-row:2!important;min-height:34px!important;
+  padding:7px 10px!important;margin:0!important;border-radius:8px
+ }
+ .postgame-fullscreen.pg-v3-combined #post-quick-root .qv-layout{
+  grid-template-rows:minmax(0,1fr) auto!important;
+ }
+ .postgame-fullscreen.pg-v3-combined #left-basket-label,
+ .postgame-fullscreen.pg-v3-combined #right-basket-label{
+  font-size:15px!important
+ }
+}
