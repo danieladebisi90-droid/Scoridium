@@ -153,3 +153,11 @@ Run **`MIGRATION_APEXVISION_POSTGAME_OPPONENT_JERSEYS.sql`** ONLY in `ApexVision
 - Successful inserted attempts can be placed before the guided play active when insertion started. **New additional ApexVision-Test-only migration:** `MIGRATION_APEXVISION_POSTGAME_SHOT_INSERTS.sql` persists this ordering across sessions; without it the shot can still be saved but its place in Guided Tracking will not persist.
 - TEAM STAT enters team-stat controls; opponent controls remain usable, and a team rebound records a `team_defensive_rebound` (or team rebound in the appropriate linked flow), not a player rebound.
 - Never merge this draft into main without landscape tablet browser verification, real touch tests, duplicate-shot reconciliation, staging migrations, and Supabase RLS tests.
+
+## Film Room v7 — phone viewport refinement
+- Add `postgame-mobile-v7.css` and `postgame-mobile-v7.js`; responsive phone portrait layout fits the Film Room header, tracked scoreboard, quarter controls, and the active tracking workspace into a single device viewport. Primary page scrolling is disabled; if a contextual control needs additional room, only its panel scrolls.
+- **Stat Tracking:** same original two-team Quick Tracker and existing actions, simplified header/scoreboard, compact navigation, balanced tracked/opponent containers. The roster hydration must still be regression-tested with real test data (empty tracked panel may also indicate roster issues).
+- **Shot Tracking:** half-court prioritized and enlarged; Guided/Free, court controls, navigation and Add Shot share a compact bottom controls area. Existing controls remain accessible within it.
+- **Combined Tracking:** Court / Stat Tracker phone tabs present one workspace at a time; court-first selection switches to original team Quick Tracker and stat-first pending location switches back to the original court. Do not replicate tracking logic.
+- More tools drawer moves the existing review action buttons in the DOM on mobile and restores them on larger screens, preserving event listeners. End Review and Next Quarter remain visible.
+- Static JavaScript syntax, unique HTML IDs, and CSS braces validated; **no browser execution or physical phone testing yet**. Keep PR draft.
