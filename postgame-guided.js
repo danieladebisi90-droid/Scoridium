@@ -123,6 +123,7 @@ function setMode(next){
  guided=next;
  document.body.classList.toggle('pg-guided-on',guided);
  if(guided){
+  courtView='half';$('pg-court-full')?.setAttribute('aria-pressed','false');$('pg-court-half')?.setAttribute('aria-pressed','true');showCourt();
   const first=sequence.findIndex(e=>e.x==null||e.y==null);
   index=first<0?0:first;
   selectGuidedItem(sequence[index]?.id);
@@ -324,6 +325,7 @@ window.addEventListener('apex:shot-review-saved',async e=>{
  }
  await reloadPending();
 });
+window.addEventListener('apex:postgame-events-updated',()=>{if(shotMode&&!window.apexCourtReview?.isBusy())selectGuidedItem(sequence[index]?.id);});
 window.addEventListener('apex:pending-shot-added',()=>{insertBeforeId=null;insertShow(false);document.body.classList.remove('pg-insert-shot');void reloadPending();selectGuidedItem();});
 $('post-period')?.addEventListener('change',()=>{if(shotMode)selectGuidedItem(null);void reloadPending();});
 let ready=false;
