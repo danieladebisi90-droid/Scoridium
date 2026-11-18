@@ -79,7 +79,7 @@ function render(){
   '<strong>Defensive pressure (optional)</strong>'+grid([['open','Open'],['contested','Contested'],['unknown','Unknown']].map(([k,v])=>button('pressure:'+k,v,pressure===k?'pgq-selected':'')))+
   '<div class="pgq-actions">'+button('saveShot','Save Shot & Continue','pgq-primary')+button('skipDetails','Skip Details','')+'</div>';
  }else if(state==='matchShot'){
- content='<p>Possible existing '+shot.points+'PT '+(shot.made?'makes':'misses')+' without locations. Link the correct attempt, or confirm a new shot.</p>'+grid(existingMatches.map((e,i)=>button('link:'+i,'Link '+(e.player_id?'#'+(players().find(p=>p.id===e.player_id)?.number??'?'):'Unassigned')+' · '+e.id.slice(0,6))).concat(button('reallyNew','New Attempt')));
+ content='<p>Possible existing '+shot.points+'PT '+(shot.made?'makes':'misses')+' without locations. Link the correct attempt, or confirm a new shot.</p>'+grid(existingMatches.map((e,i)=>button('link:'+i,'Link '+(e.player_id?'#'+(players().find(p=>p.id===e.player_id)?.number??'?'):'Unassigned')+' · Shot '+(i+1))).concat(button('reallyNew','New Attempt')));
  }else if(state==='assist'){
   content='<p>Was there an assist on the made shot?</p>'+grid(ns.filter(p=>p.id!==player).map(p=>'<button class="pgq-btn" data-action="assistPlayer" data-player="'+esc(p.id)+'">#'+esc(p.number??'?')+'</button>').concat(button('noAssist','No assist / Skip')));
  }else if(state==='rebound'){
@@ -155,7 +155,7 @@ $('post-quick-review')?.addEventListener('click',async()=>{eventsPanel=!eventsPa
 const reviewButton=document.createElement('button');reviewButton.type='button';reviewButton.textContent='Review & Edit';reviewButton.className='post-quick-review-edit';reviewButton.addEventListener('click',()=>{$('post-shot-links-open')?.click();});$('post-quick-review')?.after(reviewButton);
 $('post-period')?.addEventListener('change',()=>reset('Quarter changed. Existing records preserved.'));
 $('post-team')?.addEventListener('change',()=>{team=$('post-team').value;reset();});
-if(api.mode==='combined'){$('post-tab-stat').addEventListener('click',()=>reset());}
+// Combined workflow is one continuous stat + shot experience.
 // Only render when the existing post-game tracker is initialized with its roster.
 window.addEventListener('apex:postgame-court',e=>{
  selectedPoint=e.detail;const prefer=selectedPoint.x<430?'right':'left';root.dataset.side=prefer;
