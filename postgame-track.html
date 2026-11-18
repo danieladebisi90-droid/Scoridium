@@ -5,7 +5,7 @@
 <title>Post-game Tracking · ApexVision</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="stylesheet" href="film-analysis.css">
-<link rel="stylesheet" href="quick-track.css"><link rel="stylesheet" href="postgame-track.css?v=film-v5"><link rel="stylesheet" href="postgame-layout-v5.css?v=film-v5">
+<link rel="stylesheet" href="quick-track.css"><link rel="stylesheet" href="postgame-track.css?v=film-v5"><link rel="stylesheet" href="postgame-layout-v5.css?v=film-v6"><link rel="stylesheet" href="postgame-layout-v6.css?v=film-v6">
 </head>
 <body class="postgame-fullscreen"><main class="film-shell">
 <header class="postgame-topline" aria-label="Film Room navigation"><a id="back-to-room" class="film-back" href="gamehub.html"><span aria-hidden="true">←</span> Film Room</a><strong id="page-title">Post-game Tracking</strong><span id="game-title">Loading completed game…</span></header>
@@ -18,12 +18,12 @@
 <section id="postgame-screen" hidden>
 <div class="pg-review-toolbar" aria-label="Review navigation">
 <div class="postgame-controls">
-<label>Quarter<select id="post-period"></select></label>
+<label><span class="pg-visually-hidden">Quarter</span><select id="post-period" aria-label="Review quarter"></select></label>
 <label>Team<select id="post-team"><option value="us">Tracked team</option><option value="opponent">Opponent</option></select></label>
 <label>Player (optional, tracked team only)<select id="post-player"><option value="">Unassigned / Team</option></select></label>
 </div>
-<div class="postgame-quarter-actions"><div class="pg-review-tools"><button type="button" id="post-switch-direction" hidden>Switch Directions</button><button type="button" id="post-quick-review">Play-by-Play</button><button type="button" id="post-shot-links-open">Shot Links <span id="post-shot-link-count"></span></button><button type="button" id="pg-unmatched-open">Unmatched Shots <span id="pg-unmatched-count"></span></button><button type="button" id="pg-half-toggle" hidden>Show Opponent Half</button></div><div class="pg-review-steps"><button type="button" id="post-next-quarter">Next Quarter</button><button type="button" id="post-end-review" title="Finish the review without changing the official completed game">Finish Review</button></div></div></div><section id="post-stat-section" class="postgame-panel" hidden>
-<div class="postgame-section-top"><h2>QUICK TRACK</h2><button type="button" id="quick-team-mode" aria-pressed="false" hidden>Player Mode</button></div><div id="post-quick-root" class="post-quick-root"></div><button id="post-review-save-anchor" type="button" hidden aria-hidden="true"></button><details class="post-legacy-form"><summary>Advanced manual entry</summary><h3>Record a game event</h3>
+<div class="postgame-quarter-actions"><div class="pg-review-tools"><button type="button" id="post-switch-direction" hidden>Switch Directions</button><button type="button" id="post-quick-review">Play-by-Play</button><button type="button" id="post-shot-links-open">Shot Links <span id="post-shot-link-count"></span></button><button type="button" id="pg-unmatched-open">Unmatched Shots <span id="pg-unmatched-count"></span></button><button type="button" id="pg-half-toggle" hidden>Show Opponent Half</button></div></div></div><div class="pg-review-steps pg-floating-steps"><button type="button" id="post-next-quarter">Next Quarter</button><button type="button" id="post-end-review" title="Finish the review without changing the official completed game">Finish Review</button></div></div></div><section id="post-stat-section" class="postgame-panel" hidden>
+<div class="postgame-section-top"><h2 class="pg-quick-heading">QUICK TRACK</h2><button type="button" id="quick-team-mode" aria-pressed="false" hidden>Player Mode</button></div><div id="post-quick-root" class="post-quick-root"></div><button id="post-review-save-anchor" type="button" hidden aria-hidden="true"></button><details class="post-legacy-form"><summary>Advanced manual entry</summary><h3>Record a game event</h3>
 <p>Choose an event, then save it. Existing events are listed below for review. Shot locations can be filled in separately through Shot Tracking.</p>
 <form id="post-stat-form">
 <div class="postgame-controls">
@@ -42,6 +42,8 @@
 <button type="submit" id="post-stat-save" class="film-save">Save new event</button>
 </form></details></section>
 <section id="post-shot-section" class="postgame-panel" hidden>
+<div class="pg-shot-workspace">
+<aside class="pg-shot-sidebar" aria-label="Shot tracking controls">
 <div id="pg-guided-toolbar" aria-label="Shot Tracking mode">
  <div class="pg-guided-options">
   <button type="button" id="pg-guided-free" aria-pressed="true">Free Tracking</button>
@@ -54,7 +56,22 @@
   <button type="button" id="pg-guided-next">Next</button>
  </div>
 </div>
+<div class="pg-court-modes" role="group" aria-label="Court view">
+<button type="button" id="pg-court-full" aria-pressed="true">Full Court</button>
+<button type="button" id="pg-court-half" aria-pressed="false">Half Court</button>
+</div>
 <div id="pg-guided-hint" aria-live="polite"></div>
+<div class="pg-insert-actions"><button type="button" id="pg-add-shot">+ Record a Shot</button></div>
+<form id="pg-add-shot-form" hidden>
+<strong>Insert a missing shot</strong>
+<label>Team<select id="pg-add-shot-team"><option value="us">Tracked team</option><option value="opponent">Opponent</option></select></label>
+<label>Result<select id="pg-add-shot-made"><option value="false">Missed</option><option value="true">Made</option></select></label>
+<label>Shot value<select id="pg-add-shot-value"><option value="2">2PT</option><option value="3">3PT</option></select></label>
+<div class="pg-add-shot-buttons"><button type="submit">Choose Location</button><button type="button" id="pg-add-shot-cancel">Cancel</button></div>
+</form>
+<div id="pg-shot-sequence" class="pg-shot-sequence" aria-live="polite"></div>
+</aside>
+<div class="pg-shot-court-area">
 <div class="postgame-court-head"><h2>SHOT TRACKER</h2></div>
 <p>Tap the exact FIBA full court to choose a location. Match an existing shot first whenever one was stat-tracked live.</p>
 <svg id="postgame-court" viewBox="0 0 860 470" preserveAspectRatio="xMidYMid meet" role="img" aria-label="FIBA basketball court for post-game shot location selection">
@@ -155,7 +172,7 @@
 <g id="postgame-markers" pointer-events="none"></g>
 <circle id="postgame-target" cx="-30" cy="-30" r="10" fill="#e3bd20" stroke="#10223f" stroke-width="3" pointer-events="none"/>
 </svg>
-<p id="post-shot-preview" class="postgame-selection">Single click = make · Double click = miss</p><div id="postgame-court-prompt" class="postgame-court-prompt" hidden aria-live="polite"></div>
+<p id="post-shot-preview" class="postgame-selection">Single click = make · Double click = miss</p><div id="postgame-court-prompt" class="postgame-court-prompt" hidden aria-live="polite"></div></div></div>
 <dialog id="post-shot-dialog" class="postgame-dialog"><div class="postgame-dialog-top"><strong>Record Shot</strong><button type="button" id="post-shot-dialog-close" aria-label="Close">×</button></div><form id="post-shot-form">
 <div class="postgame-controls">
 <label>Result<select id="post-shot-made"><option value="true">Made</option><option value="false">Missed</option></select></label>
@@ -185,6 +202,6 @@
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
-<script src="postgame-track.js?v=film-v5" defer></script><script src="postgame-live-quick.js?v=film-v5" defer></script><script src="postgame-court-flow.js?v=film-v5" defer></script><script src="postgame-guided.js?v=film-v5" defer></script>
+<script src="postgame-track.js?v=film-v6" defer></script><script src="postgame-live-quick.js?v=film-v6" defer></script><script src="postgame-court-flow.js?v=film-v6" defer></script><script src="postgame-guided.js?v=film-v6" defer></script>
 </body>
 </html>
