@@ -26,7 +26,7 @@
   const player=()=>players.find(p=>String(p.id)===String(who));
   const label=(id)=>id==null?'TEAM':`#${players.find(p=>String(p.id)===String(id))?.number??'?'}`;
   const tell=s=>{last=s;render();};
-  const reset=()=>{mode='idle';who=null;source=null;block=null;opponentJersey=null;foul={type:null,shot:null,result:null,bonus:null,ft:null,technicalPersonal:null};render();};
+  const reset=()=>{mode='idle';who=null;source=null;block=null;selectedCourtShot=null;opponentJersey=null;foul={type:null,shot:null,result:null,bonus:null,ft:null,technicalPersonal:null};render();};
   const record=(type,team,playerId=null,extra={})=>{
     if(!active())return null;
     if(type==='no_assist')return null; // confirmation is a UI choice, not a real stat event.
