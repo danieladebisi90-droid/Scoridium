@@ -7,6 +7,7 @@ if(!api)return;
 const shotMode=api.mode==='shot',hasCourt=api.mode!=='stat';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
 let guided=false,sequence=[],index=0,timeline=new Map(),pending=[],queueReady=false,loading=false;
+let reversed=false;
 const period=()=>api.getPeriod();
 const label=e=>(e.team==='us'?(api.getGame()?.team_name||'Tracked Team'):(api.getGame()?.opponent||'Opponent'))+
  ' · '+(e.made?'Made ':'Missed ')+e.points+'PT'+(e.player_id?' · #'+(api.getPlayers().find(p=>String(p.id)===String(e.player_id))?.number??'?'):'');
@@ -165,13 +166,14 @@ function initHalfCourt(){
   const compact=media.matches;
   toggle.hidden=!compact;
   if(!compact){court.setAttribute('viewBox','0 0 860 470');return;}
-  const trackedLeft=Number(period())<=2;const left=opponent?!trackedLeft:trackedLeft;
+  const trackedLeft=(Number(period())<=2)!==reversed;const left=opponent?!trackedLeft:trackedLeft;
   court.setAttribute('viewBox',(left?'10':'430')+' 10 420 450');
   toggle.textContent=opponent?'Show Tracked Half':'Show Opponent Half';
   toggle.setAttribute('aria-pressed',String(opponent));
  }
  toggle?.addEventListener('click',()=>{if(window.apexCourtReview?.isBusy())return;opponent=!opponent;show();});
  media.addEventListener('change',show);
+ window.addEventListener('apex:review-direction-changed',ev=>{reversed=!!ev.detail?.reversed;show();});
  $('post-period')?.addEventListener('change',()=>{opponent=false;show();});
  show();
 }
