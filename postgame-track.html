@@ -42,6 +42,19 @@
 <button type="submit" id="post-stat-save" class="film-save">Save new event</button>
 </form></details></section>
 <section id="post-shot-section" class="postgame-panel" hidden>
+<div id="pg-guided-toolbar" aria-label="Shot Tracking mode">
+ <div class="pg-guided-options">
+  <button type="button" id="pg-guided-free" aria-pressed="true">Free Tracking</button>
+  <button type="button" id="pg-guided-enable" aria-pressed="false">Guided Tracking</button>
+ </div>
+ <div id="pg-guided-status" role="status">Choose how to track shots.</div>
+ <div class="pg-guided-navigation">
+  <button type="button" id="pg-guided-previous">Previous</button>
+  <button type="button" id="pg-guided-skip">Skip</button>
+  <button type="button" id="pg-guided-next">Next</button>
+ </div>
+</div>
+<div id="pg-guided-hint" aria-live="polite"></div>
 <div class="postgame-court-head"><h2>SHOT TRACKER</h2></div>
 <p>Tap the exact FIBA full court to choose a location. Match an existing shot first whenever one was stat-tracked live.</p>
 <svg id="postgame-court" viewBox="0 0 860 470" preserveAspectRatio="xMidYMid meet" role="img" aria-label="FIBA basketball court for post-game shot location selection">
@@ -153,6 +166,11 @@
 <button type="submit" id="post-shot-save" class="film-save" disabled>Save shot location</button>
 </form></dialog>
 </section>
+<dialog id="pg-review-queue-dialog" aria-label="Unresolved shot matching" class="postgame-dialog">
+ <div class="postgame-dialog-top"><strong>Unmatched Shots</strong><button type="button" id="pg-review-queue-close" aria-label="Close unmatched shots">×</button></div>
+ <p>Review ambiguous shots when convenient. Pending observations are not counted as extra attempts or points.</p>
+ <div id="pg-review-queue-list" role="list"></div>
+</dialog>
 <dialog id="post-shot-links-dialog" class="postgame-dialog postgame-links-dialog"><div class="postgame-dialog-top"><strong>Shot Links</strong><button type="button" id="post-shot-links-close" aria-label="Close">×</button></div><section id="post-observation-section" class="postgame-panel" hidden>
 <h2>Shots recorded by a live Shot Tracker</h2>
 <p>These observations may not be in the official game statistics yet. Match them to an existing shot, or confirm a missing attempt before adding it.</p>
