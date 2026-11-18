@@ -69,4 +69,58 @@ window.addEventListener('apex:court-view-updated',labels);
 window.addEventListener('apex:review-direction-changed',labels);
 $('post-period')?.addEventListener('change',()=>queueMicrotask(labels));
 deviceSetup();
+// iPad portrait: one shared quarter / Next Quarter / Finish Review / More bar,
+// using the original buttons (not clones) so all action listeners remain intact.
+const screen=$('postgame-screen');
+const toolbar=screen?.querySelector('.pg-review-toolbar');
+const steps=screen?.querySelector('.pg-floating-steps');
+const more=$('pg-mobile-more'),drawer=$('pg-mobile-extra');
+const actions=toolbar?.querySelector('.pg-review-tools');
+const moved=new Map();
+let ipadToolbarActive=false;
+function insertWithMarker(el,parent){
+ if(!el||!parent||moved.has(el))return;
+ const marker=document.createComment('restore original review action');
+ el.parentNode?.insertBefore(marker,el);
+ moved.set(el,marker);
+ parent.appendChild(el);
+}
+function resetIpadToolbar(){
+ if(!ipadToolbarActive)return;
+ for(const [el,marker] of moved){
+  if(marker.parentNode)marker.replaceWith(el);
+  else marker.remove();
+ }
+ moved.clear();ipadToolbarActive=false;
+ if(drawer)drawer.hidden=true;
+ if(more){more.textContent='More';more.setAttribute('aria-expanded','false');}
+}
+function updateIpadToolbar(){
+ if(!toolbar||!steps||!actions||!more||!drawer)return;
+ if(!ipad.matches){resetIpadToolbar();return;}
+ if(ipadToolbarActive)return;
+ ipadToolbarActive=true;
+ insertWithMarker(steps,toolbar);
+ insertWithMarker(more,toolbar);
+ for(const child of Array.from(actions.children))insertWithMarker(child,drawer);
+ drawer.hidden=true;
+ more.textContent='More';more.setAttribute('aria-expanded','false');
+}
+more?.addEventListener('click',()=>{
+ if(!ipad.matches)return;
+ const open=drawer.hidden;
+ drawer.hidden=!open;more.textContent=open?'Close':'More';
+ more.setAttribute('aria-expanded',String(open));
+});
+drawer?.addEventListener('click',e=>{
+ if(!ipad.matches||!e.target.closest('button'))return;
+ drawer.hidden=true;more.textContent='More';more.setAttribute('aria-expanded','false');
+});
+document.addEventListener('click',e=>{
+ if(!ipad.matches||drawer.hidden||drawer.contains(e.target)||e.target===more)return;
+ drawer.hidden=true;more.textContent='More';more.setAttribute('aria-expanded','false');
+});
+ipad.addEventListener('change',updateIpadToolbar);
+window.addEventListener('apex:postgame-ready',updateIpadToolbar);
+updateIpadToolbar();
 })();
