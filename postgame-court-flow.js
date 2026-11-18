@@ -237,7 +237,7 @@ prompt?.addEventListener('click',async ev=>{
 const next=$('post-next-quarter'),finish=$('post-end-review'),back=$('back-to-room');
 function reviewLeaveGuard(event){
  const quick=window.apexPostgameQuick;
- if(!(shotMode&&!complete()||quick?.hasPending()))return;
+ if(!(shotMode&&(!complete()||!!insertedShot)||quick?.hasPending()))return;
  if(!confirm('There is an unfinished play or an event still saving. Leave it? Unsaved selections will be discarded, but saved events remain.')){
    event.preventDefault();event.stopImmediatePropagation();return;
  }
@@ -246,7 +246,7 @@ function reviewLeaveGuard(event){
    event.preventDefault();event.stopImmediatePropagation();
    api.notify('Finishing the saved event. Try again once the save completes.');return;
  }
- if(shotMode&&!complete())clear();
+ if(shotMode&&(!complete()||insertedShot)){clear();insertedShot=null;}
  if(quick?.hasPending())quick.abort();
 }
 next?.addEventListener('click',reviewLeaveGuard,true);
@@ -267,7 +267,7 @@ window.apexCourtReview={
   return true;
  },
  getGuidedTarget:()=>guidedTarget,
- isBusy:()=>saving||!complete(),
+ isBusy:()=>saving||!complete()||!!insertedShot,
  reset:()=>{guidedTarget=null;insertedShot=null;clear();document.body.classList.remove('pg-guided-on');}
 };
 $('post-period')?.addEventListener('change',()=>{periodStamp++;guidedTarget=null;insertedShot=null;document.body.classList.remove('pg-guided-on');clear();updateScoreboard();});
