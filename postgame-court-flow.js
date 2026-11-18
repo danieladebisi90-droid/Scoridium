@@ -9,6 +9,7 @@ const court=$('postgame-court'),prompt=$('postgame-court-prompt');
 const escapeHTML=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const categories=[['catch_shoot','Catch & Shoot'],['pull_up','Dribble Pull-Up'],['drive','Drive / Layup'],['post','Post Move'],['putback','Putback'],['other','Other']];
 let shot=null,selectedJersey=null,step='idle',timer=null,directionOverride=false,saving=false,periodStamp=0;
+let guidedTarget=null;
 let teamName='Tracked Team';
 const opponentName=()=>api.getGame()?.opponent||'Opponent';
 const period=()=>api.getPeriod();
@@ -64,7 +65,7 @@ function render(){
   content=tag+'<strong>WHO SHOT?</strong>'+grid(numbers)+(shot.team==='opponent'?'<label class="pg-flow-manual">Other jersey # <input type="number" min="0" max="99" id="post-opp-jersey" placeholder="0–99"><button data-flow="manualJersey">Use</button></label>':'')+
     '<div class="pg-flow-actions"><button data-flow="cancel">Cancel</button></div>';
  }else if(step==='category'){
-  content=tag+'<strong>PLAYER '+escapeHTML(selectedJersey?.label)+'</strong><p>Choose shot category</p>'+grid(categories)+
+  content=tag+'<strong>'+(shot.guidedId?'GUIDED SHOT':'PLAYER '+escapeHTML(selectedJersey?.label||'Unassigned'))+'</strong><p>Choose shot category</p>'+grid(categories)+
   '<div class="pg-flow-actions"><button data-flow="back">Back</button><button data-flow="categorySkip">Skip category</button></div>';
  }else if(step==='match'){
   const candidates=shot.candidates||[];
@@ -78,6 +79,19 @@ function begin(location,made){
  if(saving)return;
  if(shotMode&&!complete()){api.notify('Finish or cancel the current shot before selecting another location.');return;}
  const team=teamAt(location.x),value=api.shotValue(location.x,location.y);
+ if(shotMode&&guidedTarget){
+   if(team!==guidedTarget.team||value!==Number(guidedTarget.points)){
+     api.notify('This play is '+guidedTarget.team+' '+guidedTarget.points+'PT. Choose a matching location on that team’s basket, or use Switch Directions.');
+     return;
+   }
+   if(guidedTarget.x!=null&&guidedTarget.y!=null){
+     api.notify('This shot already has a location. Use Free Tracking to review or change its details.');return;
+   }
+   shot={position:location,made:guidedTarget.made,points:value,team,guidedId:guidedTarget.id};
+   const player=api.getPlayers().find(p=>String(p.id)===String(guidedTarget.player_id));
+   selectedJersey=player?{id:player.id,number:player.number,label:'#'+player.number}:{label:'Unassigned'};
+   step='category';render();return;
+ }
  const detail={position:location,made,points:value,team};
  if(combined){
   window.dispatchEvent(new CustomEvent('apex:postgame-court-shot',{detail}));
@@ -98,6 +112,7 @@ if(shotMode||combined){
  const captureClick=ev=>{
   ev.stopImmediatePropagation();ev.preventDefault();
   const point=courtPoint(ev);if(!point)return;
+  if(shotMode&&guidedTarget){if(timer){clearTimeout(timer);timer=null;}begin(point,guidedTarget.made);return;}
   if(timer){clearTimeout(timer);timer=null;begin(point,false);return;}
   if(ev.detail>=2){begin(point,false);return;}
   timer=setTimeout(()=>{timer=null;begin(point,true);},260);
@@ -106,10 +121,39 @@ if(shotMode||combined){
  court.addEventListener('dblclick',ev=>{ev.preventDefault();ev.stopImmediatePropagation();},true);
 }
 async function saveShotLinkOrNew(){
+ if(shot.guidedId){
+  const match=api.getEvents().find(e=>e.id===shot.guidedId);
+  if(!match){api.notify('The selected play is no longer available. Refresh Guided Tracking.');return;}
+  await finalize(match);return;
+ }
  const candidates=api.getEvents().filter(e=>e.type==='shot'&&Number(e.period)===period()&&e.team===shot.team
    &&Number(e.points)===shot.points&&e.made===shot.made&&(e.x==null||e.y==null));
- if(candidates.length){shot.candidates=candidates;step='match';render();return;}
+ // A player-confirmed unique candidate is safe to match. Never guess between
+ // multiple similar attempts or infer identity from shot value alone.
+ const direct=candidates.length===1&&selectedJersey?.id&&
+  String(candidates[0].player_id)===String(selectedJersey.id);
+ if(direct){await finalize(candidates[0]);return;}
+ const locatedDuplicate=api.getEvents().some(e=>e.type==='shot'&&e.team===shot.team
+   &&Number(e.period)===period()&&e.made===shot.made&&Number(e.points)===shot.points
+   &&e.x!=null&&e.y!=null&&Math.hypot(Number(e.x)-shot.position.x,Number(e.y)-shot.position.y)<16);
+ if(candidates.length||locatedDuplicate){await savePending();return;}
  await finalize(null);
+}
+async function savePending(){
+ if(!shot||saving)return;
+ saving=true;
+ try{
+  const auth=await supabaseClient.auth.getUser(),uid=auth.data?.user?.id;
+  if(!uid)throw new Error('Please sign in again.');
+  const record={id:crypto.randomUUID(),game_id:api.gameId,period:period(),team:shot.team,points:shot.points,
+   made:shot.made,x:shot.position.x,y:shot.position.y,player_id:shot.team==='us'?selectedJersey?.id||null:null,
+   category:shot.category||null,opponent_jersey:shot.team==='opponent'?selectedJersey?.number??null:null,created_by:uid};
+  const result=await supabaseClient.from('apexvision_postgame_pending_shots').insert(record);
+  if(result.error)throw result.error;
+  clear();api.notify('Uncertain shot saved to Unmatched Shots. No duplicate attempt or points were added.');
+  window.dispatchEvent(new CustomEvent('apex:pending-shot-added'));
+ }catch(error){api.notify('Could not save pending shot: '+error.message+' (check staging migration).');}
+ finally{saving=false;}
 }
 async function finalize(match){
  if(!shot||saving)return;
@@ -145,8 +189,10 @@ async function finalize(match){
     if(result.error)api.notify('Shot saved, but opponent jersey attribution needs review: '+result.error.message);
    }
   }
+  const wasGuided=!!shot.guidedId;
   await api.refresh();updateScoreboard();clear();
-  api.notify('Shot recorded. Ready for the next shot.');
+  window.dispatchEvent(new CustomEvent('apex:shot-review-saved',{detail:{eventId,wasGuided}}));
+  api.notify(wasGuided?'Guided shot located. Moving to the next recorded attempt.':'Shot recorded. Ready for the next shot.');
  }catch(error){api.notify('Could not complete shot: '+(error.message||error));render();}
  finally{saving=false;}
 }
@@ -198,7 +244,18 @@ function reviewLeaveGuard(event){
 next?.addEventListener('click',reviewLeaveGuard,true);
 finish?.addEventListener('click',reviewLeaveGuard,true);
 back?.addEventListener('click',reviewLeaveGuard,true);
-$('post-period')?.addEventListener('change',()=>{periodStamp++;clear();updateScoreboard();});
+window.apexCourtReview={
+ setGuidedTarget:event=>{
+  if(!shotMode||saving||!complete())return false;
+  guidedTarget=event||null;
+  document.body.classList.toggle('pg-guided-on',!!event);
+  return true;
+ },
+ getGuidedTarget:()=>guidedTarget,
+ isBusy:()=>saving||!complete(),
+ reset:()=>{guidedTarget=null;clear();document.body.classList.remove('pg-guided-on');}
+};
+$('post-period')?.addEventListener('change',()=>{periodStamp++;guidedTarget=null;document.body.classList.remove('pg-guided-on');clear();updateScoreboard();});
 window.addEventListener('apex:postgame-events-updated',updateScoreboard);
 window.addEventListener('focus',()=>void refreshScoreboard());
 setInterval(()=>{if(!document.hidden)void refreshScoreboard();},7000);
