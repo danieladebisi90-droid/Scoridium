@@ -123,6 +123,12 @@
  body.postgame-fullscreen.pg-mobile-v8 .pg-v8-bottom>.pg-guided-navigation{
   width:100%;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px
  }
+ body.postgame-fullscreen.pg-mobile-v8 .pg-v8-bottom #pg-half-toggle:not([hidden]){
+  display:block!important;width:100%;min-height:35px!important;padding:6px 9px!important;
+  border:1px solid #bdd0e7;border-radius:8px;background:#f1f6fd;
+  color:var(--review-primary,#063d82);font-size:11px;font-weight:800
+ }
+ body.postgame-fullscreen.pg-mobile-v8 #pg-mobile-extra .pg-court-modes{display:none!important}
  body.postgame-fullscreen.pg-mobile-v8 .pg-v8-bottom>.pg-insert-actions{width:100%}
  body.postgame-fullscreen.pg-mobile-v8 .pg-v8-bottom #pg-add-shot{
   min-height:38px!important;width:100%!important
