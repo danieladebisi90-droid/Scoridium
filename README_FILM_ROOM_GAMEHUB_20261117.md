@@ -87,3 +87,46 @@ Run these **after the previous three migrations**, in this order, in **ApexVisio
 - Internal event IDs remain stored for correct matching and linking, but are hidden from visible shot selection labels.
 - No SQL schema changes were needed in this UX revision. The three additional staging migrations from the previous phase remain prerequisites for review dates, event linking, and footage timeline.
 - Latest UX changes are code-only and have **syntax / DOM reference static checks** but have **not undergone manual cross-device browser tests**, particularly the Game Hub modal inside the shared app-shell iframe. Keep this PR draft until staging passes.
+
+## Finalized Film Room v3 layout (approved design; staging implementation)
+
+**Home selector**
+- Game Hub stays visible under the compact Film Room modal. The popup has an X, no redundant Back to Game Hub link, and no internal scroll. Three compact cards have status, Last Reviewed and a small shared tracked-score preview.
+- Team colors use the selected team's cached color palette, falling back to navy/gold. The official final score remains distinct from the tracked points.
+- Selecting a mode opens a dedicated full-screen page. Both **Back to Film Room** and **Finish Review** return to Game Hub with the modal reopened for the selected completed game.
+- **Next Quarter** advances the selected review period only. No completed-game state mutation is permitted.
+
+**Stat Tracking**
+- Uses `postgame-live-quick.js`, a post-game adapter of the actual `quick-track.js` button layout and branching prompts, rather than `postgame-quick.js` (the earlier simplified prototype, no longer loaded).
+- Tracked and opponent team containers replace jersey buttons with stat buttons, then relevant secondary prompts; after completion the interaction resets to jersey selection.
+- Original live-only state gating and `addEvent()` persistence are replaced by authorized post-game event RPCs in a sequential write queue. The final score is never overwritten.
+
+**Shot Tracking**
+- The full existing FIBA court is the primary workspace. Single click/tap = made shot, double click/tap = missed shot; no Make/Miss prompt.
+- Court click selects offensive team based on the basket side and quarter, with manual Switch Directions override.
+- The opposite half displays a contextual prompt: jersey-number buttons, then shot-category buttons. After save, the prompt disappears and the court resets. No persistent sidebars or extra post-shot statistical prompts.
+- When an unlocated matching attempt already exists, the user must explicitly link it or confirm that a different attempt is being entered. Event IDs remain internal.
+- Opponent jersey selection stores an integer on the related shot in `apexvision_postgame_opponent_jerseys` (new staging migration below).
+
+**Stat & Shot Tracking**
+- Uses the same court beside two original Quick Tracker-style team containers (responsive stacking on narrow screens), not Stat-vs-Shot sub-tabs.
+- Either the court or a team stat can start a play. Court first highlights the relevant team's jersey container. Selecting a jersey replaces jersey buttons with stats in that same team container. The selected/active team container receives a gold outline.
+- Stat first: an entered shot highlights the court so a later location can be added to the original shot ID, not entered as another attempt. An assist recorded before a made shot can be explicitly linked to that shot.
+- A play proceeds through the existing Quick Tracker's applicable secondary prompts, then resets. Realtime changes and saves update the common tracked score in all three rooms.
+- The scoreboard sums saved made FGs/FTs for both teams and shows the immutable official final score separately, including an explanatory mismatch hover. Supabase Realtime plus refresh on focus and periodic polling provide cross-room updates.
+
+**Additional ApexVision-Test migration (not applied automatically)**
+
+Run **`MIGRATION_APEXVISION_POSTGAME_OPPONENT_JERSEYS.sql`** ONLY in `ApexVision-Test`, after the six migrations already applied. It creates one RLS-protected jersey-attribution row per opponent shot. Without it, opponent shots can save but jersey attribution reports a warning. Never apply to production before staging is verified.
+
+**Manual test gates (not completed in this coding environment)**
+1. Game Hub → Film Room opens a single compact non-scrolling popup over Game Hub; X closes it.
+2. Open each room in the full browser viewport; Back and Finish Review reopen the same popup.
+3. Stat Tracking: verify original jersey→stat→assist/rebound/foul/FT→reset flow for tracked and opponent team.
+4. Shot Tracking: single/double click, automatic FIBA points, both team directions, opposite-court prompt, tracked and opponent jersey selection, classification, auto dismiss, existing shot linking.
+5. Combined: both court-first and stat-first sequences, assist #0 then shooter #10, linked shot location, active-container highlight, no duplicate FGA.
+6. Shared tracked scoreboard after edits in each room, page navigation and a second device; official final unchanged.
+7. Phone portrait/landscape overflow, popup sizing, half-court context, safe-area, and asynchronous failure recovery.
+8. Authorization/RLS, including test users with no tracking rights and duplicate/partial event rollback behavior.
+
+**Known limitations still to verify/refine:** The post-game adapter reuses the original live workflow visuals and decision branches, but the backfill/RPC persistence is fundamentally different from live tracking. Real browser verification is required, especially for opponent jersey saves, assist-first linking, compound foul/FT scenarios, and unreliable connectivity. The prior `postgame-quick.js` and `film-analysis.html` remain in the draft for compatibility but are not primary Film Room modes. Keep this PR draft.
