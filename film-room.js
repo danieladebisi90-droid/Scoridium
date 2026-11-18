@@ -53,7 +53,7 @@ async function init(){
   const card=document.querySelector('[data-activity="'+activity+'"]');
   card.querySelector('[data-open]').addEventListener('click',async()=>{
    const previous=records.get(activity),status=previous?.status||'in_progress';
-   if(!(await update(activity,status,{reviewed:true})))return;
+   if(!(await update(activity,status,{reviewed:false})))return;
    location.href=destinations[activity]+'&gameId='+encodeURIComponent(gameId);
   });
   card.querySelector('[data-complete]').addEventListener('click',async()=>{
