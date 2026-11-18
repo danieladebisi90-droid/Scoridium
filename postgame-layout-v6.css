@@ -100,3 +100,24 @@
  .postgame-fullscreen.pg-v3-shot .pg-guided-options{flex:1}
  .postgame-fullscreen.pg-v3-shot .pg-guided-navigation{flex:1 1 100%}
 }
+
+/* Half court must grow to the available court-area height instead of
+   letterboxing a 420x450 viewBox inside a full-court rectangle. */
+.postgame-fullscreen.pg-v3-shot .pg-shot-court-area #postgame-court.pg-half-view{
+ width:auto!important;height:100%!important;max-width:100%!important;
+ aspect-ratio:420 / 450!important;margin:0 auto!important;
+}
+.postgame-fullscreen.pg-v3-shot .pg-shot-court-area .postgame-court-workspace:has(.pg-half-view){
+ display:flex!important;align-items:center;justify-content:center;height:100%!important;min-height:0!important;
+}
+.postgame-fullscreen.pg-v3-shot .pg-shot-court-area .postgame-court-workspace:has(.pg-half-view) #postgame-court{
+ max-height:100%!important;flex:0 1 auto!important;
+}
+.postgame-fullscreen.pg-v3-shot.pg-guided-on #pg-guided-hint{display:flex!important;flex-wrap:wrap;align-items:center;gap:5px;background:#0c3770}
+.postgame-fullscreen.pg-v3-shot #pg-guided-hint small{display:block;flex:1 1 100%;opacity:.7;font-size:10px}
+.postgame-fullscreen.pg-v3-shot #pg-guided-hint strong{font-size:13px}
+.postgame-fullscreen.pg-v3-shot #pg-guided-hint em{flex:1 1 100%;font-size:10px;font-style:normal;font-weight:500;opacity:.85}
+.postgame-fullscreen.pg-v3-shot #pg-guided-hint:empty{display:none!important}
+@media(min-width:900px) and (orientation:landscape) and (min-height:580px){
+ .postgame-fullscreen.pg-v3-shot .pg-shot-court-area .postgame-court-workspace:has(.pg-half-view){max-height:calc(100dvh - 240px)!important}
+}
