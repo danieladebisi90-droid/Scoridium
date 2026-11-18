@@ -4,7 +4,7 @@ const $=id=>document.getElementById(id),api=window.apexPostgame,root=$('post-qui
 if(!api||!root||api.mode==='shot')return;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let state='players',player=null,team='us',shot=null,creation='',pressure='',source=null;
-let busy=false,teamMode=false,eventsPanel=false,last='Select a player or a team action.',selectedPoint=null;
+let busy=false,teamMode=false,eventsPanel=false,last='Select a player or a team action.',selectedPoint=null,existingMatches=[];
 const labels={shot:'SHOT',free_throw:'FT',assist:'AST',offensive_rebound:'OREB',defensive_rebound:'DREB',team_offensive_rebound:'TEAM OREB',team_defensive_rebound:'TEAM DREB',steal:'STL',turnover:'TO',block:'BLK',foul:'PF'};
 const button=(action,label,kind='')=>'<button type="button" class="pgq-btn '+kind+'" data-action="'+esc(action)+'">'+esc(label)+'</button>';
 const grid=buttons=>'<div class="pgq-grid">'+buttons.join('')+'</div>';
@@ -26,6 +26,8 @@ async function save(type,{points=null,made=null,position=null}={},buttonElement)
 }
 async function finishShot(buttonElement){
  if(!shot)return;
+ existingMatches=shot.position?api.getEvents().filter(e=>e.type==='shot'&&e.x==null&&e.y==null&&e.team===team&&Number(e.period)===api.getPeriod()&&Number(e.points)===shot.points&&e.made===shot.made):[];
+ if(existingMatches.length){state='matchShot';render();return;}
  const id=await save('shot',{points:shot.points,made:shot.made,position:shot.position},buttonElement);
  if(!id){render();return;}
  source=id;selectedPoint=null;
@@ -56,6 +58,8 @@ function render(){
   grid([['catch_shoot','Catch & Shoot'],['pull_up','Pull-Up'],['drive','Drive / Layup'],['post','Post Move'],['putback','Putback'],['other','Other']].map(([k,v])=>button('creation:'+k,v,creation===k?'pgq-selected':'')))+
   '<strong>Defensive pressure (optional)</strong>'+grid([['open','Open'],['contested','Contested'],['unknown','Unknown']].map(([k,v])=>button('pressure:'+k,v,pressure===k?'pgq-selected':'')))+
   '<div class="pgq-actions">'+button('saveShot','Save Shot & Continue','pgq-primary')+button('skipDetails','Skip Details','')+'</div>';
+ }else if(state==='matchShot'){
+ content='<p>Possible existing '+shot.points+'PT '+(shot.made?'makes':'misses')+' without locations. Link the correct attempt, or confirm a new shot.</p>'+grid(existingMatches.map((e,i)=>button('link:'+i,'Link '+(e.player_id?'#'+(players().find(p=>p.id===e.player_id)?.number??'?'):'Unassigned')+' · '+e.id.slice(0,6))).concat(button('reallyNew','New Attempt')));
  }else if(state==='assist'){
   content='<p>Was there an assist on the made shot?</p>'+grid(ns.filter(p=>p.id!==player).map(p=>'<button class="pgq-btn" data-action="assistPlayer" data-player="'+esc(p.id)+'">#'+esc(p.number??'?')+'</button>').concat(button('noAssist','No assist / Skip')));
  }else if(state==='rebound'){
@@ -81,6 +85,19 @@ root.addEventListener('click',async e=>{
  if(a.startsWith('creation:')){creation=a.slice(9)===creation?'':a.slice(9);render();return;}
  if(a.startsWith('pressure:')){pressure=a.slice(9)===pressure?'':a.slice(9);render();return;}
  if(a==='saveShot'||a==='skipDetails'){if(a==='skipDetails'){creation='';pressure='';}await finishShot(b);return;}
+ if(a.startsWith('link:')){
+ const existing=existingMatches[Number(a.slice(5))];if(!existing||!shot?.position)return;
+ const ok=await api.linkShot(existing,shot.position,b);if(!ok){render();return;}
+ if(creation||pressure)await api.saveClassification(existing.id,creation,pressure);
+ last='Existing '+shot.points+'PT attempt linked to court.';selectedPoint=null;
+ source=existing.id;state=team==='us'?(shot.made?'assist':'rebound'):'players';render();return;
+ }
+ if(a==='reallyNew'){
+ const id=await save('shot',{points:shot.points,made:shot.made,position:shot.position},b);
+ if(!id){render();return;}
+ if(creation||pressure)await api.saveClassification(id,creation,pressure);
+ source=id;selectedPoint=null;last='New shot added';state=team==='us'?(shot.made?'assist':'rebound'):'players';render();return;
+ }
  if(a==='noAssist'){reset('Shot recorded without an assist attribution.');return;}
  if(a==='assistPlayer'){const name=b.dataset.player;const prior=player;player=name;const id=await save('assist',{},b);player=prior;if(id)reset('Assist recorded');else render();return;}
  if(a.startsWith('reb:')){
@@ -102,7 +119,7 @@ root.addEventListener('click',async e=>{
   if(!type)return;const id=await save(type,{},b);if(id)reset(type.toUpperCase()+' recorded');else render();return;
  }
 });
-$('post-quick-review')?.addEventListener('click',()=>{eventsPanel=!eventsPanel;render();});
+$('post-quick-review')?.addEventListener('click',()=>{$('post-shot-links-open')?.click();});
 $('post-period')?.addEventListener('change',()=>reset('Quarter changed. Existing records preserved.'));
 $('post-team')?.addEventListener('change',()=>{team=$('post-team').value;reset();});
 if(api.mode==='combined'){$('post-tab-stat').addEventListener('click',()=>reset());}
