@@ -153,7 +153,7 @@
       // recordStat auto-creates opposite-team TO and links it.
       if(active()){const id=record('steal','us',pid);if(id)record('turnover','opponent',null,{linkedEventId:id});conclude(`${names().us} ${label(pid)} • STL + opponent TO`);}return;
     }
-    const types={reb:'defensive_rebound',ast:'assist',blk:'block'};
+    const types={reb:teamMode?'team_defensive_rebound':'defensive_rebound',ast:'assist',blk:'block'};
     if(types[action]){record(types[action],'us',pid);conclude(`${names().us} ${label(pid)} • ${action.toUpperCase()}`);}
   }
   function opponentAction(action){
@@ -252,7 +252,7 @@
     if(a==='chooseBlock'){if(shooting==='opponent'){mode='blocker';render();}return;}
     if(a==='blockPlayer'){block=b.dataset.player;related('block','us',block);mode='reboundChoice';render();return;}
     if(a==='chooseRebound'){mode='reboundPlayer';render();return;}
-    if(a==='rebPlayer'){assignRebound('us',b.dataset.player);return;}
+    if(a==='rebPlayer'){assignRebound('us',b.dataset.player||null,teamMode||!b.dataset.player);return;}
     if(a==='unknownReb'){assignRebound('us',null);return;}
     if(a==='noLiveRebound'){conclude('Final FT missed • dead ball/no live rebound');return;}
     if(a==='setFoul'){
