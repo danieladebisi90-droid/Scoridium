@@ -192,6 +192,7 @@ if (totalItems === 1 && eventsForDay.length === 1) {
             renderGameCalendar();
             renderMobileSelectedDay();
             renderMobileGameCard();
+    renderMobilePreviousGame();
             window.scoridiumTournaments?.renderSelectedDate();
             const selectedCompleted = selectedGameDate ? gameHubGames.filter(g =>
                 String(g.date).slice(0,10) === dateKey && g.status === "completed") : [];
@@ -259,6 +260,7 @@ async function loadGameHubGames() {
     window.scoridiumTournaments?.renderSelectedDate();
     renderMobileSelectedDay();
     renderMobileGameCard();
+    renderMobilePreviousGame();
 
     if (scheduleModal && !scheduleModal.hidden) {
     renderExistingScheduleEvents();
@@ -2013,6 +2015,7 @@ console.log("Game Hub events loaded:", gameHubEvents.length);
 renderGameCalendar();
 renderMobileSelectedDay();
 renderMobileGameCard();
+    renderMobilePreviousGame();
 
 // Refresh the editor list if the popup is open.
 if (scheduleModal && !scheduleModal.hidden) {
@@ -2203,6 +2206,55 @@ function renderMobileSelectedDay() {
     }
 }
 
+function renderMobilePreviousGame(){
+ const card=document.getElementById('apex-mobile-previous-game');
+ if(!card)return;
+ const completed=gameHubGames.filter(g=>g.status==='completed'&&g.team_score!=null&&g.opponent_score!=null)
+   .slice().sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+ const day=selectedGameDate?
+   [selectedGameDate.getFullYear(),String(selectedGameDate.getMonth()+1).padStart(2,'0'),
+    String(selectedGameDate.getDate()).padStart(2,'0')].join('-'):null;
+ const game=(day&&completed.find(g=>String(g.date).slice(0,10)===day))||completed[0];
+ const submit=document.getElementById('apex-mobile-previous-submit');
+ const film=document.getElementById('apex-mobile-previous-film');
+ const box=document.getElementById('apex-mobile-previous-box');
+ const date=document.getElementById('apex-mobile-previous-date');
+ const note=document.getElementById('apex-mobile-previous-note');
+ if(submit)submit.hidden=!game;
+ if(film)film.hidden=true;
+ if(box)box.hidden=!game;
+ if(!game){
+  card.classList.add('apex-mobile-no-previous');
+  date.textContent='No completed games';
+  document.getElementById('apex-mobile-previous-home').textContent='HOME';
+  document.getElementById('apex-mobile-previous-away').textContent='AWAY';
+  document.getElementById('apex-mobile-previous-home-score').textContent='—';
+  document.getElementById('apex-mobile-previous-away-score').textContent='—';
+  note.textContent='Completed game results and review actions will appear here.';
+  return;
+ }
+ card.classList.remove('apex-mobile-no-previous');
+ const home=String(game.location||'').toLowerCase()==='home';
+ document.getElementById('apex-mobile-previous-home').textContent=home?gameHubTeamName:game.opponent||'Opponent';
+ document.getElementById('apex-mobile-previous-away').textContent=home?game.opponent||'Opponent':gameHubTeamName;
+ document.getElementById('apex-mobile-previous-home-score').textContent=home?game.team_score:game.opponent_score;
+ document.getElementById('apex-mobile-previous-away-score').textContent=home?game.opponent_score:game.team_score;
+ date.textContent=scFullDate(game.date);
+ const ours=Number(game.team_score),theirs=Number(game.opponent_score);
+ note.textContent=(ours>theirs?'Win':ours<theirs?'Loss':'Final')+' · '+gameHubTeamName+' '+ours+' – '+theirs+' '+(game.opponent||'Opponent');
+ if(submit){
+  submit.dataset.gameId='?gameId='+encodeURIComponent(game.id);
+  submit.dataset.matchup=gameHubTeamName+' vs '+(game.opponent||'Opponent');
+ }
+ if(box)box.href='stats.html?gameId='+encodeURIComponent(game.id);
+ if(film){
+  film.href='film-room.html?gameId='+encodeURIComponent(game.id);
+  void scMayTrack(game).then(allowed=>{
+   if(!film.isConnected||film.href!==new URL('film-room.html?gameId='+encodeURIComponent(game.id),location.href).href)return;
+   film.hidden=!allowed;
+  }).catch(()=>{film.hidden=true;});
+ }
+}
 function renderMobileGameCard(){
  const card=document.getElementById('mobile-context-game');if(!card)return;
  const heading=card.querySelector('[data-mobile-game-heading]'),date=card.querySelector('[data-mobile-game-date]');
@@ -2229,14 +2281,18 @@ function renderMobileGameCard(){
 /* Film Room mode selection overlays Game Hub; trackers use full pages. */
 document.addEventListener('DOMContentLoaded',()=>{
  const link=document.getElementById('apex-film-analysis-link');
+ const mobileLink=document.getElementById('apex-mobile-previous-film');
  const dlg=document.getElementById('apex-film-room-modal'),frame=document.getElementById('apex-film-room-frame');
  if(!link||!dlg||!frame)return;
- link.addEventListener('click',event=>{
+ const openFilm=(event)=>{
   event.preventDefault();
-  if(link.hidden)return;
-  frame.src=link.href;
+  const source=event.currentTarget;
+  if(source.hidden)return;
+  frame.src=source.href;
   dlg.showModal();
- });
+ };
+ link.addEventListener('click',openFilm);
+ mobileLink?.addEventListener('click',openFilm);
  document.getElementById('apex-film-room-close')?.addEventListener('click',()=>dlg.close());
  dlg.addEventListener('click',event=>{if(event.target===dlg)dlg.close();});
  dlg.addEventListener('close',()=>{frame.removeAttribute('src');});
