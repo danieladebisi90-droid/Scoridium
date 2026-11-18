@@ -20,3 +20,17 @@ body{background:#e9f0f9}
 .room-mini-center span{font-size:10px;color:var(--review-secondary,#e1b22d);font-weight:900}
 .room-mini-center small{text-align:center}
 @media(max-width:540px){.room-shell{padding:6px 8px!important}.room-shell .room-card{padding:7px}.room-mini-scores{padding:6px}.room-mini-scores strong{font-size:21px}.room-shell .room-card p{line-height:1.2}}
+
+/* Film Room v4 — scoreboard is the hero of the compact popup. */
+.room-shell{max-width:760px!important;padding:12px 15px 8px!important}
+.room-shell .room-mini-header{display:none!important}
+.room-shell #room-matchup{margin:3px 0 7px!important;color:var(--review-primary,#073d80);font-size:14px!important;font-weight:800}
+.room-mini-scores{min-height:128px;padding:14px 22px!important;margin:11px 0 13px!important;border-width:3px!important;border-radius:15px!important;box-shadow:0 8px 25px #072c6050;background:linear-gradient(115deg,var(--review-primary,#073d80),#092e5c 65%)!important}
+.room-mini-scores strong{font-size:clamp(37px,5vw,57px)!important;font-variant-numeric:tabular-nums}
+.room-mini-scores>div{gap:5px}
+.room-mini-scores small{font-size:clamp(11px,1.2vw,14px)!important;letter-spacing:.3px;text-align:center}
+.room-mini-center span{font-size:clamp(12px,1.5vw,16px)!important}
+.room-mini-center{flex:1.2!important}
+.room-shell .room-card{margin:7px 0!important;padding:10px 14px!important}
+.room-shell .room-card h2{font-size:15px}
+@media(max-width:540px){.room-mini-scores{min-height:105px;padding:10px 9px!important}.room-mini-scores strong{font-size:36px!important}.room-mini-scores small{font-size:10px!important}.room-shell .room-card{padding:8px!important}}
