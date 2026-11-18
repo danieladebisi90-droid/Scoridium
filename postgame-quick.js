@@ -50,7 +50,7 @@ function render(){
   content=teamMode?grid([button('set:us','Tracked Team'),button('set:opponent','Opponent')]):grid(ns.map(p=>'<button class="pgq-btn" type="button" data-action="player" data-player="'+esc(p.id)+'">#'+esc(p.number??'?')+'</button>'));
  }else if(state==='stats'){
   content=grid(['+2PT','+3PT','2 MISS','3 MISS'].map((x,i)=>button('shot:'+i,x,i<2?'pgq-made':'pgq-miss')).concat(
-   [['reb','REB'],['ast','AST'],['stl','STL'],['blk','BLK'],['to','TO'],['pf','PF'],['ft','FT']].map(([a,l])=>button('stat:'+a,l))));
+   [['reb','REB'],['ast','AST'],['stl','STL'],['blk','BLK'],['to','TO'],['pf','PF'],['ftMake','FT MAKE'],['ftMiss','FT MISS']].map(([a,l])=>button('stat:'+a,l))));
  }else if(state==='shot'){
   content=grid(['2PT MAKE','3PT MAKE','2PT MISS','3PT MISS'].map((x,i)=>button('shot:'+i,x,i<2?'pgq-made':'pgq-miss')));
  }else if(state==='shotDetails'){
@@ -114,7 +114,7 @@ root.addEventListener('click',async e=>{
  if(a==='done'){reset('Review next play');return;}
  if(a.startsWith('stat:')){
   const code=a.slice(5);
-  if(code==='ft'){const id=await save('free_throw',{points:1,made:true},b);if(id)reset('Made FT recorded');else render();return;}
+  if(code==='ftMake'||code==='ftMiss'){const made=code==='ftMake';const id=await save('free_throw',{points:1,made},b);if(id)reset((made?'Made':'Missed')+' FT recorded');else render();return;}
   const type={reb:'defensive_rebound',ast:'assist',stl:'steal',blk:'block',to:'turnover',pf:'foul'}[code];
   if(!type)return;const id=await save(type,{},b);if(id)reset(type.toUpperCase()+' recorded');else render();return;
  }
