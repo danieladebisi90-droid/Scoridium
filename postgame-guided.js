@@ -269,7 +269,12 @@ function insertShow(open){
  $('pg-add-shot').textContent=open?'Choose missing shot location':'+ Record a Shot';
 }
 $('pg-add-shot')?.addEventListener('click',()=>{
- if(insertActive){$('pg-add-shot-form').requestSubmit();return;}
+ if(insertActive){
+  if(window.apexCourtReview?.isInserting()){
+   if(confirm('Cancel the missing-shot selection?')){window.apexCourtReview.cancelInsertedShot();insertBeforeId=null;insertShow(false);document.body.classList.remove('pg-insert-shot');selectGuidedItem();}
+  }else $('pg-add-shot-form').requestSubmit();
+  return;
+ }
  if(window.apexCourtReview?.isBusy()){api.notify('Finish the current shot first.');return;}
  insertShow(true);
  insertBeforeId=sequence[index]?.id||null;
