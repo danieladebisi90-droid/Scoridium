@@ -7,6 +7,17 @@ const activities=['stat','shot','combined']; // New combined mode retains its ow
 const names={not_started:'Not Started',in_progress:'In Progress',completed:'Completed'};
 const destinations={stat:'postgame-track.html?mode=stat',shot:'postgame-track.html?mode=shot',combined:'postgame-track.html?mode=combined'};
 const records=new Map();let user=null,ready=false;
+const liveScore=$('room-scores');
+async function updateMiniScore(game){
+ const scores={us:0,opponent:0};
+ const result=await supabaseClient.from('game_events').select('team,type,points,made').eq('game_id',gameId).limit(10000);
+ if(result.error)return;
+ for(const e of result.data||[])if(e.made===true&&['shot','free_throw'].includes(e.type))scores[e.team]=(scores[e.team]||0)+Number(e.points||0);
+ $('room-us-points').textContent=scores.us;$('room-opp-points').textContent=scores.opponent;
+ $('room-final-score').textContent='OFFICIAL '+(game.team_score??'—')+'–'+(game.opponent_score??'—');
+ $('room-us-label').textContent=game.teamName||'TRACKED TEAM';$('room-opp-label').textContent=game.opponent||'OPPONENT';
+ liveScore.hidden=false;
+}
 const message=s=>{$('room-message').textContent=s;};
 function dateLabel(value){
  if(!value)return 'Not reviewed yet';
@@ -41,10 +52,13 @@ async function init(){
  if(typeof supabaseClient==='undefined'){message('Supabase unavailable.');return;}
  const auth=await supabaseClient.auth.getUser();user=auth.data?.user;
  if(!user){message('Sign in to access Film Room.');return;}
- const game=await supabaseClient.from('games').select('id,opponent,date,status').eq('id',gameId).eq('team_id',teamId).eq('seasons_id',seasonId).maybeSingle();
+ const game=await supabaseClient.from('games').select('id,opponent,date,status,team_score,opponent_score').eq('id',gameId).eq('team_id',teamId).eq('seasons_id',seasonId).maybeSingle();
  if(game.error||!game.data){message('Game not available for the selected team and season.');return;}
  if(game.data.status!=='completed'){message('Post-game Film Room requires a completed game.');return;}
  $('room-matchup').textContent='vs '+(game.data.opponent||'Opponent')+' · '+game.data.date+' · Final';
+ const cached=sessionStorage.getItem('scoridium:team-preview:'+teamId);
+ if(cached){try{const theme=JSON.parse(cached);if(/^#[a-f0-9]{6}$/i.test(theme.primary_color||''))document.documentElement.style.setProperty('--review-primary',theme.primary_color);if(/^#[a-f0-9]{6}$/i.test(theme.secondary_color||''))document.documentElement.style.setProperty('--review-secondary',theme.secondary_color);game.data.teamName=[theme.school_name||theme.club_name,theme.mascot].filter(Boolean).join(' ')||'Tracked Team';}catch{}}
+ void updateMiniScore(game.data);
  // The workflows are available for any authorized completed game. Review metadata
  // is supplementary and must never be a prerequisite for displaying the cards.
  ready=true;display();$('room-cards').hidden=false;
