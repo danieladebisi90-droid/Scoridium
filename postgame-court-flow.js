@@ -76,6 +76,7 @@ function render(){
 }
 function begin(location,made){
  if(saving)return;
+ if(shotMode&&!complete()){api.notify('Finish or cancel the current shot before selecting another location.');return;}
  const team=teamAt(location.x),value=api.shotValue(location.x,location.y);
  const detail={position:location,made,points:value,team};
  if(combined){
