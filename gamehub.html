@@ -448,6 +448,18 @@
     </section>
 </div>
 
+    <dialog id="apex-film-room-modal" class="apex-film-room-modal" aria-label="Film Room mode selection">
+      <div class="apex-film-room-modal-head"><strong>FILM ROOM</strong><button type="button" id="apex-film-room-close" aria-label="Close Film Room">×</button></div>
+      <iframe id="apex-film-room-frame" title="Choose a Film Room workflow" loading="lazy"></iframe>
+    </dialog>
+    <style>
+      .apex-film-room-modal{width:min(780px,calc(100vw - 24px));max-width:none;height:min(740px,calc(100dvh - 24px));max-height:none;margin:auto;padding:0;border:1px solid #bed0e8;border-radius:16px;overflow:hidden;background:#eff3f9;box-shadow:0 25px 100px #02162c95}
+      .apex-film-room-modal::backdrop{background:#06182bb3;backdrop-filter:blur(2px)}
+      .apex-film-room-modal-head{height:48px;display:flex;justify-content:space-between;align-items:center;padding:8px 16px;background:#092f67;color:white;font-size:13px;letter-spacing:1px}
+      #apex-film-room-close{background:transparent;border:0;color:white;font-size:27px;padding:0 6px;cursor:pointer}
+      #apex-film-room-frame{width:100%;height:calc(100% - 48px);border:0;background:#eff3f9}
+      @media(max-width:560px){.apex-film-room-modal{height:min(680px,calc(100dvh - 12px));width:calc(100vw - 12px)}}
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
     <script src="team-theme.js" defer></script>
