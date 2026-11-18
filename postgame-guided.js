@@ -7,7 +7,8 @@ if(!api)return;
 const shotMode=api.mode==='shot',hasCourt=api.mode!=='stat';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
 let guided=false,sequence=[],index=0,timeline=new Map(),pending=[],queueReady=false,loading=false;
-let reversed=false;
+let reversed=false,courtView='full',insertActive=false,manualOpponent=false;
+let showCourt=()=>{};
 const period=()=>api.getPeriod();
 const label=e=>(e.team==='us'?(api.getGame()?.team_name||'Tracked Team'):(api.getGame()?.opponent||'Opponent'))+
  ' · '+(e.made?'Made ':'Missed ')+e.points+'PT'+(e.player_id?' · #'+(api.getPlayers().find(p=>String(p.id)===String(e.player_id))?.number??'?'):'');
@@ -51,19 +52,39 @@ function highlightGuidedHalf(event){
  frame.setAttribute('x',left?'13':'436');
  frame.style.display=guided&&event?.x==null&&event?.y==null?'block':'none';
 }
+function runningScore(){
+ const running={us:0,opponent:0},item=sequence[index];
+ for(const e of api.getEvents().filter(e=>Number(e.period)===period()).slice().sort(sequenceOrder)){
+  if(e.made===true&&(e.type==='shot'||e.type==='free_throw'))running[e.team]=(running[e.team]||0)+(Number(e.points)||0);
+  if(item&&e.id===item.id)break;
+ }
+ return running;
+}
 function renderGuided(){
  if(!shotMode)return;
  const free=$('pg-guided-free'),enable=$('pg-guided-enable'),hint=$('pg-guided-hint'),status=$('pg-guided-status');
  free?.setAttribute('aria-pressed',String(!guided));enable?.setAttribute('aria-pressed',String(guided));
  const item=sequence[index],unlocated=sequence.filter(e=>e.x==null||e.y==null).length;
  const uncertain=sequence.some(e=>!timeline.has(e.id));
- status.textContent=sequence.length?index+1+' / '+sequence.length+' shots · '+unlocated+' need locations':'No shot events in this quarter';
+ status.textContent=sequence.length?'Shot '+(index+1)+' of '+sequence.length+' · '+unlocated+' need locations':'No shot events in this quarter';
+ const summary=$('pg-shot-sequence');
+ const count=sequence.length?((index+1)+' of '+sequence.length+' · '+unlocated+' need locations'):'No recorded shots';
+ if(summary)summary.textContent=guided?'Progress: '+count:'Free Tracking · '+count;
+ const score=runningScore();
+ const data=$('pg-guided-hint');
+ if(guided&&item){
+  data.innerHTML='<small>CURRENT PLAY</small><strong>'+esc(label(item))+'</strong><span> · Running Q'+period()+' score '+score.us+'–'+score.opponent+'</span>';
+ }
  if(!guided){hint.textContent='';return;}
  if(!item){
   hint.textContent='No recorded shot attempts to guide in this quarter. Switch to Free Tracking if a shot is missing.';return;
  }
  const state=item.x!=null&&item.y!=null?'ALREADY LOCATED':'TAP LOCATION';
- hint.textContent=state+' · '+label(item)+(uncertain?' · Order based on event entry time; verify against video.':'');
+ const orderWarning=uncertain?' · Sequence estimated from entry order; check video.':'';
+ hint.setAttribute('aria-label',state+' · '+label(item)+orderWarning);
+ if(data)data.innerHTML='<small>'+esc(state)+'</small><strong>'+esc(label(item))+'</strong><span> · Q'+period()+' score '+score.us+'–'+score.opponent+'</span>'+
+ (orderWarning?'<em>'+esc(orderWarning)+'</em>':'');
+
  $('pg-guided-previous').disabled=index<=0;$('pg-guided-next').disabled=index>=sequence.length-1;
 }
 function setMode(next){
@@ -183,20 +204,63 @@ function initHalfCourt(){
  function show(){
   if(!court||!toggle)return;
   const compact=media.matches;
-  toggle.hidden=!compact;
-  if(!compact){court.setAttribute('viewBox','0 0 860 470');return;}
+  const half=courtView==='half'||(compact&&courtView!=='full');
+  toggle.hidden=!half;
+  if(!half){court.setAttribute('viewBox','0 0 860 470');return;}
   const trackedLeft=(Number(period())<=2)!==reversed;const left=opponent?!trackedLeft:trackedLeft;
   court.setAttribute('viewBox',(left?'10':'430')+' 10 420 450');
   toggle.textContent=opponent?'Show Tracked Half':'Show Opponent Half';
   toggle.setAttribute('aria-pressed',String(opponent));
  }
  toggle?.addEventListener('click',()=>{if(window.apexCourtReview?.isBusy())return;opponent=!opponent;show();});
+ showCourt=show;
+ function setCourtView(value){
+  if(window.apexCourtReview?.isBusy()){api.notify('Finish or cancel the active shot before changing court views.');return;}
+  courtView=value;
+  $('pg-court-full')?.setAttribute('aria-pressed',String(value==='full'));
+  $('pg-court-half')?.setAttribute('aria-pressed',String(value==='half'));
+  show();
+ }
+ $('pg-court-full')?.addEventListener('click',()=>setCourtView('full'));
+ $('pg-court-half')?.addEventListener('click',()=>setCourtView('half'));
  media.addEventListener('change',show);
  window.addEventListener('apex:review-direction-changed',ev=>{reversed=!!ev.detail?.reversed;show();highlightGuidedHalf(sequence[index]);});
- window.addEventListener('apex:guided-shot-selected',ev=>{if(ev.detail?.guided){opponent=ev.detail.team==='opponent';show();}});
+ window.addEventListener('apex:guided-shot-selected',ev=>{if(ev.detail?.guided&&!insertActive){opponent=ev.detail.team==='opponent';show();}});
+ window.addEventListener('apex:insert-shot-focus',ev=>{opponent=ev.detail.team==='opponent';show();});
  $('post-period')?.addEventListener('change',()=>{opponent=false;show();});
+ if(media.matches){courtView='half';$('pg-court-full')?.setAttribute('aria-pressed','false');$('pg-court-half')?.setAttribute('aria-pressed','true');}
  show();
 }
+function insertShow(open){
+ insertActive=open;
+ $('pg-add-shot-form').hidden=!open;
+ $('pg-add-shot').textContent=open?'Choose missing shot location':'+ Record a Shot';
+}
+$('pg-add-shot')?.addEventListener('click',()=>{
+ if(insertActive){$('pg-add-shot-form').requestSubmit();return;}
+ if(window.apexCourtReview?.isBusy()){api.notify('Finish the current shot first.');return;}
+ insertShow(true);
+ $('pg-add-shot-team').value=sequence[index]?.team||'us';
+});
+$('pg-add-shot-form')?.addEventListener('submit',event=>{
+ event.preventDefault();
+ const request={team:$('pg-add-shot-team').value,made:$('pg-add-shot-made').value==='true',
+ points:Number($('pg-add-shot-value').value)};
+ if(!window.apexCourtReview?.startInsertedShot(request)){api.notify('Complete or cancel the current shot first.');return;}
+ insertActive=true;
+ document.body.classList.add('pg-insert-shot');
+ // Switch to half court to make accurate placement easier; preserve guided shot context.
+ courtView='half';$('pg-court-full').setAttribute('aria-pressed','false');$('pg-court-half').setAttribute('aria-pressed','true');
+ window.dispatchEvent(new CustomEvent('apex:insert-shot-focus',{detail:{team:request.team}}));
+ $('pg-add-shot-form').hidden=true;
+ $('pg-add-shot').textContent='Inserting '+(request.made?'made ':'missed ')+request.points+'PT · Tap court';
+ api.notify('Choose a '+request.points+'PT location for the '+(request.team==='us'?'tracked team':'opponent')+'. Then select the shooter and category.');
+});
+$('pg-add-shot-cancel')?.addEventListener('click',()=>{
+ window.apexCourtReview?.cancelInsertedShot();insertShow(false);
+ document.body.classList.remove('pg-insert-shot');selectGuidedItem();
+});
+window.addEventListener('apex:insert-shot-cancelled',()=>{insertShow(false);document.body.classList.remove('pg-insert-shot');selectGuidedItem();});
 $('pg-guided-free')?.addEventListener('click',()=>setMode(false));
 $('pg-guided-enable')?.addEventListener('click',()=>setMode(true));
 $('pg-guided-previous')?.addEventListener('click',()=>move(-1));
@@ -211,6 +275,7 @@ $('pg-review-queue-list')?.addEventListener('click',async e=>{
  await resolvePending(o,btn.dataset.pendingAction,row.querySelector('[data-pending-match]')?.value);
 });
 window.addEventListener('apex:shot-review-saved',async e=>{
+ if(e.detail?.wasInserted){insertShow(false);document.body.classList.remove('pg-insert-shot');}
  await api.refresh();
  const previous=sequence[index]?.id;
  selectGuidedItem(previous);
@@ -223,7 +288,7 @@ window.addEventListener('apex:shot-review-saved',async e=>{
  }
  await reloadPending();
 });
-window.addEventListener('apex:pending-shot-added',()=>void reloadPending());
+window.addEventListener('apex:pending-shot-added',()=>{insertShow(false);document.body.classList.remove('pg-insert-shot');void reloadPending();selectGuidedItem();});
 $('post-period')?.addEventListener('change',()=>{if(shotMode)selectGuidedItem(null);void reloadPending();});
 let ready=false;
 window.addEventListener('apex:postgame-ready',async()=>{
