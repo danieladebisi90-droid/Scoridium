@@ -102,7 +102,7 @@ root.addEventListener('click',async e=>{
   const saved=await supabaseClient.from('apexvision_postgame_timeline').upsert({event_id:eventId,game_id:api.gameId,video_second:seconds,updated_by:auth.data.user.id,updated_at:new Date().toISOString()},{onConflict:'event_id'});
   b.disabled=false;
   if(saved.error){api.notify('Unable to save video timestamp: '+saved.error.message);return;}
-  timelineTimes.set(eventId,seconds);api.notify('Video timestamp saved.');render();return;
+  timelineTimes.set(eventId,seconds);await api.touchReview();api.notify('Video timestamp saved.');render();return;
  }
  if(a==='back'){reset();return;}
  if(a==='team'){teamMode=!teamMode;team='us';reset();return;}
