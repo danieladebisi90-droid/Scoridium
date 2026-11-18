@@ -3,7 +3,7 @@
 const $=id=>document.getElementById(id);
 const params=new URLSearchParams(location.search),gameId=params.get('gameId');
 const mode=['shot','stat','combined'].includes(params.get('mode'))?params.get('mode'):'stat';
-let activeWorkflow=mode==='combined'?'stat':mode;
+let activeWorkflow=mode==='shot'?'shot':'stat';
 const teamId=sessionStorage.getItem('selectedTeamId'),seasonId=sessionStorage.getItem('selectedSeasonId');
 let game=null,players=[],events=[],observations=[],observationError=null,point=null,busy=false,pendingId=null;
 const say=s=>{$('postgame-message').textContent=s};
@@ -62,7 +62,7 @@ function renderEvents(){
   if(e.type==='shot'){
    const link=document.createElement('a');link.className='post-analysis-link';
    link.href='film-analysis.html?gameId='+encodeURIComponent(gameId)+'&eventId='+encodeURIComponent(e.id);
-   link.textContent='Review shot analysis';row.append(link);
+   link.textContent='Review shot details';row.append(link);
   }
   host.append(row);
  }
@@ -81,7 +81,7 @@ function renderObservations(){
   const select=document.createElement('select');
   select.setAttribute('aria-label','Select recorded shot to match');
   const matches=events.filter(e=>e.type==='shot'&&e.team===o.team&&Number(e.period)===Number(o.period)&&Number(e.points)===Number(o.points)&&e.made===o.made&&e.x==null&&e.y==null);
-  for(const e of matches)select.add(new Option('Recorded shot · '+e.id.slice(0,8),e.id));
+  for(const [index,e] of matches.entries())select.add(new Option('Recorded '+(e.made?'make':'miss')+' '+e.points+'PT · Shot '+(index+1),e.id));
   const match=document.createElement('button');match.type='button';match.textContent='Match existing shot';match.disabled=!select.value;
   match.addEventListener('click',async()=>{
    const e=events.find(x=>x.id===select.value);if(!e)return;
@@ -112,7 +112,7 @@ function refreshChoices(){
  existing.replaceChildren();
  for(const event of getCandidates()){
   const player=players.find(p=>String(p.id)===String(event.player_id));
-  const option=new Option(periodName(event.period)+' · '+(event.made?'Made':'Missed')+' '+event.points+'PT'+(player?' · #'+player.number:'')+' · '+event.id.slice(0,8),event.id);
+  const option=new Option(periodName(event.period)+' · '+(event.made?'Made':'Missed')+' '+event.points+'PT'+(player?' · #'+player.number:''),event.id);
   existing.add(option);
  }
  if([...existing.options].some(o=>o.value===selected))existing.value=selected;
@@ -182,18 +182,22 @@ async function init(){
  document.body.classList.add('postgame-shot-mode');
  document.body.classList.toggle('pgq-stat-workflow',mode!=='shot');
  if(game.status!=='completed'){say('This post-game screen is only for completed games. Live games use the Game Tracker.');return;}
- $('back-to-room').href='film-room.html?gameId='+encodeURIComponent(gameId);
+ $('back-to-room').href='gamehub.html';
  $('page-title').textContent=mode==='shot'?'Post-game Shot Tracking':mode==='combined'?'Post-game Stat & Shot Tracking':'Post-game Stat Tracking';
  $('game-title').textContent='vs '+(game.opponent||'Opponent')+' · '+game.date+' · Final '+(game.team_score??'—')+'–'+(game.opponent_score??'—');
  $('post-stat-section').hidden=mode==='shot';
  $('post-shot-section').hidden=false;
- if(mode==='combined'){
-  $('postgame-mode-tabs').hidden=false;
-  const activate=next=>{activeWorkflow=next;$('post-stat-section').hidden=next!=='stat';$('post-shot-section').hidden=false;document.body.classList.toggle('pgq-stat-workflow',next==='stat');$('post-tab-stat').classList.toggle('active',next==='stat');$('post-tab-shot').classList.toggle('active',next==='shot');};
-  $('post-tab-stat').onclick=()=>activate('stat');$('post-tab-shot').onclick=()=>activate('shot');activate('stat');
- }
+ // Combined mode puts stat-entry and optional shot analysis in one court flow.
  $('post-observation-section').hidden=false;
  for(let p=1;p<=Math.max(4,Number(game.current_period)||4);p++)$('post-period').add(new Option(periodName(p),String(p)));
+ $('post-next-quarter').addEventListener('click',()=>{
+  const select=$('post-period'),index=select.selectedIndex;
+  if(index<select.options.length-1){select.selectedIndex=index+1;select.dispatchEvent(new Event('change'));say('Reviewing '+periodName(currentPeriod())+'. The completed game result is unchanged.');}
+  else say('Final recorded period reached. End Game Review returns to Game Hub.');
+ });
+ $('post-end-review').addEventListener('click',()=>{
+  if(confirm('Finish reviewing and return to Game Hub? Saved events remain unchanged.'))location.href='gamehub.html';
+ });
  const roster=await supabaseClient.from('players').select('id,first_name,last_name,number').eq('team_id',teamId).order('number');
  if(roster.error){say('Unable to load roster: '+roster.error.message);return;}
  players=roster.data||[];
