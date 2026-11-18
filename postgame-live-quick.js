@@ -270,6 +270,11 @@
       else render();return;
     }
   });
+  // Shared review controls are separate from the active Quick Tracker step.
+  // They must not replace the original jersey/stat/secondary-stat workflow.
+  document.getElementById('post-quick-review')?.addEventListener('click',()=>{
+    document.getElementById('post-shot-links-open')?.click();
+  });
   // Refresh names and roster after the original tracker hydrates asynchronously.
   // Court-to-stat and stat-to-court both resolve against the same pending attempt.
   window.addEventListener('apex:postgame-court-shot',event=>{
