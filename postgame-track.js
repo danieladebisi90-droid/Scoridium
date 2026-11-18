@@ -331,7 +331,7 @@ window.apexPostgame={get mode(){return mode;},get gameId(){return gameId;},getPl
    const id=fixedId||crypto.randomUUID();
    const same=events.filter(e=>e.type===type&&e.team===team&&Number(e.period)===currentPeriod()&&(type!=='shot'||e.points===points&&e.made===made));
    const prompt=same.length?'There are '+same.length+' events like this in the quarter. Confirm this is an additional missing play.':'Confirm this event was missing from the game.';
-   if(!confirmed&&!confirm(prompt))return null;
+   if(!confirmed&&same.length&&!confirm(prompt))return null;
    const result=await invoke('apexvision_postgame_add_event',{p_game_id:gameId,p_event_id:id,p_type:type,p_team:team,p_period:currentPeriod(),p_player_id:playerId,p_points:points,p_made:made,p_x:position?.x??null,p_y:position?.y??null},button);
    if(result===null)return null;
    if(linkedEventId){
