@@ -63,7 +63,9 @@ async function init(){
    // Failed status writes must not block a tracking workflow: its RPCs
    // independently enforce team membership and post-game permissions.
    await update(activity,status,{reviewed:false});
-   location.href=destinations[activity]+'&gameId='+encodeURIComponent(gameId);
+   const destination=destinations[activity]+'&gameId='+encodeURIComponent(gameId);
+   if(window.parent!==window)window.top.location.assign(destination);
+   else location.href=destination;
   });
   card.querySelector('[data-complete]').addEventListener('click',async()=>{
    const next=records.get(activity)?.status==='completed'?'in_progress':'completed';
