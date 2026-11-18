@@ -115,6 +115,7 @@ function layout(){
   statClose.addEventListener('click',()=>showStats(false));
   // The existing full/half controls stay in More. Combined shares the court.
   move(side.querySelector('.pg-court-modes'),drawer);
+  move($('pg-half-toggle'),dock);
   move($('pg-guided-hint'),info);
   $('pg-court-half')?.click();
   showStats(false);
