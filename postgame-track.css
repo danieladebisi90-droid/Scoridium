@@ -114,3 +114,54 @@ html,body.postgame-fullscreen{margin:0;min-height:100dvh}
 .postgame-fullscreen.pg-v3-stat #post-stat-section>.postgame-section-top{display:flex!important;margin:6px 0}.postgame-fullscreen.pg-v3-combined #post-stat-section>.postgame-section-top{display:flex!important;margin:4px 0}.postgame-fullscreen #quick-team-mode{background:var(--review-primary);color:#fff}
 
 .postgame-fullscreen.pg-awaiting-location #postgame-court{outline:4px solid var(--review-secondary);outline-offset:3px;box-shadow:0 0 20px #d3a92a99}.pg-opponent-jerseys strong{font-size:12px}.pg-opponent-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin:8px 0}.pg-opponent-grid button{padding:9px 2px;background:var(--review-primary);color:#fff;border:1px solid #abc0d9;border-radius:6px;font-weight:800}.pg-opponent-jerseys label{font-size:11px}.pg-opponent-jerseys input{width:65px;padding:5px}
+
+/* Film Room v4 — fill the available viewport with purposeful active content. */
+.postgame-fullscreen .film-shell{padding:12px clamp(14px,2.5vw,36px) 22px!important}
+.postgame-fullscreen .postgame-topline{gap:12px;padding:4px 0 11px!important}
+.postgame-fullscreen .postgame-topline strong{font-weight:900;font-size:clamp(18px,2vw,24px);color:var(--review-primary)}
+.postgame-fullscreen #postgame-message{margin:5px 0 10px;font-size:12px;min-height:0}
+.postgame-fullscreen .postgame-scoreboard{min-height:93px;padding:12px 24px;margin-bottom:10px;background:linear-gradient(115deg,var(--review-primary) 0%,#062a58 62%,var(--review-primary) 100%)}
+.postgame-fullscreen .pg-score-team strong{font-size:clamp(35px,5vw,58px)}
+.postgame-fullscreen #postgame-screen>.postgame-controls{margin:6px 9px 5px 0}
+.postgame-fullscreen #postgame-screen>.postgame-quarter-actions{margin:5px 0 10px}
+.postgame-fullscreen #post-stat-section>.postgame-section-top{display:flex!important;justify-content:flex-end!important;margin:0 0 8px!important;min-height:38px}
+.postgame-fullscreen #post-stat-section>.postgame-section-top h2{margin-right:auto!important;font-size:15px;color:var(--review-primary)}
+.postgame-fullscreen #quick-team-mode{display:none!important}
+.postgame-fullscreen.pg-v3-stat #post-stat-section{max-width:1180px;margin:0 auto!important}
+.postgame-fullscreen.pg-v3-stat .qv-layout{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)!important;grid-template-rows:minmax(420px,1fr) auto!important;align-items:stretch}
+.postgame-fullscreen.pg-v3-stat .qv-tracked,.postgame-fullscreen.pg-v3-stat .qv-opponent{min-height:420px!important;padding:20px!important;background:linear-gradient(#ffffff,#f8fbff);border-top:5px solid var(--review-primary)}
+.postgame-fullscreen.pg-v3-stat .qv-team-heading strong{font-size:clamp(17px,1.8vw,23px)!important}
+.postgame-fullscreen.pg-v3-stat .qv-team-heading small{font-size:13px!important}
+.postgame-fullscreen.pg-v3-stat .qv-action-surface{flex:1;display:flex;flex-direction:column;justify-content:center}
+.postgame-fullscreen.pg-v3-stat .qv-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px!important}
+.postgame-fullscreen.pg-v3-stat .qv-button{min-height:65px!important;font-size:clamp(15px,1.7vw,20px)!important;box-shadow:0 2px 5px #092b5417}
+.postgame-fullscreen.pg-v3-stat .qv-opp-buttons{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.postgame-fullscreen.pg-v3-stat .qv-last{border-top:2px solid var(--review-secondary);padding:12px!important;font-size:13px}
+.postgame-fullscreen #post-shot-section{max-width:1480px;margin-left:auto!important;margin-right:auto!important}
+.postgame-fullscreen.pg-v3-shot #postgame-court{width:100%;max-height:calc(100dvh - 335px)!important;min-height:400px}
+.postgame-fullscreen.pg-v3-combined .postgame-court-workspace{grid-template-columns:minmax(0,1.12fr) minmax(360px,1fr)!important;gap:15px!important;min-height:430px}
+.postgame-fullscreen.pg-v3-combined #postgame-court{width:100%;max-height:calc(100dvh - 330px)!important;min-height:340px}
+.postgame-fullscreen.pg-v3-combined #post-quick-root{display:block!important;min-height:425px!important;max-height:calc(100dvh - 318px)!important;overflow-y:auto!important}
+.postgame-fullscreen.pg-v3-combined .qv-layout{min-height:430px!important;display:flex!important;flex-direction:column}
+.postgame-fullscreen.pg-v3-combined .qv-tracked,.postgame-fullscreen.pg-v3-combined .qv-opponent{min-height:180px!important;flex:1 0 auto!important;padding:12px!important;background:linear-gradient(#fff,#f4f8ff)}
+.postgame-fullscreen.pg-v3-combined .qv-team-heading strong{font-size:15px!important}
+.postgame-fullscreen.pg-v3-combined .qv-button{min-height:43px!important}
+.postgame-fullscreen.pg-v3-combined .qv-grid{gap:6px!important}
+.postgame-fullscreen.pg-v3-combined .qv-opp-buttons{gap:7px!important}
+.postgame-fullscreen.pg-v3-combined .qv-tracked{border-left:5px solid var(--review-secondary)}
+.postgame-fullscreen.pg-v3-combined .qv-opponent{border-left:5px solid var(--review-primary)}
+@media(max-width:940px){
+ .postgame-fullscreen.pg-v3-combined .postgame-court-workspace{grid-template-columns:minmax(0,1.08fr) minmax(290px,1fr)!important}
+ .postgame-fullscreen.pg-v3-combined #postgame-court,.postgame-fullscreen.pg-v3-combined #post-quick-root{grid-row:1!important}
+ .postgame-fullscreen.pg-v3-combined #postgame-court{grid-column:1!important;min-height:260px}
+ .postgame-fullscreen.pg-v3-combined #post-quick-root{grid-column:2!important;min-height:390px!important}
+ .postgame-fullscreen.pg-v3-combined .qv-layout{display:flex!important}
+}
+@media(max-width:690px){
+ .postgame-fullscreen.pg-v3-stat .qv-layout{display:flex!important;flex-direction:column;gap:12px}
+ .postgame-fullscreen.pg-v3-stat .qv-tracked,.postgame-fullscreen.pg-v3-stat .qv-opponent{min-height:220px!important;padding:12px!important}
+ .postgame-fullscreen.pg-v3-combined .postgame-court-workspace{display:flex!important;flex-direction:column}
+ .postgame-fullscreen.pg-v3-combined #postgame-court{width:100%;min-height:210px!important;max-height:46dvh!important}
+ .postgame-fullscreen.pg-v3-combined #post-quick-root{width:100%!important;min-height:0!important;max-height:none!important}
+ .postgame-fullscreen.pg-v3-shot #postgame-court{min-height:210px!important;max-height:55dvh!important}
+}
