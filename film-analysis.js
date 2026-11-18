@@ -108,7 +108,9 @@ function render(){renderMarkers();renderPicker();renderDetail();}
 function applyFilters(){
  const type=$('film-type').value,quarter=$('film-quarter').value;
  events=allEvents.filter(e=>(type==='all'||e.type===type)&&(quarter==='all'||Number(e.period)===Number(quarter)));
- if(!events.some(e=>e.id===selectedId))selectedId=events[0]?.id||null;
+ if(!events.some(e=>e.id===selectedId)){
+ const requested=params.get('eventId');selectedId=events.some(e=>e.id===requested)?requested:(events[0]?.id||null);
+}
  $('film-workspace').hidden=!events.length;render();
  status(events.length?events.length+' event'+(events.length===1?'':'s')+' available. Select a shot on the court or in the list.'
    :'No recorded events match the selected filters.');
