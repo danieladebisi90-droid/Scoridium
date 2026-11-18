@@ -161,3 +161,12 @@ Run **`MIGRATION_APEXVISION_POSTGAME_OPPONENT_JERSEYS.sql`** ONLY in `ApexVision
 - **Combined Tracking:** Court / Stat Tracker phone tabs present one workspace at a time; court-first selection switches to original team Quick Tracker and stat-first pending location switches back to the original court. Do not replicate tracking logic.
 - More tools drawer moves the existing review action buttons in the DOM on mobile and restores them on larger screens, preserving event listeners. End Review and Next Quarter remain visible.
 - Static JavaScript syntax, unique HTML IDs, and CSS braces validated; **no browser execution or physical phone testing yet**. Keep PR draft.
+
+## Film Room v8 — standard mobile screen layout
+- All three Film Room pages share compact header → score → fixed quarter / Next Quarter / Finish Review / More toolbar → mode-specific workspace. More opens a floating overlay containing the existing secondary controls (Switch Directions, Shot Links, Play-by-Play, Unmatched Shots, and court view controls). Original event listeners are preserved when buttons move between containers.
+- Stat Tracking retains the real Quick Tracker player/team and opponent flows with its original components and no court.
+- Shot Tracking shows selected guided play, or latest recorded shot during Free Tracking, **above** the FIBA half court. Existing Previous / Skip / Next and Free / Guided buttons, plus Record Shot, stay below the court. Jersey → category prompts render as a contextual overlay on the court; added-shot form uses the same overlay.
+- Stat & Shot Tracking follows the same court-first body; its existing Quick Tracker is displayed contextually over the court when the user taps Stat Tracker or initiates a court-first play. When a stat requires a location, the court returns to focus, without duplicate shot events.
+- Mobile portrait body/page scrolling is disabled. A contextual workflow may scroll inside its own overlay when necessary. Responsive DOM positioning restores original desktop controls on wider screens.
+- `postgame-mobile-v8.js` replaces `postgame-mobile-v7.js` (v7 CSS retained underneath new v8 overrides). No database migration required.
+- JS syntax / HTML ID uniqueness / CSS brace balance checked. **Runtime and iPhone Safari PWA layout unverified; test at 393×852 and rotate, inspect unfinished-play behavior. Keep draft, production untouched.**
