@@ -263,7 +263,7 @@ window.apexCourtReview={
  setGuidedTarget:event=>{
   if(!shotMode||saving||!complete())return false;
   guidedTarget=event||null;
-  document.body.classList.toggle('pg-guided-on',!!event);
+  // Guided-mode styling is owned by Guided Tracking, even when a shot is already located.
   return true;
  },
  getGuidedTarget:()=>guidedTarget,
