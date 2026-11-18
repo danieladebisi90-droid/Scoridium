@@ -32,3 +32,17 @@
 .pgq-timeline{max-height:300px;overflow:auto}.pgq-entry{align-items:center;flex-wrap:wrap}.pgq-entry label{display:flex;align-items:center;gap:4px;font-size:10px}.pgq-entry input{max-width:77px;padding:6px;font-size:11px;border:1px solid #b9c6d9;border-radius:6px}.pgq-entry .pgq-btn{min-height:26px;padding:5px 8px}.post-quick-review-edit{border:1px solid #adc0d5;border-radius:8px;padding:7px 9px;background:#fff;color:#173d78;font-weight:700;font-size:12px}.postgame-section-top{flex-wrap:wrap}
 
 .post-analysis-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:6px}.post-analysis-buttons button{font-size:12px;border:1px solid #b8c8dc;border-radius:8px;background:#f6f8fc;color:#173d78;padding:8px 6px;cursor:pointer}.post-analysis-buttons button[aria-pressed=true]{background:#173d78;color:#fff;border-color:#173d78}#post-shot-analysis select[hidden]{display:none!important}
+
+/* Full-viewport post-game tracking, no app navigation or mode tabs. */
+html,body.postgame-fullscreen{margin:0;min-height:100dvh}
+.postgame-fullscreen .film-shell{width:100%;max-width:none;padding:10px clamp(10px,2vw,32px) 24px}
+.postgame-fullscreen .postgame-topline{display:flex;align-items:center;gap:15px;flex-wrap:wrap;padding:4px 0 9px;border-bottom:1px solid #c9d5e4}
+.postgame-topline .film-back{font-size:13px;white-space:nowrap}.postgame-topline strong{font-size:15px}.postgame-topline span{color:#5c6a7d;font-size:12px}
+.postgame-fullscreen #postgame-screen{width:100%}
+.postgame-fullscreen #post-shot-section{margin-top:4px}
+.postgame-fullscreen #postgame-court{max-height:calc(100dvh - 185px)}
+.postgame-quarter-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin:8px 0}
+.postgame-quarter-actions button{padding:9px 14px;border:1px solid #9eb4d1;border-radius:9px;background:#fff;color:#153c78;font-weight:750;cursor:pointer}
+#post-end-review{background:#173d78;color:#fff}
+.postgame-fullscreen .postgame-mode-tabs{display:none!important}
+@media(max-width:700px){.postgame-fullscreen #postgame-court{max-height:55dvh}.postgame-fullscreen .postgame-topline{gap:7px}.postgame-quarter-actions{justify-content:stretch}.postgame-quarter-actions button{flex:1}}
