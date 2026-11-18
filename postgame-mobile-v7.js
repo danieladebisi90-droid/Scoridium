@@ -47,7 +47,7 @@ if(combined){
  window.addEventListener('apex:postgame-court-shot',()=>{if(media.matches)setCombinedView('stats');});
  // Stat-first shot: location is now required; show the original FIBA court.
  const observer=new MutationObserver(()=>{
-  if(media.matches&&document.body.classList.contains('pg-awaiting-location'))setCombinedView('court');
+  if(media.matches&&document.body.classList.contains('pg-awaiting-location')&&!document.body.classList.contains('pg-mobile-court'))setCombinedView('court');
  });
  observer.observe(document.body,{attributes:true,attributeFilter:['class']});
 }
