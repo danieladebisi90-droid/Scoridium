@@ -10,7 +10,7 @@
   const state={status:'live'};
   let writeQueue=Promise.resolve(),unresolved=0,lastSaveError='';
   const pendingIds=new Map();
-  let selectedCourtShot=null,pendingCourtShot=null;
+  let selectedCourtShot=null,pendingCourtShot=null,pendingAssist=null,opponentJersey=null;
   const rootContainer=()=>root.querySelector('.qv-tracked');
   const notify=s=>{api.notify(s);};
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -26,7 +26,7 @@
   const player=()=>players.find(p=>String(p.id)===String(who));
   const label=(id)=>id==null?'TEAM':`#${players.find(p=>String(p.id)===String(id))?.number??'?'}`;
   const tell=s=>{last=s;render();};
-  const reset=()=>{mode='idle';who=null;source=null;block=null;foul={type:null,shot:null,result:null,bonus:null,ft:null,technicalPersonal:null};render();};
+  const reset=()=>{mode='idle';who=null;source=null;block=null;opponentJersey=null;foul={type:null,shot:null,result:null,bonus:null,ft:null,technicalPersonal:null};render();};
   const record=(type,team,playerId=null,extra={})=>{
     if(!active())return null;
     if(type==='no_assist')return null; // confirmation is a UI choice, not a real stat event.
@@ -38,19 +38,57 @@
       candidate.position=selectedCourtShot.position;
       selectedCourtShot=null;
     }
-    if(type==='shot'&&!candidate.position)pendingCourtShot={id,team,points:extra.points,made:extra.made};
+    if(type==='shot'&&api.mode==='combined'&&!candidate.position)pendingCourtShot={id,team,points:extra.points,made:extra.made};
+    let priorAssist=null;
+    if(type==='assist'&&!relatedId)pendingAssist={id,team};
+    if(type==='shot'&&candidate.made&&pendingAssist?.team===team){
+      if(confirm('Link the previously recorded assist to this made shot?'))priorAssist=pendingAssist.id;
+      pendingAssist=null;
+    }
+    const thisOpponentJersey=type==='shot'&&team==='opponent'?opponentJersey:null;
     unresolved++;
     writeQueue=writeQueue.then(async()=>{
       const saved=await api.saveEvent(candidate,document.getElementById('post-review-save-anchor'));
       if(!saved)throw new Error('Event was not saved or was cancelled');
       pendingIds.set(id,saved);
+      if(priorAssist)await api.linkRelated(priorAssist,saved);
+      if(thisOpponentJersey!==null){
+        const auth=await supabaseClient.auth.getUser();
+        if(auth.data?.user){
+          const assigned=await supabaseClient.from('apexvision_postgame_opponent_jerseys').upsert({
+            event_id:saved,game_id:api.gameId,jersey_number:thisOpponentJersey,updated_by:auth.data.user.id
+          },{onConflict:'event_id'});
+          if(assigned.error)notify('Opponent jersey was not saved: '+assigned.error.message);
+        }
+      }
       await api.refresh();
       document.dispatchEvent(new CustomEvent('apex:postgame-events-updated'));
     }).catch(error=>{lastSaveError=String(error.message||error);notify('Review entry needs attention: '+lastSaveError);})
       .finally(()=>{unresolved--;});
     return id;
   };
-  const shot=(team,points,made,playerId=null)=>record('shot',team,playerId,{points,made});
+  const shot=(team,points,made,playerId=null)=>{
+    if(selectedCourtShot&&selectedCourtShot.team===team&&
+     (selectedCourtShot.points!==points||selectedCourtShot.made!==made)){
+      tell('Court selection is '+(selectedCourtShot.made?'MAKE ':'MISS ')+selectedCourtShot.points+'PT. Choose the matching Quick Track shot button.');
+      return null;
+    }
+    if(selectedCourtShot?.team===team){
+      const candidates=api.getEvents().filter(e=>e.type==='shot'&&e.team===team
+       &&Number(e.period)===api.getPeriod()&&Number(e.points)===points&&e.made===made&&e.x==null&&e.y==null);
+      if(candidates.length>1){tell('Multiple unlocated shots match. Open Shot Links to choose which attempt to attach.');return null;}
+      if(candidates.length===1&&confirm('Link this location to the already recorded '+points+'PT '+(made?'make':'miss')+' instead of creating a second attempt?')){
+        const match=candidates[0],location=selectedCourtShot.position;selectedCourtShot=null;
+        writeQueue=writeQueue.then(async()=>{
+          const ok=await api.linkShot(match,location,document.getElementById('post-review-save-anchor'));
+          if(!ok)notify('The existing shot could not be linked.');
+          document.dispatchEvent(new CustomEvent('apex:postgame-events-updated'));
+        });
+        return match.id;
+      }
+    }
+    return record('shot',team,playerId,{points,made});
+  };
   const related=(type,team,playerId=null,linkedEventId=source)=>record(type,team,playerId,{...(linkedEventId?{linkedEventId}:{})});
   const btn=(action,text,kind='',extra='')=>`<button type="button" class="qv-button ${kind}" data-qv="${action}" ${extra}>${esc(text)}</button>`;
   const tile=(action,text,kind='',extra='')=>`<button type="button" class="qv-button qv-tile ${kind}" data-qv="${action}" ${extra}>${esc(text)}</button>`;
@@ -169,8 +207,29 @@
       <section class="qv-opponent ${reboundActive?'qv-opponent-highlight':''}" aria-label="Opponent controls"><div class="qv-team-heading"><div><strong>${esc(ns.opponent)}</strong><small>Opponent team stats</small></div></div>
       <div class="qv-opp-buttons">${[['made2','+2PT','qv-made'],['made3','+3PT','qv-made'],['to','TO',''],['miss2','2PT MISS','qv-miss'],['miss3','3PT MISS','qv-miss'],['pf','PF',''],...(reboundActive?[['reb','REB',''],['stl','STL',''],['blk','BLK','']]:[])].map(([a,label,kind])=>btn(`opp:${a}`,label,kind,(mode!=='idle'&&!(reboundActive&&(a==='reb'||(shooting==='us'&&a==='blk'))))?'disabled':'')).join('')}</div></section>
       <section class="qv-last"><small>LAST EVENT</small><strong>${esc(last)}</strong></section></div>`;
+    if(api.mode==='combined'&&selectedCourtShot?.team==='opponent'){
+      const panel=root.querySelector('.qv-opponent'),buttons=panel?.querySelector('.qv-opp-buttons');
+      if(panel){panel.classList.add('qv-selection-required');}
+      if(buttons&&opponentJersey===null){
+       buttons.innerHTML='<div class="pg-opponent-jerseys"><strong>SELECT OPPONENT JERSEY</strong><div class="pg-opponent-grid">'+
+        Array.from({length:40},(_,i)=>'<button type="button" data-opponent-jersey="'+i+'">#'+i+'</button>').join('')+
+        '</div><label>Other # <input type="number" min="0" max="99" id="pg-opponent-manual"><button type="button" data-opponent-manual="1">Use</button></label></div>';
+      }
+      if(opponentJersey!==null)panel?.querySelector('.qv-team-heading small')?.replaceChildren(document.createTextNode('Selected #'+opponentJersey+' · Choose stat'));
+    }
+    if(api.mode==='combined'&&selectedCourtShot?.team==='us')root.querySelector('.qv-tracked')?.classList.add('qv-selection-required');
+    document.body.classList.toggle('pg-awaiting-location',!!pendingCourtShot);
   }
   root.addEventListener('click',e=>{
+    const jersey=e.target.closest('[data-opponent-jersey]');
+    if(jersey){opponentJersey=Number(jersey.dataset.opponentJersey);render();return;}
+    const manual=e.target.closest('[data-opponent-manual]');
+    if(manual){
+      const n=Number(document.getElementById('pg-opponent-manual')?.value);
+      if(Number.isInteger(n)&&n>=0&&n<=99){opponentJersey=n;render();}
+      else notify('Enter an opponent jersey number from 0 to 99.');
+      return;
+    }
     const b=e.target.closest('button[data-qv]');if(!b||b.disabled)return;
     const a=b.dataset.qv;
     if(a==='back'){if(mode==='stats')reset();else if(mode==='reboundPlayer')mode='reboundChoice';else if(mode==='ftShooter')mode='ft';else if(mode==='foul')reset();else {reset();}render();return;}
@@ -230,17 +289,15 @@
     }
     selectedCourtShot=detail;
     shooting=detail.team;
-    mode=detail.team==='us'?'idle':'idle';
-    who=null;
+    mode='idle';who=null;opponentJersey=null;
     render();
-    root.querySelector(detail.team==='us'?'.qv-tracked':'.qv-opponent')?.classList.add('qv-selection-required');
     notify((detail.made?'Made ':'Missed ')+detail.points+'PT selected. Choose a jersey, then record that shot.');
   });
   window.addEventListener('apex:postgame-court-cancel',()=>{selectedCourtShot=null;pendingCourtShot=null;render();});
   document.addEventListener('apex:postgame-events-updated',()=>{
     if(mode==='idle')render();
   });
-  window.apexPostgameQuick={ready:()=>unresolved===0,flush:()=>writeQueue,reset,hasPending:()=>!!selectedCourtShot||!!pendingCourtShot,
+  window.apexPostgameQuick={ready:()=>unresolved===0,flush:()=>writeQueue,reset,hasPending:()=>!!selectedCourtShot||!!pendingCourtShot||unresolved>0,
     selectingLocation:()=>!!pendingCourtShot,abort:()=>{selectedCourtShot=null;pendingCourtShot=null;reset();}};
   let tries=0;
   const hydrate=async()=>{
