@@ -30,7 +30,26 @@ function selectGuidedItem(preferredId=null){
  const target=sequence[index];
  if(guided&&!(target.x!=null&&target.y!=null))window.apexCourtReview?.setGuidedTarget(target);
  else window.apexCourtReview?.setGuidedTarget(null);
+ window.dispatchEvent(new CustomEvent('apex:guided-shot-selected',{detail:{team:target.team,guided,located:target.x!=null&&target.y!=null}}));
+ highlightGuidedHalf(target);
  renderGuided();
+}
+function highlightGuidedHalf(event){
+ const court=$('postgame-court');if(!court)return;
+ let frame=document.getElementById('pg-guided-half-highlight');
+ if(!frame){
+  frame=document.createElementNS('http://www.w3.org/2000/svg','rect');
+  frame.setAttribute('id','pg-guided-half-highlight');
+  frame.setAttribute('y','13');frame.setAttribute('width','411');frame.setAttribute('height','443');
+  frame.setAttribute('rx','8');frame.setAttribute('stroke','var(--review-secondary,#e7b537)');
+  frame.setAttribute('stroke-width','5');frame.setAttribute('fill','none');
+  frame.setAttribute('pointer-events','none');
+  court.append(frame);
+ }
+ const trackedLeft=(Number(period())<=2)!==reversed;
+ const left=event?.team==='us'?trackedLeft:!trackedLeft;
+ frame.setAttribute('x',left?'13':'436');
+ frame.style.display=guided&&event?.x==null&&event?.y==null?'block':'none';
 }
 function renderGuided(){
  if(!shotMode)return;
@@ -55,7 +74,7 @@ function setMode(next){
   const first=sequence.findIndex(e=>e.x==null||e.y==null);
   index=first<0?0:first;
   selectGuidedItem(sequence[index]?.id);
- }else{window.apexCourtReview?.setGuidedTarget(null);renderGuided();}
+ }else{window.apexCourtReview?.setGuidedTarget(null);highlightGuidedHalf(null);renderGuided();}
 }
 function move(delta){
  if(window.apexCourtReview?.isBusy()){api.notify('Finish the current shot before moving to another recorded play.');return;}
@@ -173,7 +192,8 @@ function initHalfCourt(){
  }
  toggle?.addEventListener('click',()=>{if(window.apexCourtReview?.isBusy())return;opponent=!opponent;show();});
  media.addEventListener('change',show);
- window.addEventListener('apex:review-direction-changed',ev=>{reversed=!!ev.detail?.reversed;show();});
+ window.addEventListener('apex:review-direction-changed',ev=>{reversed=!!ev.detail?.reversed;show();highlightGuidedHalf(sequence[index]);});
+ window.addEventListener('apex:guided-shot-selected',ev=>{if(ev.detail?.guided){opponent=ev.detail.team==='opponent';show();}});
  $('post-period')?.addEventListener('change',()=>{opponent=false;show();});
  show();
 }
