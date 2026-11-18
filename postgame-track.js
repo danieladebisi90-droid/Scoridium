@@ -164,19 +164,20 @@ async function init(){
    .eq('id',gameId).eq('team_id',teamId).eq('seasons_id',seasonId).maybeSingle();
  if(response.error||!response.data){say('Game not available to the selected team and season.');return;}
  game=response.data;
- if(mode!=='stat')document.body.classList.add('postgame-shot-mode');
+ document.body.classList.add('postgame-shot-mode');
+ document.body.classList.toggle('pgq-stat-workflow',mode!=='shot');
  if(game.status!=='completed'){say('This post-game screen is only for completed games. Live games use the Game Tracker.');return;}
  $('back-to-room').href='film-room.html?gameId='+encodeURIComponent(gameId);
  $('page-title').textContent=mode==='shot'?'Post-game Shot Tracking':mode==='combined'?'Post-game Stat & Shot Tracking':'Post-game Stat Tracking';
  $('game-title').textContent='vs '+(game.opponent||'Opponent')+' · '+game.date+' · Final '+(game.team_score??'—')+'–'+(game.opponent_score??'—');
  $('post-stat-section').hidden=mode==='shot';
- $('post-shot-section').hidden=mode!=='shot';
+ $('post-shot-section').hidden=false;
  if(mode==='combined'){
   $('postgame-mode-tabs').hidden=false;
-  const activate=next=>{activeWorkflow=next;$('post-stat-section').hidden=next!=='stat';$('post-shot-section').hidden=next!=='shot';$('post-tab-stat').classList.toggle('active',next==='stat');$('post-tab-shot').classList.toggle('active',next==='shot');};
+  const activate=next=>{activeWorkflow=next;$('post-stat-section').hidden=next!=='stat';$('post-shot-section').hidden=false;document.body.classList.toggle('pgq-stat-workflow',next==='stat');$('post-tab-stat').classList.toggle('active',next==='stat');$('post-tab-shot').classList.toggle('active',next==='shot');};
   $('post-tab-stat').onclick=()=>activate('stat');$('post-tab-shot').onclick=()=>activate('shot');activate('stat');
  }
- if(mode!=='stat')$('post-observation-section').hidden=false;
+ $('post-observation-section').hidden=false;
  for(let p=1;p<=Math.max(4,Number(game.current_period)||4);p++)$('post-period').add(new Option(periodName(p),String(p)));
  const roster=await supabaseClient.from('players').select('id,first_name,last_name,number').eq('team_id',teamId).order('number');
  if(roster.error){say('Unable to load roster: '+roster.error.message);return;}
@@ -197,12 +198,15 @@ async function init(){
  $('post-shot-analysis').hidden=mode!=='combined';
  $('post-shot-made').addEventListener('change',()=>{resetPending();refreshChoices();});
  $('post-shot-action').addEventListener('change',()=>{resetPending();refreshChoices();});
- if(mode!=='stat'){
+ {
  // The court owns the page; player attribution belongs in the shot popup.
  const playerLabel=$('post-player').closest('label');
  $('post-shot-form').insertBefore(playerLabel,$('post-shot-form').firstChild);
  const shotDialog=$('post-shot-dialog'),linksDialog=$('post-shot-links-dialog');
  $('post-shot-dialog-close').onclick=()=>shotDialog.close();
+ const court=$('postgame-court');const parent=court.parentElement;
+ const wrap=document.createElement('div');wrap.className='postgame-court-workspace';parent.insertBefore(wrap,court);wrap.appendChild(court);
+ const quick=$('post-quick-root');if(quick)wrap.appendChild(quick);
  $('post-shot-links-close').onclick=()=>linksDialog.close();
  $('post-shot-links-open').onclick=()=>{renderEvents();renderObservations();linksDialog.showModal();};
  for(const dlg of [shotDialog,linksDialog])dlg.addEventListener('click',e=>{if(e.target===dlg)dlg.close();});
@@ -216,6 +220,7 @@ async function init(){
   point={x:Number(c.x.toFixed(2)),y:Number(c.y.toFixed(2)),points:shotValue(c.x,c.y)};
   resetPending();updateShotSelection();
   if((mode==='shot'||mode==='combined'&&activeWorkflow==='shot')&&!$('post-shot-dialog').open)$('post-shot-dialog').showModal();
+  else if(activeWorkflow==='stat')window.dispatchEvent(new CustomEvent('apex:postgame-court',{detail:{...point}}));
  });
  $('post-stat-form').addEventListener('submit',e=>{e.preventDefault();void saveStat();});
  $('post-shot-form').addEventListener('submit',e=>{e.preventDefault();void saveShot();});
