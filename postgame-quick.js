@@ -5,6 +5,7 @@ if(!api||!root||api.mode==='shot')return;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let state='players',player=null,team='us',shot=null,creation='',pressure='',source=null;
 let busy=false,teamMode=false,eventsPanel=false,last='Select a player or a team action.',selectedPoint=null,existingMatches=[];
+let timelineTimes=new Map(),timelineError='';
 const labels={shot:'SHOT',free_throw:'FT',assist:'AST',offensive_rebound:'OREB',defensive_rebound:'DREB',team_offensive_rebound:'TEAM OREB',team_defensive_rebound:'TEAM DREB',steal:'STL',turnover:'TO',block:'BLK',foul:'PF'};
 const button=(action,label,kind='')=>'<button type="button" class="pgq-btn '+kind+'" data-action="'+esc(action)+'">'+esc(label)+'</button>';
 const grid=buttons=>'<div class="pgq-grid">'+buttons.join('')+'</div>';
@@ -36,12 +37,31 @@ async function finishShot(buttonElement){
  if(team==='opponent'){reset(last);return;}
  state=shot.made?'assist':'rebound';render();
 }
-function renderTimeline(){
- const ordered=api.getEvents().filter(e=>Number(e.period)===api.getPeriod()).slice().sort((a,b)=>String(a.created_at||'').localeCompare(String(b.created_at||''))||String(a.id).localeCompare(String(b.id)));
- return '<div class="pgq-timeline"><h3>Play-by-Play Review · Q'+api.getPeriod()+'</h3><p>Listed by entry time; footage sequence is not yet available.</p>'
- +ordered.map((event,i)=>'<div class="pgq-entry"><span>'+String(i+1).padStart(2,'0')+'</span><strong>'+esc(labels[event.type]||event.type)+'</strong><small>'+esc(event.team==='us'?('#'+(players().find(p=>p.id===event.player_id)?.number??'?')):'OPP')+(event.type==='shot'?' · '+(event.made?'MAKE':'MISS')+' '+event.points+'PT':'')+'</small></div>').join('')
- +'<p>For player corrections or shot links, use the existing Review controls.</p></div>';
+async function loadTimeline(){
+ const result=await supabaseClient.from('apexvision_postgame_timeline').select('event_id,video_second').eq('game_id',api.gameId);
+ if(result.error){timelineError='Video timeline unavailable: '+result.error.message;return;}
+ timelineError='';timelineTimes=new Map((result.data||[]).map(row=>[String(row.event_id),Number(row.video_second)]));
 }
+function formatTime(s){if(s==null||!Number.isFinite(s))return '';return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+function renderTimeline(){
+ const ordered=api.getEvents().filter(e=>Number(e.period)===api.getPeriod()).slice().sort((a,b)=>{
+  const at=timelineTimes.get(String(a.id)),bt=timelineTimes.get(String(b.id));
+  if(at!=null&&bt!=null&&at!==bt)return at-bt;
+  if(at!=null&&bt==null)return -1;
+  if(at==null&&bt!=null)return 1;
+  return String(a.created_at||'').localeCompare(String(b.created_at||''))||String(a.id).localeCompare(String(b.id));
+ });
+ return '<div class="pgq-timeline"><h3>Play-by-Play · Q'+api.getPeriod()+'</h3>'+
+ '<p>Enter optional video timestamps (MM:SS) to order plays by the recording. Events without a timestamp are shown afterward in entry order.</p>'+
+ (timelineError?'<p>'+esc(timelineError)+'</p>':'')+
+ ordered.map((event,i)=>'<div class="pgq-entry"><span>'+String(i+1).padStart(2,'0')+'</span><strong>'+esc(labels[event.type]||event.type)+'</strong><small>'+
+ esc(event.team==='us'?('#'+(players().find(p=>p.id===event.player_id)?.number??'?')):'OPP')+
+ (event.type==='shot'?' · '+(event.made?'MAKE':'MISS')+' '+event.points+'PT':'')+'</small>'+
+ '<label>Video time <input data-time-id="'+esc(event.id)+'" placeholder="MM:SS" inputmode="numeric" value="'+esc(formatTime(timelineTimes.get(String(event.id))))+'"></label>'+
+ button('saveTime:'+event.id,'Save Time')+'</div>').join('')+
+ '<p>Use Review &amp; Edit to adjust a player attribution or match recorded shots.</p></div>';
+}
+
 function render(){
  const ns=players();
  const title=state==='players'?'Select a player':state==='stats'?playerName()+' · Choose stat':state==='shot'?'Select shot result':state==='shotDetails'?'Shot creation and pressure':state==='assist'?'Who assisted?':state==='rebound'?'Rebound or block?':state==='reboundPlayer'?'Who rebounded?':state==='foul'?'Record foul':state==='ft'?'Free throw result':'Quick Track';
@@ -72,6 +92,18 @@ function render(){
 }
 root.addEventListener('click',async e=>{
  const b=e.target.closest('button[data-action]');if(!b||busy)return;const a=b.dataset.action;
+ if(a.startsWith('saveTime:')){
+  const eventId=a.slice(9),field=root.querySelector('input[data-time-id="'+eventId+'"]'),value=field?.value.trim()||'';
+  const match=/^(\\d{1,3}):([0-5]\\d)$/.exec(value);
+  if(!match){api.notify('Enter MM:SS, such as 04:12.');return;}
+  const seconds=Number(match[1])*60+Number(match[2]);
+  const auth=await supabaseClient.auth.getUser();if(!auth.data?.user){api.notify('Sign in to save video timing.');return;}
+  b.disabled=true;
+  const saved=await supabaseClient.from('apexvision_postgame_timeline').upsert({event_id:eventId,game_id:api.gameId,video_second:seconds,updated_by:auth.data.user.id,updated_at:new Date().toISOString()},{onConflict:'event_id'});
+  b.disabled=false;
+  if(saved.error){api.notify('Unable to save video timestamp: '+saved.error.message);return;}
+  timelineTimes.set(eventId,seconds);api.notify('Video timestamp saved.');render();return;
+ }
  if(a==='back'){reset();return;}
  if(a==='team'){teamMode=!teamMode;team='us';reset();return;}
  if(a==='player'){player=b.dataset.player;team='us';state='stats';render();return;}
@@ -119,7 +151,8 @@ root.addEventListener('click',async e=>{
   if(!type)return;const id=await save(type,{},b);if(id)reset(type.toUpperCase()+' recorded');else render();return;
  }
 });
-$('post-quick-review')?.addEventListener('click',()=>{$('post-shot-links-open')?.click();});
+$('post-quick-review')?.addEventListener('click',async()=>{eventsPanel=!eventsPanel;if(eventsPanel)await loadTimeline();render();});
+const reviewButton=document.createElement('button');reviewButton.type='button';reviewButton.textContent='Review & Edit';reviewButton.className='post-quick-review-edit';reviewButton.addEventListener('click',()=>{$('post-shot-links-open')?.click();});$('post-quick-review')?.after(reviewButton);
 $('post-period')?.addEventListener('change',()=>reset('Quarter changed. Existing records preserved.'));
 $('post-team')?.addEventListener('change',()=>{team=$('post-team').value;reset();});
 if(api.mode==='combined'){$('post-tab-stat').addEventListener('click',()=>reset());}
