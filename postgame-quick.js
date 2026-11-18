@@ -4,13 +4,13 @@ const $=id=>document.getElementById(id),api=window.apexPostgame,root=$('post-qui
 if(!api||!root||api.mode==='shot')return;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let state='players',player=null,team='us',shot=null,creation='',pressure='',source=null;
-let busy=false,teamMode=false,eventsPanel=false,last='Select a player or a team action.';
+let busy=false,teamMode=false,eventsPanel=false,last='Select a player or a team action.',selectedPoint=null;
 const labels={shot:'SHOT',free_throw:'FT',assist:'AST',offensive_rebound:'OREB',defensive_rebound:'DREB',team_offensive_rebound:'TEAM OREB',team_defensive_rebound:'TEAM DREB',steal:'STL',turnover:'TO',block:'BLK',foul:'PF'};
 const button=(action,label,kind='')=>'<button type="button" class="pgq-btn '+kind+'" data-action="'+esc(action)+'">'+esc(label)+'</button>';
 const grid=buttons=>'<div class="pgq-grid">'+buttons.join('')+'</div>';
 const players=()=>api.getPlayers().slice().sort((a,b)=>(Number(a.number)||0)-(Number(b.number)||0));
 const playerName=()=>player?('#'+(players().find(p=>p.id===player)?.number??'?')):'TEAM';
-function reset(message){state='players';player=null;shot=null;source=null;creation='';pressure='';if(message)last=message;render();}
+function reset(message){state='players';player=null;shot=null;source=null;selectedPoint=null;creation='';pressure='';if(message)last=message;render();}
 function chooseAction(a){
  if(a==='back'){reset();return;}
  if(a==='team'){teamMode=!teamMode;reset();return;}
@@ -28,7 +28,7 @@ async function finishShot(buttonElement){
  if(!shot)return;
  const id=await save('shot',{points:shot.points,made:shot.made,position:shot.position},buttonElement);
  if(!id){render();return;}
- source=id;
+ source=id;selectedPoint=null;
  if(creation||pressure)await api.saveClassification(id,creation,pressure);
  last=(shot.made?'Made ':'Missed ')+shot.points+'PT shot · '+playerName();
  if(team==='opponent'){reset(last);return;}
@@ -74,7 +74,8 @@ root.addEventListener('click',async e=>{
  if(a.startsWith('set:')){team=a.split(':')[1];player=null;state='stats';render();return;}
  if(a.startsWith('shot:')){
   const n=Number(a.split(':')[1]);
-  shot={points:n%2?3:2,made:n<2,position:null};creation='';pressure='';
+  if(selectedPoint&&selectedPoint.points!==(n%2?3:2)){api.notify('Selected court location is '+selectedPoint.points+'PT. Use the matching shot button.');return;}
+  shot={points:selectedPoint?.points??(n%2?3:2),made:n<2,position:selectedPoint};creation='';pressure='';
   state='shotDetails';render();return;
  }
  if(a.startsWith('creation:')){creation=a.slice(9)===creation?'':a.slice(9);render();return;}
@@ -106,6 +107,13 @@ $('post-period')?.addEventListener('change',()=>reset('Quarter changed. Existing
 $('post-team')?.addEventListener('change',()=>{team=$('post-team').value;reset();});
 if(api.mode==='combined'){$('post-tab-stat').addEventListener('click',()=>reset());}
 // Only render when the existing post-game tracker is initialized with its roster.
-const wait=()=>{if(api.getPlayers().length){render();return;}setTimeout(wait,200)};
+window.addEventListener('apex:postgame-court',e=>{
+ selectedPoint=e.detail;const prefer=selectedPoint.x<430?'right':'left';root.dataset.side=prefer;
+ state='players';team='us';player=null;
+ last='Shot location selected · '+selectedPoint.points+'PT. Choose the shooter.';
+ render();
+});
+let tries=0;
+const wait=()=>{if(api.getPlayers().length||++tries>60){render();return;}setTimeout(wait,200)};
 wait();
 })();
