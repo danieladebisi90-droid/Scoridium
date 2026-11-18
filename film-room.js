@@ -3,9 +3,9 @@
 const $=id=>document.getElementById(id);
 const gameId=new URLSearchParams(location.search).get('gameId');
 const teamId=sessionStorage.getItem('selectedTeamId'),seasonId=sessionStorage.getItem('selectedSeasonId');
-const activities=['stat','shot','film']; // 'film' remains the existing database key for combined workflow.
+const activities=['stat','shot','combined']; // New combined mode retains its own review status.
 const names={not_started:'Not Started',in_progress:'In Progress',completed:'Completed'};
-const destinations={stat:'postgame-track.html?mode=stat',shot:'postgame-track.html?mode=shot',film:'postgame-track.html?mode=combined'};
+const destinations={stat:'postgame-track.html?mode=stat',shot:'postgame-track.html?mode=shot',combined:'postgame-track.html?mode=combined'};
 const records=new Map();let user=null,ready=false;
 const message=s=>{$('room-message').textContent=s;};
 function dateLabel(value){
