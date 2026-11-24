@@ -757,22 +757,28 @@ function renderPreviousGameLeaders(events, players) {
 
 // Check game-specific or season-scoped tracking grants before showing edit entry points.
 // This only selects the link label; Supabase RLS must still enforce all writes.
-const scTrackingGrants=new Map();
+// Re-check grants on every use: revocations must not be masked by an old
+// resolved promise. RLS remains authoritative for any write.
 async function scMayTrack(game){
-  const key=String(game.id);if(scTrackingGrants.has(key))return scTrackingGrants.get(key);
-  const promise=(async()=>{
-    try{
-      const user=(await supabaseClient.auth.getUser()).data.user;if(!user)return false;
-      const team=sessionStorage.getItem('selectedTeamId');
-      const [membership,permission]=await Promise.all([
-        supabaseClient.from('team_members').select('role').eq('team_id',team).eq('user_id',user.id),
-        supabaseClient.from('game_tracking_permissions').select('game_id,season_id').eq('user_id',user.id)
-      ]);
-      const coach=(membership.data||[]).some(x=>['head_coach','coach','assistant_coach','manager'].includes(x.role));
-      return coach||(permission.data||[]).some(x=>x.game_id===game.id||Boolean(x.season_id&&x.season_id===game.seasons_id));
-    }catch(e){return false;}
-  })();
-  scTrackingGrants.set(key,promise);return promise;
+  try {
+    const user=(await supabaseClient.auth.getUser()).data.user;
+    if(!user)return false;
+    const team=sessionStorage.getItem('selectedTeamId');
+    const [membership,permission]=await Promise.all([
+      supabaseClient.from('team_members').select('role').eq('team_id',team).eq('user_id',user.id),
+      supabaseClient.from('game_tracking_permissions')
+        .select('game_id,season_id,revoked_at,expires_at').eq('user_id',user.id)
+    ]);
+    if(membership.error || permission.error)return false;
+    const coach=(membership.data||[]).some(x=>
+      ['head_coach','coach','assistant_coach','manager'].includes(x.role));
+    const now=Date.now();
+    const granted=(permission.data||[]).some(x=>
+      !x.revoked_at && (!x.expires_at || Date.parse(x.expires_at)>now) &&
+      (String(x.game_id)===String(game.id) ||
+       Boolean(x.season_id && String(x.season_id)===String(game.seasons_id))));
+    return coach||granted;
+  } catch(e){console.warn('Tracker permission check failed:',e);return false;}
 }
 
 function scFullDate(value){

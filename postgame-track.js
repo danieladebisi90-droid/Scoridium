@@ -126,7 +126,8 @@ function renderShotMarkers(){
  for(const event of events){
    if(event.type!=='shot'||event.x==null||event.y==null)continue;
    const circle=document.createElementNS('http://www.w3.org/2000/svg','circle');
-   circle.setAttribute('cx',event.x);circle.setAttribute('cy',event.y);
+   const otherHalf=(Number(event.period)<=2)!==(Number(currentPeriod())<=2);
+   circle.setAttribute('cx',otherHalf?860-Number(event.x):event.x);circle.setAttribute('cy',event.y);
    circle.setAttribute('r','5');circle.setAttribute('stroke',event.made?'#16763c':'#9c2a2a');
    circle.setAttribute('fill',event.made?'#42d784':'#f87d7d');circle.setAttribute('stroke-width','2');
    host.append(circle);
@@ -142,7 +143,7 @@ async function refresh(){
  const results=[];
  for(let offset=0;offset<10000;offset+=500){
   const r=await supabaseClient.from('game_events')
-   .select('id,game_id,period,type,team,player_id,points,made,x,y,version,created_at')
+   .select('id,game_id,period,type,team,player_id,points,made,x,y,version,created_at,linked_event_id')
    .eq('game_id',gameId).order('id',{ascending:true}).range(offset,offset+499);
   if(r.error)throw r.error;
   results.push(...r.data||[]);
@@ -217,7 +218,7 @@ async function init(){
  if(roster.error){say('Unable to load roster: '+roster.error.message);return;}
  players=roster.data||[];
  for(const player of players)$('post-player').add(new Option('#'+(player.number??'?')+' '+(player.first_name||'')+' '+(player.last_name||''),player.id));
- $('post-period').addEventListener('change',()=>{resetPending();renderEvents();refreshChoices();renderObservations();});
+ $('post-period').addEventListener('change',()=>{resetPending();renderEvents();renderShotMarkers();refreshChoices();renderObservations();});
  $('post-team').addEventListener('change',()=>{resetPending();updatePlayer();});
  $('post-player').addEventListener('change',resetPending);
  $('post-refresh').addEventListener('click',async()=>{try{await refresh();say('Event list refreshed.');}catch(e){say('Refresh failed: '+e.message);}});
@@ -328,10 +329,15 @@ async function saveShotAnalysis(eventId){
 window.apexPostgame={get mode(){return mode;},get gameId(){return gameId;},getPlayers:()=>players.slice(),getEvents:()=>events.slice(),getPeriod:currentPeriod,getTeam:currentTeam,getPoint:()=>point,getGame:()=>game?{...game}:null,shotValue,
  setPlayer:id=>{$('post-player').value=id||'';},setTeam:team=>{$('post-team').value=team;$('post-team').dispatchEvent(new Event('change'));},
  saveEvent:async({type,team='us',playerId=null,points=null,made=null,position=null,linkedEventId=null,fixedId=null,confirmed=false},button)=>{
-   const id=fixedId||crypto.randomUUID();
-   const same=events.filter(e=>e.type===type&&e.team===team&&Number(e.period)===currentPeriod()&&(type!=='shot'||e.points===points&&e.made===made));
-   const prompt=same.length?'There are '+same.length+' events like this in the quarter. Confirm this is an additional missing play.':'Confirm this event was missing from the game.';
-   if(!confirmed&&same.length&&!confirm(prompt))return null;
+   // Each recording action has its own event ID.
+// Repeated basketball statistics in a quarter are valid.
+// Do not use event similarity as duplicate detection.
+const id = fixedId || crypto.randomUUID();
+
+// If this event ID is already present, do not create it again.
+if (events.some(e => e.id === id)) {
+  return id;
+}
    const result=await invoke('apexvision_postgame_add_event',{p_game_id:gameId,p_event_id:id,p_type:type,p_team:team,p_period:currentPeriod(),p_player_id:playerId,p_points:points,p_made:made,p_x:position?.x??null,p_y:position?.y??null},button);
    if(result===null)return null;
    if(linkedEventId){

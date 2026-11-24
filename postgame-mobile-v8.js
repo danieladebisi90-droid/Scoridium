@@ -89,8 +89,11 @@ function layout(){
  if(!workspace||!courtArea||!side||!courtWrap)return;
  stage=make('div','pg-v8-stage');
  workspace.prepend(stage);
- info=make('div','pg-v8-shot-info');
- stage.appendChild(info);
+// Only create the blue information bar for Shot Tracking.
+if (mode === 'shot') {
+  info = make('div', 'pg-v8-shot-info');
+  stage.appendChild(info);
+}
  move(courtArea,stage);
  dock=make('div','pg-v8-bottom');
  stage.appendChild(dock);
@@ -139,7 +142,11 @@ more?.addEventListener('click',()=>openMore(drawer.hidden));
 drawer?.addEventListener('click',e=>{if(e.target.closest('button'))openMore(false);});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){openMore(false);if(mode==='combined')showStats(false);}});
 document.addEventListener('click',e=>{if(!mobile.matches||drawer.hidden)return;if(!drawer.contains(e.target)&&e.target!==more)openMore(false);});
-mobile.addEventListener('change',layout);
+mobile.addEventListener('change', () => {
+  requestAnimationFrame(() => {
+    layout();
+  });
+});
 window.addEventListener('apex:postgame-ready',()=>{layout();queueMicrotask(updateLastShot);});
 window.addEventListener('apex:postgame-events-updated',updateLastShot);
 window.addEventListener('apex:shot-review-saved',()=>{queueMicrotask(updateLastShot);});

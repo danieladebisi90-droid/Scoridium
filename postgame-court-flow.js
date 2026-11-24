@@ -80,6 +80,7 @@ function begin(location,made){
  if(shotMode&&!insertedShot&&document.body.classList.contains('pg-guided-on')&&!guidedTarget){api.notify('This recorded shot is already located. Choose Next or another pending shot.');return;}
  if(shotMode&&!complete()){api.notify('Finish or cancel the current shot before selecting another location.');return;}
  const team=teamAt(location.x),value=api.shotValue(location.x,location.y);
+ if(combined&&window.apexPostgameQuick?.linkIntent())made=window.apexPostgameQuick.linkIntent()==='ast';
  if(shotMode&&insertedShot){
   if(team!==insertedShot.team||value!==insertedShot.points){api.notify('Choose the '+insertedShot.points+'PT area on the selected team’s basket.');return;}
   shot={position:location,made:insertedShot.made,points:value,team,inserted:true};
@@ -120,6 +121,7 @@ if(shotMode||combined){
   ev.stopImmediatePropagation();ev.preventDefault();
   if(Date.now()<(window.__apexCourtSwipeUntil||0))return;
   const point=courtPoint(ev);if(!point)return;
+  if(combined&&window.apexPostgameQuick?.selectExistingShotAt(point)){if(timer){clearTimeout(timer);timer=null;}return;}
   if(shotMode&&insertedShot){if(timer){clearTimeout(timer);timer=null;}begin(point,insertedShot.made);return;}
   if(shotMode&&guidedTarget){if(timer){clearTimeout(timer);timer=null;}begin(point,guidedTarget.made);return;}
   if(timer){clearTimeout(timer);timer=null;begin(point,false);return;}

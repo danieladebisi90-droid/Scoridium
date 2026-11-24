@@ -1,0 +1,54 @@
+/* ApexVision Shot Tracking — Free vs Guided presentation only. */
+body.postgame-fullscreen.pg-v3-shot #av-shot-mode-switch {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(5px, .8vmin, 10px);
+  width: 100%;
+  min-width: 0;
+  flex: 0 0 auto;
+  margin: 0 0 clamp(5px, .7dvh, 9px);
+  padding: 4px;
+  background: #fff;
+  border: 1px solid #b9cbe0;
+  border-radius: 10px;
+}
+body.postgame-fullscreen.pg-v3-shot #av-shot-mode-switch button {
+  min-width: 0;
+  min-height: clamp(32px, 4.5dvh, 42px);
+  padding: 5px 8px;
+  border-radius: 7px;
+  border: 1px solid #b9cbe0;
+  background: #f4f8fd;
+  color: #173d78;
+  font-size: clamp(11px, 1.2vmin, 14px);
+  font-weight: 800;
+  cursor: pointer;
+}
+body.postgame-fullscreen.pg-v3-shot #av-shot-mode-switch button[aria-pressed="true"] {
+  background: var(--review-primary, #063d82);
+  color: #fff;
+  border-color: var(--review-primary, #063d82);
+}
+/* Free: no event queue navigation or current-event banner. */
+html body.postgame-fullscreen.pg-v3-shot.av-shot-free .pg-guided-navigation,
+html body.postgame-fullscreen.pg-v3-shot.av-shot-free #pg-guided-hint {
+  display: none !important;
+}
+/* Free recording always retains the existing +Record a Shot workflow. */
+html body.postgame-fullscreen.pg-v3-shot.av-shot-free .pg-insert-actions {
+  display: flex !important;
+}
+/* Wide-screen dock must not reserve the missing navigation's height. */
+@media (min-width: 980px) and (min-aspect-ratio: 11/10) and (min-height: 550px) {
+  html body.postgame-fullscreen.pg-v3-shot.pg-shot-unified.av-shot-free .pg-shot-unified-dock > .pg-guided-navigation {
+    display: none !important;
+    flex: 0 0 0 !important;
+    min-height: 0 !important;
+  }
+  html body.postgame-fullscreen.pg-v3-shot.pg-shot-unified.av-shot-free .pg-shot-unified-dock > .pg-insert-actions {
+    flex: 1 1 0 !important;
+  }
+  html body.postgame-fullscreen.pg-v3-shot.pg-shot-unified.av-shot-free .pg-shot-unified-dock > .pg-shot-unified-ft {
+    flex: 2 1 0 !important;
+  }
+}
