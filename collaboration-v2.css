@@ -1,0 +1,443 @@
+/* Scoridium Court workspace v2 — original calibrated FIBA SVG, no redrawing. */
+html.focus-tracker .tracker-shell[data-focus-view="court"] .focus-stage{min-height:0}
+html.focus-tracker .tracker-shell[data-focus-view="court"] .focus-court.sc-court-workspace{display:flex!important;flex-direction:column;min-width:0;min-height:0;width:100%;height:100%;overflow:hidden;gap:4px}
+.sc-court-workspace .sc-court-head{flex:0 0 auto;padding:7px 10px}
+.sc-court-workspace .sc-court-main{display:flex!important;flex:1;min-height:0;min-width:0;gap:0!important;overflow:hidden;border:1px solid #d2dce9;border-radius:9px;background:#fff}
+.sc-court-workspace .sc-shot-sidebar,.sc-court-workspace .sc-tools-sidebar{box-sizing:border-box;display:flex;flex:1 1 0;min-width:0;min-height:0;max-width:none!important;padding:8px;gap:8px;flex-direction:column;background:#f6f8fb;border:0!important;border-radius:0!important}
+.sc-court-workspace .sc-shot-sidebar{align-items:stretch;border-right:1px solid #d4deea!important}
+.sc-court-workspace .sc-tools-sidebar{border-left:1px solid #d4deea!important}
+.sc-court-workspace .sc-court-body{flex:0 1 auto;min-width:0;min-height:0;padding:0!important;border:0!important;border-radius:0!important;gap:0!important;display:flex;flex-direction:column;overflow:hidden}
+.sc-court-workspace #sc-court-mount{height:100%;width:auto;max-height:100%;max-width:100%;flex:1;min-height:0;min-width:0;overflow:hidden!important;padding:0!important;align-items:center;justify-content:center}
+.sc-court-workspace #sc-court-mount #tracker-controls{padding:0!important;margin:0!important;border:0!important;border-radius:0!important;background:transparent;overflow:hidden!important;width:100%;height:100%;max-height:100%;display:flex;min-height:0}
+.sc-court-workspace #sc-court-mount .court-wrap{padding:0!important;margin:0!important;border:0!important;min-width:0;min-height:0;overflow:hidden!important;display:flex;flex:1}
+.sc-court-workspace #sc-court-mount #basketball-court{display:block;min-width:0;width:100%;height:100%;max-width:100%;max-height:100%!important;object-fit:contain;touch-action:manipulation;cursor:crosshair;user-select:none;-webkit-user-select:none}
+.sc-court-workspace #sc-court-mount .court-view-toggle{display:none!important}
+.sc-court-workspace #sc-court-mount .court-side-toggle{display:none!important}
+.sc-court-workspace #sc-court-feedback{font-size:11px;margin:0;padding:4px;border-radius:0;max-height:26px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:none;text-align:center}
+.sc-court-workspace .sc-court-view-choices,.sc-court-workspace .sc-court-modes{display:flex!important;gap:4px;flex-direction:column;grid-template-columns:none}
+.sc-court-workspace .sc-court-view-choices button,.sc-court-workspace .sc-court-modes button{min-height:31px;padding:4px!important;font-size:clamp(10px,1.6vw,14px);font-weight:800;white-space:normal}
+.sc-court-workspace .sc-court-view-choices button.active,.sc-court-workspace .sc-court-modes button.active{background:#173c75;color:#fff}
+.sc-court-workspace.sc-full-mode .sc-court-modes{display:none!important}
+.sc-court-workspace .sc-court-scope{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:750}
+.sc-court-workspace .sc-court-scope select{max-width:100%;min-width:0;padding:5px 2px;font-size:clamp(10px,1.4vw,12px);background:white;color:#193251;border:1px solid #b9c9db;border-radius:5px}
+.sc-court-workspace .sc-compact-directions{align-self:flex-start;width:35px;height:35px;padding:1px!important;font-size:23px!important;font-weight:850;line-height:1;border:1px solid #d7bf7b;background:#fff4cf;color:#5c4700;border-radius:7px}
+.sc-court-workspace .sc-shot-counts{width:100%;padding:9px 3px;background:#fff;border:1px solid #cbd7e7;border-radius:8px;color:#122b49;display:flex;flex-direction:column;gap:5px;text-align:center;font-size:clamp(10px,1.4vw,13px)}
+.sc-court-workspace .sc-shot-counts strong{font-size:clamp(13px,2vw,18px)}
+.sc-court-workspace .sc-shot-counts span:nth-child(2){color:#087343;font-weight:800}
+.sc-court-workspace .sc-ft-bar{border:1px solid #d4dfeb;border-radius:7px;background:white;display:flex;flex-direction:column;justify-content:center;gap:5px;padding:7px;flex:none;min-height:92px;max-height:92px;overflow:hidden;box-sizing:border-box}
+.sc-court-workspace .sc-ft-bar>strong{color:#173c75;font-size:13px}
+.sc-court-workspace #sc-ft-step{display:flex;align-items:stretch;gap:3px;min-height:37px;max-height:45px;overflow:hidden}
+.sc-court-workspace #sc-ft-step button{flex:1;min-width:0;min-height:32px;padding:3px 2px!important;font-size:clamp(9px,1.35vw,12px);font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:normal;line-height:1.05;border-radius:5px}
+.sc-court-workspace #sc-ft-step button.sc-make{background:#07853e;color:#fff}.sc-court-workspace #sc-ft-step button.sc-miss{background:#d12f38;color:#fff}
+.sc-court-workspace #sc-ft-step>strong,.sc-court-workspace #sc-ft-step>span{font-size:11px;align-self:center;white-space:nowrap}
+.sc-court-workspace .sc-mini-button{font-size:11px;padding:5px!important;min-height:29px;margin-top:auto}
+.sc-court-workspace .sc-checkpoint-summary{position:absolute;z-index:15;inset:8px;max-height:none!important;overflow-y:auto!important;box-shadow:0 10px 35px #10233f55;background:#fff;border:1px solid #9db6d2;border-radius:10px;padding:16px;font-size:12px}
+.sc-court-workspace{position:relative}
+.sc-review-head{display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:-16px;background:#fff;padding:5px 0}
+.sc-review-head h3{margin:0;font-size:16px}
+.sc-review-head button{width:37px;height:37px;font-size:24px;border:1px solid #c4d0dd;border-radius:8px;background:#f0f4f9;color:#14314e}
+.sc-review-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(70px,.65fr);gap:7px;padding:7px;border-bottom:1px solid #e2e8ef;overflow-wrap:anywhere}
+.sc-review-columns b{font-size:11px}.sc-review-columns span{font-size:11px}
+@media(orientation:landscape) and (max-height:750px){
+ html.focus-tracker .tracker-shell[data-focus-view="court"]{padding:0!important;gap:0!important}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .scoreboard{min-height:45px!important;max-height:48px!important;border-radius:0!important}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .score-team output{font-size:25px!important}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .focus-stage{flex:1;min-height:0}
+ .sc-court-workspace .sc-court-head{display:none!important}
+ .sc-court-workspace .sc-court-main{border-radius:0;border:0;min-height:0}
+ .sc-court-workspace .sc-shot-sidebar,.sc-court-workspace .sc-tools-sidebar{padding:5px 6px;gap:5px;flex:1 1 0;min-width:82px}
+ .sc-court-workspace .sc-court-body{height:100%;aspect-ratio:860/470;flex:0 1 auto;max-width:calc(100% - 164px)}
+ .sc-court-workspace:not(.sc-full-mode) .sc-court-body{aspect-ratio:470/440}
+ .sc-court-workspace #sc-court-mount{width:100%;height:100%}
+ .sc-court-workspace #sc-court-feedback{display:none!important}
+ .sc-court-workspace .sc-compact-directions{width:30px;height:30px;font-size:18px}
+ .sc-court-workspace .sc-ft-bar{min-height:85px;max-height:85px;padding:4px}
+ .sc-court-workspace .sc-shot-counts{padding:6px 2px;gap:4px}
+}
+@media(orientation:portrait) and (max-width:800px){
+ .sc-court-workspace .sc-court-main{display:flex!important;flex-direction:column;overflow-y:auto!important;overflow-x:hidden!important;gap:0!important}
+ .sc-court-workspace .sc-shot-sidebar{order:0;flex:none;display:flex;flex-direction:row;align-items:center;gap:5px;padding:6px;min-height:0;max-height:none!important;border-bottom:1px solid #d4deea!important;border-right:0!important}
+ .sc-court-workspace .sc-court-view-choices{display:none!important}
+ .sc-court-workspace .sc-court-modes{flex:1;flex-direction:row}
+ .sc-court-workspace .sc-court-modes button{flex:1}
+ .sc-court-workspace .sc-court-scope{flex:1}
+ .sc-court-workspace .sc-court-scope label{display:none}
+ .sc-court-workspace .sc-compact-directions{flex:none;width:32px;height:33px}
+ .sc-court-workspace .sc-tools-sidebar{order:2;flex:none;display:flex;flex-direction:column;min-height:0;max-height:none!important;padding:6px;gap:6px;border-top:1px solid #d4deea!important;border-left:0!important}
+ .sc-court-workspace .sc-shot-counts{order:-1;min-height:45px;flex-direction:row;align-items:center;justify-content:space-around;gap:5px}
+ .sc-court-workspace .sc-shot-counts strong{font-size:14px}
+ .sc-court-workspace .sc-mini-button{margin-top:0;align-self:flex-end}
+ .sc-court-workspace .sc-ft-bar{min-height:66px;max-height:66px;flex-direction:row;align-items:center;justify-content:space-between;gap:8px}
+ .sc-court-workspace .sc-ft-bar>strong{flex:0 0 auto}
+ .sc-court-workspace #sc-ft-step{flex:1}
+ .sc-court-workspace #sc-ft-step button{font-size:12px}
+ .sc-court-workspace .sc-court-body{order:1;flex:none;height:auto!important;aspect-ratio:470/440;max-height:none!important;width:100%;min-height:0}
+ .sc-court-workspace #sc-court-mount{width:100%;height:auto!important;aspect-ratio:470/440;flex:none}
+ .sc-court-workspace #sc-court-mount #tracker-controls{height:100%}
+ .sc-court-workspace #sc-court-feedback{height:auto;max-height:none;white-space:normal}
+}
+/* Phone Quick Track: bigger labels without resizing fixed action containers. */
+@media(max-width:800px){
+ html.focus-tracker .tracker-shell[data-focus-view="track"] .qv-grid .qv-tile,
+ html.focus-tracker .tracker-shell[data-focus-view="track"] .qv-opp-buttons .qv-button{font-size:clamp(14px,3.5vw,20px)!important;letter-spacing:-.01em}
+ html.focus-tracker .tracker-shell[data-focus-view="track"] .qv-team-heading strong{font-size:clamp(15px,3.9vw,19px)!important}
+ html.focus-tracker .tracker-shell[data-focus-view="track"] .qv-team-heading small{font-size:clamp(11px,2.9vw,14px)!important}
+ html.focus-tracker .tracker-shell[data-focus-view="track"] .qv-option,
+ html.focus-tracker .tracker-shell[data-focus-view="track"] .qv-bottom .qv-button{font-size:clamp(13px,3vw,17px)!important}
+ html.focus-tracker .tracker-shell[data-focus-view="track"] .qv-last strong{font-size:clamp(13px,3vw,16px)!important}
+ html.focus-tracker .tracker-shell[data-focus-view="track"] .focus-game-actions button{font-size:clamp(12px,3vw,15px)!important}
+ html.focus-tracker .tracker-shell[data-focus-view="track"] .score-team h2{font-size:clamp(12px,3.2vw,17px)!important}
+}
+@media(orientation:landscape) and (max-height:600px){
+ html.focus-tracker .tracker-shell[data-focus-view="track"] .qv-grid .qv-tile,
+ html.focus-tracker .tracker-shell[data-focus-view="track"] .qv-opp-buttons .qv-button{font-size:clamp(12px,2.6vw,16px)!important}
+}
+
+/* Court layout fix: retain the dedicated workspace, never re-expose legacy controls. */
+html.focus-tracker .tracker-shell[data-focus-view="court"] .tracker-grid,
+html.focus-tracker.mobile-tracker-active .tracker-shell[data-focus-view="court"] .tracker-grid,
+html.focus-tracker.mobile-tracker-active .tracker-shell[data-focus-view="court"] #mobile-tracker,
+html.focus-tracker .tracker-shell[data-focus-view="court"] #mobile-tracker {
+  display:none!important;
+}
+html.focus-tracker .tracker-shell[data-focus-view="court"] .focus-stage {
+  flex:1 1 auto; width:100%; overflow:hidden; min-width:0; min-height:0;
+}
+html.focus-tracker .tracker-shell[data-focus-view="court"] .focus-court.sc-court-workspace {
+  flex:1 1 auto; min-width:0; min-height:0; width:100%;
+}
+/* Keep the court SVG proportional, and let control rails consume leftover width. */
+@media (orientation:landscape) and (max-height:750px) {
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-main {display:flex!important; flex-direction:row!important; height:100%; width:100%; min-width:0; align-items:stretch;}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-body {
+   order:1; height:100%; width:auto; flex:0 1 auto; min-width:0;
+   aspect-ratio:860/470; max-width:calc(100% - 160px);
+ }
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace:not(.sc-full-mode) .sc-court-body {aspect-ratio:470/440;}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-shot-sidebar {
+   order:0;flex:1 1 0;min-width:80px;max-width:none;overflow-y:auto;
+ }
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-tools-sidebar {
+   order:2;flex:1 1 0;min-width:80px;max-width:none;overflow-y:auto;
+ }
+ html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount,
+ html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount #tracker-controls,
+ html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount .court-wrap {
+   height:100%!important;max-height:100%!important;min-height:0!important;
+ }
+ html.focus-tracker .tracker-shell[data-focus-view="court"] #basketball-court {width:100%;height:100%;object-fit:contain;}
+}
+/* Portrait: full-width comparison, one compact controls row, court, then FT + undo. */
+@media (orientation:portrait) and (max-width:800px) {
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace .sc-shot-sidebar {
+   display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.4fr) 36px;
+   grid-template-rows:auto auto;gap:6px;align-items:center;width:100%;
+   padding:7px;flex:0 0 auto;
+ }
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace .sc-shot-counts {
+   grid-column:1/-1;grid-row:1;width:100%;min-height:60px;padding:8px;
+   display:flex;flex-direction:column;justify-content:center;gap:2px;text-align:center;
+ }
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace .sc-shot-counts strong {font-size:19px;line-height:1.1;}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace .sc-shot-counts span {font-size:13px;line-height:1.25;}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace .sc-court-modes {
+   grid-column:1/3;grid-row:2;display:flex!important;flex-direction:row;min-width:0;gap:4px;
+ }
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace .sc-court-modes button {
+   flex:1 1 0;min-width:0;min-height:38px;padding:4px 2px!important;font-size:clamp(11px,3vw,14px);
+ }
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace .sc-court-scope {
+   grid-column:3;grid-row:2;min-width:0;width:100%;
+ }
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace .sc-court-scope select {
+   width:100%;min-width:0;height:38px;font-size:clamp(10px,2.7vw,13px);
+ }
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace .sc-compact-directions {
+   grid-column:4;grid-row:2;width:36px;height:38px;min-width:0;padding:0!important;
+ }
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace .sc-tools-sidebar {
+   display:grid!important;grid-template-columns:minmax(0,1fr) 84px;
+   gap:7px;align-items:stretch;padding:7px;
+ }
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace .sc-ft-bar {
+   grid-column:1;min-width:0;height:66px;min-height:66px;max-height:66px;
+   padding:5px;gap:6px;
+ }
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace .sc-ft-bar>strong {font-size:15px;}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace #sc-ft-step {flex:1;min-width:0;}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace #sc-ft-step button {font-size:clamp(11px,3vw,14px);}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace #sc-undo-court {
+   grid-column:2;width:100%;height:66px;min-height:66px;margin:0;
+   font-size:15px;font-weight:800;border-radius:8px;
+ }
+}
+/* FT back buttons should never take the same width as team/attempt choices. */
+.sc-court-workspace #sc-ft-step button.sc-ft-back {
+  flex:0 0 35px!important; width:35px!important; min-width:35px!important;
+  font-size:19px!important; padding:2px!important;
+}
+/* Let the FT action itself carry the label; no duplicated FT heading. */
+.sc-court-workspace .sc-ft-bar>strong{display:none!important}
+.sc-court-workspace .sc-ft-bar #sc-ft-step{width:100%;flex:1 1 auto;align-items:center}
+/* Neutralize the original landscape player and stats panels even when
+   older responsive rules try to show them again. */
+html.focus-tracker .tracker-shell[data-focus-view="court"] .tracker-grid .player-panel,
+html.focus-tracker .tracker-shell[data-focus-view="court"] .tracker-grid .stats-panel{display:none!important}
+
+/* V4: landscape court must occupy the full usable HEIGHT, including tall
+   desktop/tablet landscape viewports (previously only <=750px tall).
+   Side rails absorb leftover WIDTH; never stretch the calibrated court. */
+@media (orientation: landscape) {
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-main {
+    display:flex!important;
+    flex-direction:row!important;
+    align-items:stretch!important;
+    width:100%;height:100%;min-height:0;min-width:0;
+    overflow:hidden;
+  }
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-body {
+    order:1!important;
+    flex:0 0 auto!important;
+    box-sizing:border-box;
+    width:auto!important;
+    height:100%!important;
+    min-height:0!important;min-width:0!important;
+    aspect-ratio:860 / 470;
+    max-width:calc(100% - 160px)!important;
+    align-self:stretch;
+  }
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-workspace:not(.sc-full-mode) .sc-court-body {
+    aspect-ratio:470 / 440;
+  }
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-shot-sidebar,
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-tools-sidebar {
+    flex:1 1 0!important;
+    min-width:80px!important;
+    max-width:none!important;
+    box-sizing:border-box;
+    overflow-y:auto;
+  }
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-shot-sidebar {order:0!important;}
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-tools-sidebar {order:2!important;}
+  html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount,
+  html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount #tracker-controls,
+  html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount .court-wrap {
+    width:100%!important;height:100%!important;min-height:0!important;max-height:100%!important;
+  }
+  html.focus-tracker .tracker-shell[data-focus-view="court"] #basketball-court {
+    width:100%!important;height:100%!important;object-fit:contain!important;
+  }
+}
+
+/* V5: one RIGHT rail in landscape. Give the court the entire LEFT portion. */
+@media (orientation:landscape) {
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-main {
+    display:flex!important; flex-direction:row!important; gap:0!important;
+    justify-content:flex-start!important; align-items:stretch!important;
+  }
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-shot-sidebar {
+    display:none!important;
+  }
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-body {
+    order:0!important; height:100%!important; flex:0 1 auto!important;
+    max-width:calc(100% - 205px)!important; min-width:0!important;
+    border-right:1px solid #d4deea!important;
+  }
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-tools-sidebar {
+    display:flex!important;order:1!important;flex:1 1 205px!important;
+    min-width:205px!important;max-width:none!important;
+    padding:8px 10px!important;gap:7px!important;overflow-y:auto!important;
+    border-left:0!important;
+  }
+  .sc-court-workspace .sc-tools-sidebar .sc-court-view-choices {display:grid!important;grid-template-columns:1fr 1fr;gap:5px;flex:none}
+  .sc-court-workspace .sc-tools-sidebar .sc-court-view-choices button {font-size:clamp(12px,1.6vw,16px)!important;min-height:38px}
+  .sc-court-workspace .sc-tools-sidebar .sc-court-modes {display:flex!important;flex-direction:row;gap:5px;flex:none}
+  .sc-court-workspace.sc-full-mode .sc-tools-sidebar .sc-court-modes {display:none!important}
+  .sc-court-workspace .sc-tools-sidebar .sc-court-modes button {flex:1;min-width:0;font-size:clamp(12px,1.5vw,15px)!important;min-height:36px}
+  .sc-court-workspace .sc-tools-sidebar .sc-court-scope {font-size:12px;flex:none}
+  .sc-court-workspace .sc-tools-sidebar .sc-court-scope select {height:36px;font-size:12px;width:100%}
+  .sc-court-workspace .sc-tools-sidebar .sc-compact-directions {flex:none;width:36px;height:33px;margin:0}
+  .sc-court-workspace .sc-tools-sidebar .sc-shot-counts {flex:none;min-height:78px;gap:2px;padding:8px;font-size:13px}
+  .sc-court-workspace .sc-tools-sidebar .sc-shot-counts strong {font-size:19px}
+  .sc-court-workspace .sc-tools-sidebar .sc-ft-bar {flex:none;width:100%;min-height:72px;max-height:72px;padding:7px}
+  .sc-court-workspace .sc-tools-sidebar #sc-undo-court {width:100%;min-height:40px;font-size:14px;margin-top:auto}
+  .sc-court-workspace .sc-court-body #sc-court-mount {width:100%;height:100%}
+}
+
+/* V6: deterministic court sizing and visibility through rotation.
+   Landscape width is set by the measured FIBA aspect ratio in collaboration.js. */
+html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount,
+html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount #tracker-controls,
+html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount .court-wrap {
+  display:flex!important;
+  flex-direction:column!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  max-width:none!important;
+  max-height:none!important;
+  overflow:visible!important;
+  position:relative;
+  visibility:visible!important;
+}
+html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount .court-wrap {
+  flex:1 1 auto!important;
+}
+html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount #basketball-court,
+html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount #basketball-court.half-court-view {
+  display:block!important;
+  flex:1 1 auto!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  min-width:0!important;
+  max-width:100%!important;
+  max-height:100%!important;
+  object-fit:contain!important;
+  visibility:visible!important;
+}
+@media(orientation:landscape){
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-main {height:100%!important;min-height:0!important;}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-body {flex-shrink:0!important;flex-grow:0!important;overflow:hidden!important;}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-tools-sidebar {flex-grow:0!important;flex-shrink:0!important;min-width:0!important;}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount {flex:1 1 auto!important;overflow:hidden!important;}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount .court-wrap {overflow:hidden!important;}
+}
+@media(orientation:portrait){
+ html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-body {width:100%!important;flex-basis:auto!important;max-width:100%!important;}
+ html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount {aspect-ratio:470/440; height:auto!important;}
+}
+
+
+/* V7: unified responsive Court layout. Overrides earlier incremental V2–V6
+   rules without changing game state, shot coordinates, or original FIBA SVG. */
+html.focus-tracker .tracker-shell[data-focus-view="court"] .focus-stage,
+html.focus-tracker .tracker-shell[data-focus-view="court"] .focus-court.sc-court-workspace {
+  min-width:0!important;min-height:0!important;
+}
+/* SVG must have a definite drawing box, not an unbounded flex-child height. */
+html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount,
+html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount #tracker-controls,
+html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount .court-wrap {
+  box-sizing:border-box!important;display:flex!important;flex-direction:column!important;
+  flex:1 1 0!important;width:100%!important;height:100%!important;
+  max-width:none!important;max-height:none!important;min-width:0!important;min-height:0!important;
+  margin:0!important;padding:0!important;overflow:hidden!important;visibility:visible!important;
+}
+html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount #basketball-court {
+  display:block!important;position:relative!important;box-sizing:border-box!important;
+  flex:1 1 0!important;width:100%!important;height:100%!important;
+  max-width:100%!important;max-height:100%!important;min-width:0!important;min-height:0!important;
+  margin:0!important;padding:0!important;visibility:visible!important;
+  object-fit:contain!important;overflow:visible!important;
+}
+@media (orientation:landscape){
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-head {display:none!important}
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-main {
+    display:flex!important;flex-direction:row!important;align-items:stretch!important;
+    flex:1 1 0!important;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;
+    overflow:hidden!important;gap:0!important;
+  }
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-shot-sidebar{display:none!important}
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-body{
+    order:0!important;display:flex!important;flex-direction:column!important;
+    box-sizing:border-box!important;flex-grow:0!important;flex-shrink:0!important;
+    height:100%!important;min-height:0!important;min-width:0!important;
+    overflow:hidden!important;aspect-ratio:auto!important;
+  }
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-tools-sidebar{
+    order:1!important;display:flex!important;flex-direction:column!important;
+    box-sizing:border-box!important;flex-grow:0!important;flex-shrink:0!important;
+    min-width:0!important;max-width:none!important;height:100%!important;
+    overflow-x:hidden!important;overflow-y:auto!important;
+  }
+  html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-feedback{display:none!important}
+}
+/* Portrait on EVERY device, including iPad portrait >800px. This solves
+   the desktop horizontal layout hiding everything besides the large court. */
+@media (orientation:portrait){
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .focus-stage{
+    display:block!important;overflow-y:auto!important;overflow-x:hidden!important;
+  }
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .focus-court.sc-court-workspace{
+    height:auto!important;min-height:100%!important;overflow:visible!important;display:flex!important;
+  }
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-head{display:flex!important}
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-main{
+    display:flex!important;flex-direction:column!important;height:auto!important;
+    flex:0 0 auto!important;overflow:visible!important;gap:0!important;
+  }
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-shot-sidebar{
+    display:grid!important;order:0!important;flex:0 0 auto!important;
+    width:100%!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.4fr) 40px!important;
+    grid-template-rows:auto auto!important;align-items:center!important;gap:6px!important;
+    max-width:none!important;padding:8px!important;overflow:visible!important;
+  }
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-shot-counts{
+    grid-column:1/-1!important;grid-row:1!important;min-height:65px!important;
+    display:flex!important;flex-direction:column!important;gap:3px!important;
+    width:100%!important;max-width:none!important;
+  }
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-view-choices{display:none!important}
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-modes{
+    display:flex!important;grid-column:1/3!important;grid-row:2!important;flex-direction:row!important;
+    gap:5px!important;min-width:0!important;
+  }
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-modes button{
+    flex:1 1 0!important;min-width:0!important;min-height:42px!important;
+  }
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-scope{
+    grid-column:3!important;grid-row:2!important;min-width:0!important;width:100%!important;
+  }
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-scope label{display:none!important}
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-scope select{
+    width:100%!important;height:42px!important;min-width:0!important;
+  }
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-compact-directions{
+    grid-column:4!important;grid-row:2!important;width:40px!important;height:42px!important;
+  }
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-body{
+    order:1!important;display:flex!important;flex:0 0 auto!important;align-self:center!important;
+    width:100%!important;max-width:100%!important;min-height:0!important;height:auto!important;
+    aspect-ratio:470/440!important;overflow:hidden!important;
+  }
+  html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount{
+    width:100%!important;height:auto!important;aspect-ratio:470/440!important;flex:0 0 auto!important;
+  }
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-tools-sidebar{
+    display:grid!important;grid-template-columns:minmax(0,1fr) 94px!important;
+    order:2!important;flex:0 0 auto!important;width:100%!important;
+    height:auto!important;min-height:0!important;gap:8px!important;overflow:visible!important;
+  }
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-ft-bar{
+    grid-column:1!important;grid-row:1!important;min-width:0!important;min-height:66px!important;max-height:66px!important;
+  }
+  html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-undo-court{
+    grid-column:2!important;grid-row:1!important;min-height:66px!important;height:66px!important;
+    width:100%!important;margin:0!important;
+  }
+}
+@media (orientation:portrait) and (min-width:801px){
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-body,
+  html.focus-tracker .tracker-shell[data-focus-view="court"] #sc-court-mount{
+    /* Don't let an iPad's wide screen make the court taller than the viewport. */
+    width:min(100%, 630px)!important;max-width:630px!important;
+  }
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-court-body{height:auto!important}
+  html.focus-tracker .tracker-shell[data-focus-view="court"] .sc-tools-sidebar{margin-top:4px!important}
+}
+
+/* Manual confirmation for ambiguous Stat/Court shot pairs */
+.sc-manual-match-controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px;border-bottom:1px solid #e2e8ef}
+.sc-manual-match-controls select{flex:1 1 190px;min-width:0;max-width:100%;padding:9px;border:1px solid #9db6d2;border-radius:7px;background:#fff;color:#10233f}
+.sc-manual-match-controls button{padding:9px 12px;border:0;border-radius:7px;background:#173d78;color:#fff;font-weight:700;cursor:pointer}
+.sc-manual-match-controls button:disabled{opacity:.45;cursor:not-allowed}
+
+/* Optional one-tap shot clarification within the existing tracker panel. */
+#quick-track-root,.sc-court-body{position:relative}
+.sc-inline-shot-question{position:absolute;z-index:25;inset:0;min-height:190px;overflow:auto;display:flex;flex-direction:column;gap:12px;padding:18px;background:var(--surface,#fff);color:var(--text,#102643);border:2px solid #e0ac21;border-radius:12px;box-shadow:0 5px 20px #0002}
+.sc-inline-shot-question strong{font-size:clamp(15px,2vw,21px);line-height:1.35}
+.sc-inline-shot-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.sc-inline-shot-question button{min-height:52px;border-radius:10px;padding:10px;border:1px solid #cbd5e1;font-size:15px;font-weight:750;cursor:pointer;touch-action:manipulation}
+.sc-inline-shot-options button{background:#123b78;color:white}
+.sc-inline-shot-skip{background:#f1f5f9;color:#123b78}

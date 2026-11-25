@@ -1,0 +1,21 @@
+#edit-roster[hidden]{display:none!important}
+.roster-edit-dialog{width:min(440px,calc(100% - 32px));border:1px solid #cdd8e4;border-radius:15px;padding:24px;box-shadow:0 20px 50px #10233f50;color:#122c4d;background:#fff}
+.roster-edit-dialog::backdrop{background:#07182bb8}
+.roster-edit-dialog form{display:grid;gap:12px}
+.roster-edit-dialog label{display:grid;gap:5px;font-size:12px;font-weight:800}
+.roster-edit-dialog input{padding:12px;border:1px solid #bac9da;border-radius:8px;font-size:16px;max-width:100%}
+.roster-edit-actions{display:flex;flex-wrap:wrap;gap:9px}
+.roster-edit-actions button{border:1px solid #cad5e1;border-radius:8px;padding:11px;font-weight:800;background:#f2f6fb;cursor:pointer}
+#roster-edit-save{background:var(--team-primary,#173c75);color:#fff}
+#roster-edit-archive{background:#fff1f1;color:#a11c1c}
+.roster-edit-trigger{margin-top:6px;background:#fff;border:1px solid #bfccdc;border-radius:8px;font-weight:800;padding:6px 12px;cursor:pointer}
+.roster-staff-role{display:flex;justify-content:space-between;align-items:center;padding:13px;border-bottom:1px solid #e1e6ee}
+
+.roster-edit-dialog{max-height:min(88dvh,750px);overflow-y:auto;overscroll-behavior:contain}
+.roster-edit-dialog select{padding:12px;border:1px solid #bac9da;border-radius:8px;font-size:16px;background:white}
+.roster-manager-dialog{width:min(520px,calc(100% - 24px))}
+.roster-manager-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+.roster-manager-heading h2{margin:0}.roster-manager-heading button{font-size:20px;background:none;border:0;padding:8px}
+.roster-manager-list{display:grid;gap:8px;max-height:68dvh;overflow:auto}
+.roster-manager-list button{padding:13px;border:1px solid #dce4ee;border-radius:9px;background:#f9fbfd;color:#132b4a;text-align:left;font-weight:700}
+.roster-manager-list .roster-add-player{background:var(--team-primary,#173c75);color:white;text-align:center}

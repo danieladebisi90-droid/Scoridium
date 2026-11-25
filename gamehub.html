@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Installable ApexVision app (iOS, Android, desktop) -->
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+  <meta name="theme-color" content="#10233F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ApexVision">
+
+<script>if(window.top===window && sessionStorage.getItem('selectedTeamId')){location.replace('app.html?page=gamehub.html'+encodeURIComponent(location.search+location.hash));}</script>
+<script>if(window.parent!==window){document.documentElement.classList.add('scoridium-framed');}</script>
+<style>html.scoridium-framed #shared-header {display:none!important;}html.scoridium-framed #app-header {display:none!important;}html.scoridium-framed body {padding-top:0!important;}html.scoridium-framed body {min-height:100dvh!important;}</style>
+  <script src="team-theme-boot.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Game Hub</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link rel="stylesheet" href="gamehub.css">
+    <link rel="stylesheet" href="gamehub-mobile.css?v=mobile-previous-v1">
+    <link rel="stylesheet" href="pageLayout.css">
+    <link rel="stylesheet" href="calendar-subscribe.css">
+    <link rel="stylesheet" href="tournaments.css">
+  <link rel="stylesheet" href="navigation-smooth.css">
+  <link rel="stylesheet" href="universal-ui.css?v=1">
+<link rel="stylesheet" href="revision43.css?v=2">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="modal-safety.css">
+<script src="modal-safety.js" defer></script>
+<link rel="stylesheet" href="major-update.css">
+<link rel="stylesheet" href="revision44.css?v=2">
+<link rel="stylesheet" href="phase2-fixes.css?v=1">
+<script src="sc-date-display.js" defer></script>
+</head>
+
+<body>
+
+    <!-- SHARED HEADER -->
+    <div id="shared-header"><header id="app-header"><nav id="main-navigation" aria-label="Main navigation">
+<a href="myTeams.html" class="nav-home" aria-label="Back to My Teams" title="My Teams"><i data-lucide="house"></i></a>
+<span class="nav-divider"></span><div class="header-team"><h2 id="shared-team-name"></h2></div><span class="nav-divider"></span>
+<div class="nav-links"><a href="dashboard.html">Dashboard</a><a href="gamehub.html">Game Hub</a><a href="roster.html">Roster</a><a href="stats.html">Stats</a></div>
+<span class="nav-divider"></span><div class="season-selector-container"><select class="season-selector" aria-label="Select season"><option value="">Season</option></select></div>
+</nav></header>
+<script>/* synchronous identity restore, prior to first paint */
+(()=>{const t=window.__scoridiumCachedTeam;const id=sessionStorage.getItem('selectedTeamId');const label=t&&t.id===id?((t.team_type==='club'?(t.club_name||t.mascot):(t.mascot||t.club_name))||''):'';const target=document.getElementById('shared-team-name');if(target)target.textContent=label.toUpperCase();const link=document.querySelector('#main-navigation a[href="'+location.pathname.split('/').pop()+'"]');if(link)link.classList.add('active');const seasonId=sessionStorage.getItem('selectedSeasonId');const seasonName=sessionStorage.getItem('scoridium:season-label:'+id);if(seasonId&&seasonName){const s=document.querySelector('.season-selector');s.options[0].text=seasonName;s.options[0].value=seasonId;}})();
+</script></div>
+        <main id="app-content">
+            <section class="game-hub-layout">
+                <section class="mobile-team-events-summary" aria-label="Next team event">
+                  <div class="mobile-section-label">NEXT TEAM EVENT</div>
+                  <h2 id="mobile-next-event-title">No upcoming events</h2>
+                  <p id="mobile-next-event-info">Your team schedule will appear here.</p>
+                </section>
+                <!-- LEFT SIDE -->
+                <div class="game-schedule">
+                    <div class="game-calendar">
+                        <div class="game-calendar-header">
+                            <h2>GAME SCHEDULE</h2>
+                            <div class="calendar-controls">
+                                <button
+    type="button"
+    class="calendar-subscribe-btn"
+>
+    Subscribe
+</button>
+
+<button
+    id="manage-schedule"
+    class="manage-schedule-btn"
+    type="button"
+    hidden
+    aria-haspopup="dialog"
+    aria-controls="schedule-modal"
+>
+    <i data-lucide="calendar-cog"></i>
+    <span>Manage</span>
+</button>
+
+                                <button id="previous-month" aria-label="Previous month">‹</button>
+                                <span id="calendar-month">October 2026</span>
+                                <button id="next-month" aria-label="Next month">›</button>
+                            </div>
+                        </div>
+                        <div class="calendar-weekdays">
+                            <span>MON</span>
+                            <span>TUE</span>
+                            <span>WED</span>
+                            <span>THU</span>
+                            <span>FRI</span>
+                            <span>SAT</span>
+                            <span>SUN</span>
+                        </div>
+                        <div class="calendar-dates" id="calendar-dates">
+                        <!-- JavaScript will generate the dates -->
+                        </div>
+                    </div>
+                    <section class="mobile-selected-activities" aria-label="Selected day events">
+                      <div class="mobile-section-label" id="mobile-selected-date">SELECT A DATE</div>
+                      <div id="mobile-day-activities" class="mobile-day-activities">Tap a calendar date to see activities.</div>
+                    </section>
+                    <div class="games-list" id="gamehub-context-container">
+                        <div class="games-list-header">
+                            <h2 id="context-panel-heading"></h2>
+                            <button type="button" id="add-tournament" hidden aria-hidden="true" tabindex="-1">Add Tournament</button>
+                        </div>
+                        <div id="gamehub-dynamic-context" class="gamehub-dynamic-context" aria-live="polite">
+                            <p class="context-muted">Select a game or tournament date on the calendar.</p>
+                        </div>
+                        <div class="legacy-season-games" hidden>
+                        <div class="games-list-header">
+                            <h2>SEASON GAMES</h2>
+                            <span id="games-count">0 Games</span>
+                        </div>
+                        <div class="games-table-scroll">
+                            <table class="games-table">
+                            <thead>
+                                <tr>
+                                    <th>DATE</th>
+                                    <th>OPPONENT</th>
+                                    <th>LOCATION</th>
+                                    <th>RESULT</th>
+                                    <th>SCORE</th>
+                                </tr>
+                            </thead>
+                            <tbody id="game-hub-games-body">
+                            <!-- JavaScript will generate game rows -->
+                            </tbody>
+                        </table>
+
+                        </div>
+                    </div>
+                    </div>
+
+                </div>
+                <!-- RIGHT SIDE -->
+                <div class="game-info-container">
+                    <section id="mobile-context-game" class="mobile-context-game" aria-label="Game details">
+                        <div class="mobile-game-card-top">
+                            <h2 data-mobile-game-heading>NEXT GAME</h2>
+                            <span data-mobile-game-date>—</span>
+                        </div>
+                        <h3 data-mobile-game-matchup>Loading game...</h3>
+                        <p data-mobile-game-result></p>
+                        <button type="button" data-mobile-game-action disabled>OPEN GAME TRACKER</button>
+                        <button type="button" id="apex-mobile-score-link" data-score-popup-open hidden>Submit Score</button>
+                    </section>
+                    <section id="apex-mobile-previous-game" class="apex-mobile-previous-game" aria-label="Previous game summary">
+                      <div class="apex-mobile-previous-head"><h2>PREVIOUS GAME</h2><span id="apex-mobile-previous-date">—</span></div>
+                      <div class="apex-mobile-previous-matchup"><span id="apex-mobile-previous-home">HOME</span><span class="apex-mobile-previous-final">FINAL</span><span id="apex-mobile-previous-away">AWAY</span></div>
+                      <div class="apex-mobile-previous-score"><strong id="apex-mobile-previous-home-score">—</strong><span>–</span><strong id="apex-mobile-previous-away-score">—</strong></div>
+                      <p id="apex-mobile-previous-note">Your latest completed game will appear here.</p>
+                      <div class="apex-mobile-previous-actions">
+                        <button type="button" id="apex-mobile-previous-submit" data-score-popup-open hidden>Submit Score</button>
+                        <a href="film-room.html" id="apex-mobile-previous-film" hidden>Film Room</a>
+                        <a href="stats.html" id="apex-mobile-previous-box" hidden>Box Score</a>
+                      </div>
+                    </section>
+                    <div class="previous-game">
+                        <div class="previous-game-header">
+                            <h2>PREVIOUS GAME</h2>
+                            <span id="previous-game-date">—</span>
+                        </div>
+                        <div class="previous-game-scoreboard">
+                            <div class="previous-home">
+                                <h3 id="previous-home-name">HOME</h3>
+                                <h1 id="previous-home-score">—</h1>
+                            </div>
+                            <span class="previous-vs">FINAL</span>
+
+                            <div class="previous-away">
+                                <h3 id="previous-away-name">AWAY</h3>
+                                <h1 id="previous-away-score">—</h1>
+                            </div>
+                        </div>
+                        <div class="previous-quarter-scores">
+                            <h3>QUARTER BREAKDOWN</h3>
+                            <div id="previous-quarters"></div>
+                        </div>
+
+                        <div class="previous-game-leaders">
+                            <h3>GAME LEADERS</h3>
+                            <div id="previous-leaders"></div>
+                        </div>
+
+                        <a id="previous-box-score-link" href="stats.html">VIEW FULL BOX SCORE</a>
+                        <div class="apex-game-actions">
+                          <button type="button" id="apex-add-score-link" data-score-popup-open hidden>Submit Score</button>
+                          <a id="apex-film-analysis-link" href="film-room.html" hidden>Film Room</a>
+                        </div>
+
+                    </div>
+                    <div class="next-game">
+                        <div class="next-game-header">
+                            <h2 id="next-game-heading">NEXT GAME</h2>
+                            <span id="next-game-date">—</span><span id="next-game-live" hidden>● LIVE</span>
+                        </div>
+                        <div class="next-game-matchup">
+                            <div class="next-home">
+                                <h3 id="next-home-name">HOME</h3><strong id="next-home-score" class="sc-live-score" hidden></strong>
+                                <p>HOME</p>
+                            </div>
+                            <span class="next-vs">VS</span>
+                            <div class="next-away">
+                                <h3 id="next-away-name">AWAY</h3><strong id="next-away-score" class="sc-live-score" hidden></strong>
+                                <p>AWAY</p>
+                            </div>
+                        </div>
+                        <div class="next-game-details">
+                            <span id="next-game-time">TIME: TBD</span>
+                            <span id="next-game-location">LOCATION: TBD</span>
+                        </div>
+                        <button id="open-next-game"> OPEN GAME </button>
+                        <button type="button" id="apex-next-score-link" data-score-popup-open hidden>Submit Score</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+<!-- Score submission snapshots are independent of official game statistics. -->
+<dialog id="apex-score-dialog" class="apex-score-dialog" aria-labelledby="apex-score-title">
+  <form id="apex-score-form" method="dialog">
+    <div class="apex-score-top"><h2 id="apex-score-title">Submit Score</h2><button type="button" id="apex-score-close" aria-label="Close">×</button></div>
+    <p id="apex-score-matchup">Game</p>
+    <div class="apex-score-pair">
+      <label>Our Score<input id="apex-score-us" type="number" min="0" max="500" step="1" required></label>
+      <label>Opponent Score<input id="apex-score-them" type="number" min="0" max="500" step="1" required></label>
+    </div>
+    <fieldset><legend>When was this score recorded?</legend>
+      <label><input type="radio" name="apex-score-point" value="quarter" checked> End of Quarter</label>
+      <label><input type="radio" name="apex-score-point" value="final"> End of Game</label>
+      <label><input type="radio" name="apex-score-point" value="random"> During Game (Random)</label>
+    </fieldset>
+    <label id="apex-score-period-wrap">Quarter
+      <select id="apex-score-period"><option value="1">Q1</option><option value="2">Q2</option><option value="3">Q3</option><option value="4">Q4</option><option value="5">Overtime</option></select>
+    </label>
+    <button id="apex-score-submit" type="submit">Submit Score</button>
+    <p id="apex-score-feedback" role="status" aria-live="polite"></p>
+    <footer id="apex-score-last">Last submitted: Never</footer>
+  </form>
+</dialog>
+<!-- MANAGE SCHEDULE MODAL -->
+<div id="schedule-modal" class="schedule-modal" hidden>
+    <div class="schedule-modal-backdrop"></div>
+
+    <section class="schedule-modal-content"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="schedule-modal-title"
+             tabindex="-1">
+
+        <div class="schedule-modal-header">
+            <h2 id="schedule-modal-title">MANAGE SCHEDULE</h2>
+
+            <button id="close-schedule"
+                    type="button"
+                    aria-label="Close schedule editor">
+                ✕
+            </button>
+        </div>
+
+
+<!-- EXISTING SCHEDULE EVENTS -->
+<div class="schedule-existing-events">
+    <label for="schedule-existing-select">
+        EXISTING EVENTS
+    </label>
+
+    <select id="schedule-existing-select">
+        <option value="">+ Create New Event</option>
+    </select>
+</div>
+
+<form id="schedule-event-form">
+
+    <input
+    type="hidden"
+    id="schedule-event-id"
+    value=""
+>
+
+    <!-- EVENT TYPE DROPDOWN -->
+    <label for="schedule-event-type">Event Type</label>
+    <select id="schedule-event-type" required>
+        <option value="practice">Practice</option>
+        <option value="game">Game</option>
+        <option value="tournament">Tournament</option>
+        <option value="meeting">Team Meeting</option>
+        <option value="training">Training</option>
+        <option value="other">Other</option>
+    </select>
+
+    <!-- OPPONENT: GAME ONLY -->
+    <div id="schedule-opponent-field" hidden>
+        <label for="schedule-opponent">Opponent</label>
+        <input
+            id="schedule-opponent"
+            type="text"
+            maxlength="120"
+            placeholder="Enter opponent">
+    </div>
+
+    <!-- EXTRA FIELDS: TRAINING / OTHER -->
+    <div class="schedule-extra-fields" hidden>
+        <label for="schedule-event-title">Event Title</label>
+        <input
+            id="schedule-event-title"
+            type="text"
+            maxlength="120"
+            placeholder="Enter event title">
+
+        <label for="schedule-event-description">Description</label>
+        <textarea
+            id="schedule-event-description"
+            rows="3"
+            placeholder="Enter description"></textarea>
+    </div>
+
+    <!-- DATE -->
+    <label for="schedule-event-date">Date</label>
+    <input
+        id="schedule-event-date"
+        type="date"
+        required>
+
+    <!-- START AND END TIME -->
+    <div class="schedule-time-row">
+        <div>
+            <label for="schedule-start-time">Start Time</label>
+            <input
+                id="schedule-start-time"
+                type="time"
+                required>
+        </div>
+
+        <div>
+            <label for="schedule-end-time">End Time</label>
+            <input
+                id="schedule-end-time"
+                type="time">
+        </div>
+    </div>
+
+    <!-- LOCATION -->
+    <label for="schedule-event-location">Location</label>
+    <input
+        id="schedule-event-location"
+        type="text"
+        maxlength="200"
+        placeholder="Enter location"
+        required>
+
+    
+<!-- RECURRING PRACTICE OPTIONS -->
+<div id="practice-repeat-fields" class="schedule-repeat-fields" hidden>
+    <label class="schedule-repeat-toggle">
+        <input type="checkbox" id="schedule-repeat-weekly">
+        Repeat weekly
+    </label>
+
+    <div id="schedule-repeat-options" hidden>
+        <label>Repeat on</label>
+
+        <div class="schedule-repeat-days">
+            <label><input type="checkbox" value="1"> Mon</label>
+            <label><input type="checkbox" value="2"> Tue</label>
+            <label><input type="checkbox" value="3"> Wed</label>
+            <label><input type="checkbox" value="4"> Thu</label>
+            <label><input type="checkbox" value="5"> Fri</label>
+            <label><input type="checkbox" value="6"> Sat</label>
+            <label><input type="checkbox" value="0"> Sun</label>
+        </div>
+
+        <label for="schedule-repeat-until">Repeat until</label>
+        <input type="date" id="schedule-repeat-until">
+    </div>
+</div>
+
+<!-- OPTIONS WHEN EDITING AN EXISTING SERIES -->
+<div id="schedule-series-editor" hidden>
+    <label for="schedule-edit-scope">Apply changes to</label>
+
+    <select id="schedule-edit-scope">
+        <option value="one">This practice only</option>
+        <option value="future">This and following practices</option>
+        <option value="all">All practices in the series</option>
+    </select>
+
+    <p class="schedule-series-note">
+        Practices individually customized earlier will be preserved
+        when updating the series.
+    </p>
+</div>
+
+<!-- GAME-SPECIFIC FIELDS -->
+<div id="schedule-game-fields" hidden>
+
+    <label for="schedule-game-location">
+        Home or Away
+    </label>
+
+    <select id="schedule-game-location">
+        <option value="home">Home Game</option>
+        <option value="away">Away Game</option>
+    </select>
+
+    <label for="schedule-game-venue">
+        Venue / Gymnasium
+    </label>
+
+    <input
+        type="text"
+        id="schedule-game-venue"
+        placeholder="Enter gym or arena"
+    >
+
+</div>
+
+<!-- FORM MESSAGE -->
+    <p id="schedule-form-message" role="status"></p>
+
+    <!-- ACTION BUTTONS -->
+    <div class="schedule-form-actions">
+        <button
+            id="delete-schedule-event"
+            type="button"
+            hidden>
+            Delete Event
+        </button>
+
+        <button
+            id="save-schedule-event"
+            type="submit">
+            Save Event
+        </button>
+    </div>
+
+</form>
+<!-- Tournament forms are separate from game scheduling and may start with zero games. -->
+<div id="tournament-editor" class="tournament-backdrop schedule-embedded-tournament" hidden>
+  <form id="tournament-form" class="tournament-dialog" aria-label="Create tournament">
+    <div class="tournament-dialog-head"><h2>Create Tournament</h2><button type="button" id="tournament-cancel" aria-label="Close">×</button></div>
+    <label for="tournament-name">Name (optional)</label><input id="tournament-name" maxlength="120" placeholder="Tournament">
+    <div class="tournament-dates"><label>Start date<input id="tournament-start" type="date" required></label><label>End date<input id="tournament-end" type="date" required></label></div>
+    <button type="button" id="tournament-plan-game">+ Add Tournament Game</button>
+    <div id="tournament-planned-games" role="status"></div>
+    <p class="context-muted">You can add games and results later. No opponent or bracket is required.</p>
+    <p id="tournament-form-status" role="status"></p>
+    <div class="tournament-dialog-actions"><button type="button" id="tournament-dismiss">Cancel</button><button type="submit">Create Tournament</button></div>
+  </form>
+</div>
+
+
+    </section>
+</div>
+
+    <dialog id="apex-film-room-modal" class="apex-film-room-modal" aria-label="Film Room mode selection">
+      <div class="apex-film-room-modal-head"><strong>FILM ROOM</strong><button type="button" id="apex-film-room-close" aria-label="Close Film Room">×</button></div>
+      <iframe id="apex-film-room-frame" title="Choose a Film Room workflow" loading="lazy"></iframe>
+    </dialog>
+    <style>
+      .apex-film-room-modal{width:min(780px,calc(100vw - 24px));max-width:none;height:min(650px,calc(100dvh - 24px));max-height:none;margin:auto;padding:0;border:1px solid #bed0e8;border-radius:16px;overflow:hidden;background:#eff3f9;box-shadow:0 25px 100px #02162c95}
+      .apex-film-room-modal::backdrop{background:#06182bb3;backdrop-filter:blur(2px)}
+      .apex-film-room-modal-head{height:48px;display:flex;justify-content:space-between;align-items:center;padding:8px 16px;background:#092f67;color:white;font-size:13px;letter-spacing:1px}
+      #apex-film-room-close{background:transparent;border:0;color:white;font-size:27px;padding:0 6px;cursor:pointer}
+      #apex-film-room-frame{width:100%;height:calc(100% - 48px);border:0;background:#eff3f9}
+      @media(max-width:560px){.apex-film-room-modal{height:min(640px,calc(100dvh - 12px));width:calc(100vw - 12px)}}
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="team-theme.js" defer></script>
+<script src="pageLayout.js" defer></script>
+    <script src="gamehub.js?v=mobile-previous-v1" defer></script>
+    <script src="score-popup.js" defer></script>
+    <link rel="stylesheet" href="score-popup.css">
+    <script src="calendar-subscribe.js" defer></script>
+    <script src="tournaments.js" defer></script>
+
+  <script src="./pwa-register.js" defer></script>
+</body>
+</html>

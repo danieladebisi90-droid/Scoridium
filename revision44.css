@@ -1,0 +1,75 @@
+/* Scoridium major update: shared responsive fixes */
+#team-emblem,.team-emblem,.team-logo,.team-logo-circle,.header-team-logo{display:none!important}
+.team-banner{gap:0!important}
+.roster-edit-dialog{max-height:calc(100dvh - 22px);overflow-y:auto;padding:18px;overscroll-behavior:contain}
+.roster-edit-dialog form[hidden],.roster-manager-list[hidden]{display:none!important}
+.roster-manager-list{display:flex;flex-direction:column;gap:8px;min-width:0}
+.roster-manager-heading{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.roster-manager-heading button{border:0;background:transparent;font-size:21px;padding:9px}
+.roster-manager-player,.roster-add-player{padding:13px;border:1px solid #cdd8e4;border-radius:9px;background:#f5f8fc;text-align:left;font-weight:700}
+#roster-edit-grade{font-size:16px;padding:12px;border:1px solid #bac9da;border-radius:8px;background:#fff}
+.schedule-modal:not([hidden]) .schedule-modal-content{max-height:calc(100dvh - 12px)!important;overflow:auto!important;padding-bottom:max(20px,env(safe-area-inset-bottom))!important}
+.next-game{justify-content:flex-start!important}
+.next-game-matchup{margin:auto 0;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;text-align:center;gap:8px}
+.next-game .sc-score{display:block;font-size:clamp(30px,4vw,52px);font-variant-numeric:tabular-nums;color:var(--team-primary,#173b78);padding-top:9px}
+.next-game.sc-is-live{border-top:4px solid var(--team-secondary,#ffd600)}
+.next-game.sc-is-live #next-game-time{color:var(--team-primary,#173b78);font-weight:900}
+.next-game .next-vs{font-size:clamp(13px,1.6vw,19px)!important}
+.sc-dashboard-live-vs{font-size:clamp(14px,1.5vw,20px);color:var(--team-primary,#173b78);font-weight:900}
+.sc-dashboard-live-badge{background:var(--team-secondary,#ffd600)!important;color:#10233f!important}
+.opponent-courts-row{display:grid!important;grid-template-columns:450px 300px 300px!important;gap:14px!important;overflow-x:auto!important;overflow-y:visible;max-width:100%;-webkit-overflow-scrolling:touch;padding-bottom:12px}
+.opponent-courts-row>section{min-width:0!important}
+.opponent-courts-row svg{width:100%!important;max-width:100%!important;height:auto!important;display:block!important}
+.sc-empty-court{position:relative;min-height:150px}
+.sc-empty-court>span{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#0b1b34c9;color:white;border-radius:9px;padding:9px 13px;text-align:center;white-space:nowrap;font-size:12px;font-weight:700;pointer-events:none}
+.sc-h2h-metric{margin:12px 0}
+.sc-h2h-head{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;gap:10px}
+.sc-h2h-head span:nth-child(2){color:#52627a;font-size:12px}
+.sc-h2h-bar{height:12px;border-radius:999px;overflow:hidden;display:flex;width:100%;background:#d9dfe9;margin-top:5px}
+.sc-h2h-bar>span{height:100%;display:block}
+@media(max-width:650px){.opponent-courts-row{grid-template-columns:350px 230px 230px!important}.next-game-matchup{gap:5px}.next-home h3,.next-away h3{font-size:15px!important}}
+
+.sc-tournament-match-editor{border:1px solid #ccd8e6;background:#f7f9fc;border-radius:10px;padding:12px;display:grid;gap:10px}
+.sc-tournament-match-editor[hidden]{display:none!important}
+.sc-tournament-match-editor label{display:grid;gap:4px;font-weight:700;font-size:13px}
+.sc-tournament-match-editor input{width:100%;min-height:42px;padding:9px;border:1px solid #bdccda;border-radius:8px;font-size:16px}
+.sc-planned-match{display:flex;align-items:center;gap:8px;border-bottom:1px solid #dce4ed;padding:9px 0;flex-wrap:wrap}
+.sc-planned-match span{flex:1;min-width:150px;font-size:13px}
+.sc-planned-match button{border:1px solid #b9cadb;border-radius:7px;padding:7px;background:white}
+.tournament-dialog{max-height:calc(100dvh - 12px)!important;padding-bottom:max(20px,env(safe-area-inset-bottom))!important}
+.tournament-dialog-actions{position:sticky;bottom:0;background:white;padding:8px 0;z-index:5}
+
+.sc-player-zone-inline-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.sc-player-zone-inline-tabs button{border:1px solid #c8d5e5;background:#f3f6fa;border-radius:8px;padding:9px;font-size:12px;font-weight:750;cursor:pointer}
+.sc-player-zone-inline-tabs button[aria-pressed=true]{background:var(--team-primary,#173b78);color:white;border-color:var(--team-primary,#173b78)}
+#panel-statistics #player-zone-preview{min-height:240px!important;max-height:none!important;overflow:visible!important}
+#panel-statistics #player-zone-preview svg{max-height:420px!important;height:auto!important;width:100%!important}
+.team-badge,.team-emblem,#team-emblem,.team-logo,.team-logo-circle,.header-team-logo,.team-logo-image,.team-crest{display:none!important}
+
+/* V44.1: two actual overview counters, not four reserved columns. */
+.team-banner{display:flex!important;flex-wrap:wrap!important;align-items:center!important;gap:16px!important;padding:22px!important;min-height:0!important;}
+.team-banner .team-title{flex:1 1 250px!important;min-width:0!important;overflow-wrap:anywhere;}
+.team-banner .team-title h2{font-size:clamp(19px,3.5vw,32px)!important;line-height:1.12!important;overflow-wrap:anywhere!important;}
+.team-banner .team-title p{font-size:clamp(11px,1.4vw,14px)!important;overflow-wrap:normal!important;line-height:1.35!important;}
+.team-banner .team-highlights{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important;flex:0 1 320px!important;width:auto!important;min-width:0!important;max-width:100%!important;}
+.team-banner .team-highlights>div{min-width:0!important;padding:13px 7px!important;}
+.team-banner .team-highlights strong{font-size:clamp(24px,6vw,38px)!important;white-space:nowrap;}
+@media(max-width:700px){.team-banner{display:flex!important;flex-direction:column!important;align-items:stretch!important;padding:18px!important;gap:12px!important;}.team-banner .team-title{flex:none!important;}.team-banner .team-highlights{flex:none!important;width:100%!important;max-width:100%!important;}.team-banner .team-title p .gold-bar{padding:0 3px!important;}}
+/* Dashboard live score card, shared desktop/mobile presentation. */
+.mobile-dashboard-next-event.sc-is-live{padding:20px 14px!important;min-height:230px!important;}
+.mobile-dashboard-next-event.sc-is-live .sc-dashboard-live-teams{display:grid!important;grid-template-columns:minmax(0,1fr) 48px minmax(0,1fr)!important;align-items:center!important;gap:5px!important;width:100%!important;max-width:none!important;margin:16px auto!important;}
+.mobile-dashboard-next-event.sc-is-live .sc-dashboard-live-team{display:flex!important;align-items:center!important;flex-direction:column!important;gap:9px!important;min-width:0!important;text-align:center!important;}
+.mobile-dashboard-next-event.sc-is-live .sc-dashboard-live-label{font-size:clamp(14px,4vw,19px)!important;overflow-wrap:anywhere!important;}
+.mobile-dashboard-next-event.sc-is-live .sc-dashboard-live-points{font-size:clamp(42px,13vw,64px)!important;line-height:1!important;}
+.mobile-dashboard-next-event.sc-is-live .sc-dashboard-live-center{display:flex!important;flex-direction:column!important;align-items:center!important;gap:8px!important;min-width:0!important;}
+.mobile-dashboard-next-event.sc-is-live .sc-dashboard-live-vs{font-size:16px!important;font-weight:900!important;}
+.mobile-dashboard-next-event.sc-is-live .sc-dashboard-live-period{font-size:12px!important;white-space:nowrap!important;}
+.mobile-dashboard-next-event.sc-is-live .sc-dashboard-live-badge{background:var(--team-secondary,#ffd600)!important;color:#10233f!important;}
+.mobile-dashboard-next-event.sc-is-live .sc-live-view-link{display:inline-block!important;margin:0!important;padding:10px 15px!important;border-radius:10px!important;background:var(--team-secondary,#ffd600)!important;color:#10233f!important;font-weight:800!important;text-decoration:none!important;}
+
+.sc-mobile-live-header{display:flex;align-items:center;justify-content:space-between;gap:8px;}.sc-mobile-live-header .mobile-dashboard-eyebrow{margin:0!important;min-width:0!important;}
+
+/* ApexVision opponent zone selection: shared Basic/Traditional/Distance court modes. */
+.sc-opponent-zone-controls{display:flex;flex-wrap:wrap;gap:8px;margin:9px 0 15px}
+.sc-opponent-zone-controls button{border:1px solid #cad5e5;background:#fff;color:#173d78;border-radius:8px;padding:9px 13px;font-weight:700;cursor:pointer}
+.sc-opponent-zone-controls button[aria-pressed="true"]{background:var(--team-primary,#173d78);color:white;border-color:var(--team-primary,#173d78)}

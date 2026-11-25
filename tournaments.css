@@ -1,0 +1,39 @@
+/* Game Hub tournament dates are accessible regardless of team palette. */
+.calendar-day.tournament-date { background: var(--tournament-highlight, #8c6815) !important; color: var(--tournament-text, #fff) !important; font-weight: 800; }
+.calendar-day.tournament-date::after { content: '♜'; content: '🏆'; position:absolute; font-size:10px; bottom:0; right:2px; }
+.calendar-day.tournament-date.selected { outline: 3px solid var(--team-strong, #142840); outline-offset: -3px; }
+.gamehub-dynamic-context { flex:1; min-height:0; overflow:auto; padding:8px 1px; display:flex; flex-direction:column; gap:12px; }
+.gamehub-dynamic-context .context-muted { color:#637185; margin:6px 0; font-size:0.9rem; }
+.gamehub-context-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:8px; }
+.gamehub-context-card { padding:10px; background:#f2f5fa; border-radius:9px; color:#162d49; }
+.gamehub-context-card strong { display:block; font-size:1.15rem; font-variant-numeric:tabular-nums; }
+.gamehub-context-row { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; }
+.gamehub-context-row button, .gamehub-dynamic-context button, .tournament-dialog button { border:1px solid #cbd5e1; background:#fff; color:#15375b; padding:9px 12px; border-radius:8px; font:inherit; cursor:pointer; }
+.gamehub-context-row button:focus-visible,.gamehub-dynamic-context button:focus-visible,.tournament-dialog button:focus-visible{outline:3px solid #e9b900;outline-offset:2px}
+.gamehub-dynamic-context .tournament-match { padding:10px; border:1px solid #d9e0e8; border-radius:9px; display:grid; gap:5px; }
+.gamehub-dynamic-context .tournament-match small { color:#6c7b8d; }
+.tournament-backdrop:not([hidden]) { position:fixed; inset:0; background:#00152aa8; z-index:100000; display:grid; place-items:center; padding:16px; }
+.tournament-backdrop[hidden] { display:none!important; }
+.tournament-dialog { background:#fff; color:#152a42; width:min(480px,100%); max-height:min(90dvh,720px); overflow:auto; padding:20px; border-radius:14px; display:grid; gap:12px; box-shadow:0 14px 50px #0005; }
+.tournament-dialog h2 {margin:0}
+.tournament-dialog-head,.tournament-dialog-actions {display:flex; justify-content:space-between; align-items:center; gap:8px}
+.tournament-dialog label { display:grid; gap:5px; font-weight:600; }
+.tournament-dialog input,.tournament-dialog select {width:100%;box-sizing:border-box;min-height:42px;padding:8px;border:1px solid #9aa8b9;border-radius:7px;font:inherit;}
+.tournament-dates {display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tournament-dialog-actions button[type=submit]{background:#173c75;color:#fff;border-color:#173c75}
+.gamehub-dynamic-context .bracket-expanded {position:fixed;inset:0;z-index:99999;background:white;padding:24px;overflow:auto;display:grid;align-content:start;gap:14px;}
+.gamehub-dynamic-context .bracket-expanded .tournament-match {font-size:1.1rem;min-width:260px}
+@media(max-width:600px){.gamehub-dynamic-context{overflow:visible}.tournament-dates{grid-template-columns:1fr}.tournament-backdrop:not([hidden]){align-items:end;padding:0}.tournament-dialog{width:100%;border-radius:16px 16px 0 0;max-height:90dvh}}
+/* Old mobile stylesheet hid Season Games; the new contextual card must remain visible. */
+@media (max-width:700px) and (orientation:portrait) {
+ .game-schedule #gamehub-context-container { display:flex!important; flex-direction:column!important; order:3!important; overflow:visible!important; min-height:160px!important; height:auto!important; }
+ .game-schedule #gamehub-context-container .gamehub-dynamic-context { overflow:visible!important; }
+ .game-schedule #gamehub-context-container .legacy-season-games { display:none!important; }
+}
+@media (max-width:1024px) and (orientation:portrait) {
+ .game-schedule #gamehub-context-container {min-height:175px!important;height:auto!important;}
+}
+.h2h-detail-table {width:100%;border-collapse:collapse;font-size:12px;}
+.h2h-detail-table th,.h2h-detail-table td{padding:6px;border-bottom:1px solid #e7ebf1;text-align:left;}
+.h2h-detail-table th{position:sticky;top:0;background:#f2f5fa;color:#213e65;}
+.gamehub-detailed-h2h h4 {margin:10px 0 6px}

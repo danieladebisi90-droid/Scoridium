@@ -1,0 +1,125 @@
+/* Mobile Game Hub — simple schedule view */
+.mobile-team-events-summary,.mobile-selected-activities{display:none}
+@media(max-width:700px) and (orientation:portrait){
+ html,body{height:auto!important;min-height:100%!important;overflow:auto!important;}
+ body{padding:12px!important;background:#f4f6fa!important;display:block!important}
+ #app-content{display:block!important;flex:none!important;min-height:0!important}
+ .game-hub-layout{display:flex!important;flex-direction:column!important;min-height:0!important;height:auto!important;gap:12px!important}
+ .game-schedule{display:contents!important}
+ .game-info-container,.games-list{display:none!important}
+ .mobile-team-events-summary,.mobile-selected-activities{display:block!important;background:#fff;border-radius:14px;padding:17px;box-shadow:0 2px 8px #0f172a0b;color:#172437}
+ .mobile-section-label{font-size:10px;letter-spacing:.11em;font-weight:800;color:#687991;margin-bottom:10px}
+ .mobile-team-events-summary h2{font-size:19px;line-height:1.25;margin:0 0 8px;color:#172437;font-family:inherit}
+ .mobile-team-events-summary p{font-size:12px;color:#667386;margin:0;line-height:1.6}
+ .game-calendar{display:flex!important;min-height:0!important;height:auto!important;padding:15px!important;overflow:visible!important;border-radius:14px!important;box-shadow:0 2px 8px #0f172a0b}
+ .game-calendar-header{flex-wrap:wrap!important;gap:10px}
+ .game-calendar-header h2{font-size:15px!important;font-family:inherit!important;letter-spacing:0}
+ .calendar-controls{gap:7px!important;flex-wrap:wrap;justify-content:flex-end}
+ #calendar-month{font-size:12px!important;white-space:nowrap}
+ .calendar-subscribe-btn,.manage-schedule-btn{font-size:11px!important}
+ .calendar-weekdays{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;margin:12px 0 5px!important}
+ .calendar-weekdays span{text-align:center;font-size:10px!important}
+ .calendar-dates{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;grid-auto-rows:40px!important;gap:3px!important;flex:none!important;min-height:0!important}
+ .calendar-day{font-size:12px!important;min-height:38px!important;border-radius:8px!important;padding:0!important}
+ .calendar-day.selected{outline:2px solid var(--team-primary,#10233f)!important}
+ .mobile-day-activities{display:flex;flex-direction:column;gap:9px}
+ .mobile-no-activities{font-size:13px;color:#728095;margin:0}
+ .mobile-activity-item{display:grid;gap:4px;padding:10px 12px;background:#f4f6fa;border-radius:10px}
+ .mobile-activity-type{font-size:10px;color:#708098;text-transform:uppercase;font-weight:800}
+ .mobile-activity-item strong{font-size:14px;color:#172437}
+ .mobile-activity-item small{font-size:12px;color:#69778b}
+}
+
+/* Phone: schedule calendar, season games, then open-game control */
+@media(max-width:700px) and (orientation:portrait) {
+ .mobile-team-events-summary { display:none!important; }
+ .game-schedule { display:flex!important; flex-direction:column!important; gap:12px!important; }
+ .game-schedule .game-calendar { order:1; }
+ .game-schedule .mobile-selected-activities { order:2; }
+ .game-schedule .games-list { display:block!important; order:3; width:100%!important; min-width:0!important; max-height:none!important; height:auto!important; overflow:visible!important; border-radius:14px!important; background:#fff!important; padding:14px!important; box-shadow:0 2px 8px #0f172a0b; }
+ .games-list .games-list-header h2 { font-size:15px!important; }
+ .games-list .games-table-scroll { overflow-x:auto!important; -webkit-overflow-scrolling:touch; }
+ .games-list .games-table { min-width:480px; font-size:11px!important; }
+ .games-list .games-table td,.games-list .games-table th { padding:9px 7px!important; }
+ .game-info-container { display:block!important; height:auto!important; min-height:0!important; width:100%!important; overflow:visible!important; }
+ .game-info-container .previous-game { display:none!important; }
+ .game-info-container .next-game { display:block!important; height:auto!important; min-height:0!important; background:#fff!important; padding:15px!important; border-radius:14px!important; box-shadow:0 2px 8px #0f172a0b; }
+ .next-game .next-game-header h2 { font-size:15px!important; }
+ #open-next-game { width:100%!important; min-height:44px!important; margin-top:10px!important; border-radius:9px!important; }
+}
+
+/* MOBILE FIX: Calendar -> selected activities -> next game tracking control. */
+@media (max-width:700px) and (orientation:portrait) {
+ .game-hub-layout { display:flex!important; flex-direction:column!important; gap:12px!important; }
+ .game-schedule { display:flex!important; flex-direction:column!important; gap:12px!important; }
+ .game-schedule .game-calendar { order:1!important; }
+ .game-schedule .mobile-selected-activities { order:2!important; display:block!important; }
+ .game-schedule .games-list { display:none!important; }
+ .game-info-container { display:block!important; flex:0 0 auto!important; order:3!important; }
+ .game-info-container .previous-game { display:none!important; }
+ .game-info-container .next-game { display:block!important; }
+}
+
+/* Mobile contextual game card: replaces both desktop game cards on phones. */
+.mobile-context-game { display:none; }
+@media (max-width:700px) and (orientation:portrait) {
+ .game-info-container .next-game,
+ .game-info-container .previous-game { display:none!important; }
+ .game-info-container .mobile-context-game {
+   display:flex!important;flex-direction:column;gap:12px;
+   min-width:0;max-width:100%;box-sizing:border-box;
+   padding:16px;background:white;border-radius:14px;
+   box-shadow:0 2px 8px #0f172a0b;
+ }
+ .mobile-game-card-top {display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+ .mobile-game-card-top h2 {font-size:16px;line-height:1.3;margin:0;color:#173b73}
+ .mobile-game-card-top span {font-size:12px;color:#60718a}
+ .mobile-context-game h3 {font-size:18px;line-height:1.4;margin:0;color:#142a4c;overflow-wrap:anywhere}
+ .mobile-context-game p {font-size:13px;margin:0;color:#546a89}
+ 
+.mobile-context-game button {
+  min-height: 46px;
+  width: 100%;
+  border: 0;
+  border-radius: 9px;
+  font-weight: 800;
+
+  background: var(--team-secondary, #9299A5);
+  color: var(--team-secondary-ink, #151515);
+
+  cursor: pointer;
+}
+
+ .mobile-context-game button:disabled {opacity:.45;cursor:not-allowed}
+}
+
+/* Previous Game — mobile Game Hub: real completed-game overview and actions. */
+.apex-mobile-previous-game{display:none}
+@media(max-width:700px) and (orientation:portrait){
+ .game-info-container #apex-mobile-previous-game{
+  display:flex!important;flex-direction:column;gap:11px;width:100%;min-width:0;
+  margin-top:12px;padding:16px;background:#fff;color:#172437;border-radius:14px;
+  box-shadow:0 2px 8px #0f172a0b;box-sizing:border-box;overflow:hidden;
+ }
+ .apex-mobile-previous-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+ .apex-mobile-previous-head h2{font-size:15px!important;line-height:1.2!important;margin:0!important;font-family:inherit!important;font-weight:850!important;color:var(--team-strong,#173b73)!important}
+ #apex-mobile-previous-date{font-size:12px;color:#62748e;text-align:right}
+ .apex-mobile-previous-matchup{display:grid;grid-template-columns:minmax(0,1fr) 56px minmax(0,1fr);gap:8px;align-items:end}
+ #apex-mobile-previous-home,#apex-mobile-previous-away{font-size:13px;color:#173d78;font-weight:800;overflow-wrap:anywhere;text-align:center}
+ .apex-mobile-previous-final{font-size:10px;color:#5c708c;text-align:center;font-weight:850;letter-spacing:.08em}
+ .apex-mobile-previous-score{display:flex;gap:18px;align-items:center;justify-content:center;background:#f1f5fb;border:1px solid #d9e4f2;border-radius:12px;padding:8px 12px}
+ .apex-mobile-previous-score strong{font-size:clamp(29px,8vw,44px);line-height:1.2;color:#102c55;font-weight:900;font-variant-numeric:tabular-nums}
+ .apex-mobile-previous-score>span{font-size:23px;color:#92a3b7}
+ #apex-mobile-previous-note{margin:0;font-size:12px;color:#526680;text-align:center;line-height:1.5}
+ .apex-mobile-previous-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .apex-mobile-previous-actions>a,.apex-mobile-previous-actions>button{
+  display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 7px;
+  font:inherit;font-size:12px;font-weight:850;line-height:1.3;text-align:center;text-decoration:none;
+  border:1px solid #c3d2e7;border-radius:9px;color:var(--team-strong,#173d78);
+  background:#f6f9fe;cursor:pointer;box-sizing:border-box
+ }
+ .apex-mobile-previous-actions>#apex-mobile-previous-film{background:var(--team-primary,#063d82);border-color:var(--team-primary,#063d82);color:#fff}
+ .apex-mobile-previous-actions>*[hidden]{display:none!important}
+ .apex-mobile-previous-actions>:last-child:not([hidden]){grid-column:1/-1}
+ .apex-mobile-no-previous .apex-mobile-previous-actions{display:none}
+}

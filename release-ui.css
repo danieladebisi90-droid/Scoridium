@@ -1,0 +1,25 @@
+/* Scoridium consolidated release UI: one visual system, accessible motion. */
+:root{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-synthesis:none}
+html,body{min-height:100%;min-height:100dvh}
+button,input,select,textarea{font:inherit}
+body.scoridium-shell{background:var(--team-primary,#10233f)!important;padding-top:max(4px,env(safe-area-inset-top))}
+body.scoridium-shell .shell-header .nav-home{font-weight:900;font-size:16px;letter-spacing:.075em;text-decoration:none;white-space:nowrap}
+@media(max-width:700px) and (orientation:portrait){
+ body.scoridium-shell{padding:0!important}
+ .mobile-bottom-nav{position:relative;display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;flex:none!important;margin:0 12px max(10px,env(safe-area-inset-bottom))!important;padding:7px!important;gap:2px;border:1px solid rgba(255,255,255,.22)!important;border-radius:999px!important;background:rgba(16,35,63,.91)!important;box-shadow:0 8px 28px #0916284a!important;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);overflow:hidden;isolation:isolate}
+ .mobile-bottom-nav:before{content:"";position:absolute;top:6px;bottom:6px;left:calc(7px + (100% - 14px)/4 * var(--nav-index,0));width:calc((100% - 14px)/4);background:rgba(255,255,255,.18);border-radius:999px;transition:left .24s cubic-bezier(.2,.85,.3,1);z-index:0}
+ .mobile-bottom-nav a{min-height:46px;color:#f9fbff!important;background:transparent!important;border-radius:999px!important;transition:color .2s ease,transform .2s ease}
+ .mobile-bottom-nav a.active{color:var(--team-secondary,#ffd600)!important;transform:translateY(-1px)}
+ .mobile-bottom-nav .mobile-nav-icon{font-size:22px}
+ .mobile-app-topbar{background:var(--team-primary,#10233f)!important}
+ body.scoridium-shell .shell-main{min-height:0}
+}
+@media(max-width:800px) and (orientation:landscape){
+ /* iOS may not enforce manifest portrait. Keep the page usable when rotated. */
+ body.scoridium-shell{padding:0!important}
+ .shell-header{min-height:52px}
+ .shell-main{min-height:0;flex:1}
+}
+@media(prefers-reduced-motion:reduce){.mobile-bottom-nav:before,.mobile-bottom-nav a{transition:none!important}}
+
+@media(max-width:700px) and (orientation:portrait){.mobile-bottom-nav a{position:relative;z-index:1}}

@@ -1,0 +1,3 @@
+html.sc-modal-active .mobile-bottom-nav,html.sc-modal-active #mobile-bottom-nav,html.sc-modal-active .floating-nav,html.sc-modal-active .mobile-nav-island,html.sc-modal-active #mobile-nav-island,html.sc-modal-active .sc-floating-dock,html.sc-modal-active .bottom-nav,html.sc-modal-active .mobile-dock{display:none!important}
+html.sc-modal-active .tournament-dialog,html.sc-modal-active .schedule-modal-content{max-height:92dvh;overflow-y:auto;overscroll-behavior:contain;padding-bottom:max(18px,env(safe-area-inset-bottom))}
+html.sc-modal-active .tournament-dialog-actions,html.sc-modal-active .schedule-form-actions{position:sticky;bottom:0;background:inherit;z-index:5;padding-bottom:max(10px,env(safe-area-inset-bottom))}
