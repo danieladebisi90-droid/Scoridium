@@ -1200,3 +1200,17 @@ label[for="schedule-end-time"][hidden] {
 /* Dynamic palette for calendar & scheduling controls */
 .game-calendar h2,.games-list h2,.previous-game h2,.next-game h2,#calendar-month{color:var(--team-strong)}
 #calendar-dates button:focus-visible,.calendar-controls button:focus-visible{outline:2px solid var(--team-secondary);outline-offset:2px}
+
+/* ApexVision: calendar markers and compact empty next-game card. */
+.calendar-day.sc-has-game{box-shadow:inset 0 0 0 2px var(--team-secondary,#e3be39);font-weight:800}
+.calendar-day.sc-live-date{position:relative}
+.calendar-day.sc-live-date::after{content:"";position:absolute;right:3px;top:3px;width:5px;height:5px;border-radius:50%;background:#e43e42}
+.calendar-day.sc-has-game.selected{outline:3px solid var(--team-secondary,#e3be39);outline-offset:-3px}
+.game-info-container{grid-template-rows:minmax(0,1fr) auto}
+.next-game{justify-content:flex-start;height:auto;align-self:start}
+.next-game.sc-no-upcoming{gap:10px;min-height:125px}
+.next-game.sc-no-upcoming .next-game-matchup,.next-game.sc-no-upcoming .next-game-details,.next-game.sc-no-upcoming #open-next-game{display:none!important}
+.next-game.sc-no-upcoming::after{content:"No upcoming games scheduled";color:#64748b;font-size:14px;text-align:center;padding:25px 10px 18px}
+@media(max-width:900px){.game-info-container{display:block}.next-game.sc-no-upcoming{min-height:120px}}
+
+.sc-season-fallback{display:grid;gap:9px;padding:12px 4px}.sc-season-fallback h4{font-size:15px;color:var(--team-strong,#173c75);margin:0 0 4px}.sc-season-metric{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e7ecf2;padding:9px 2px;gap:12px}.sc-season-metric span{color:#526174;font-size:13px}.sc-season-metric strong{font-variant-numeric:tabular-nums}

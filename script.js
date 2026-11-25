@@ -1119,7 +1119,7 @@ function shotValue(x, y) {
 
 function playerName(id) {
   const player = players.find(p => String(p.id) === String(id));
-  return player ? `#${player.number ?? "?"} ${player.name || player.last_name || "Player"}` : "Unassigned";
+  return player ? `#${player.number ?? "?"} ${player.name || player.last_name || "Player"}` : "Unknown Player";
 }
 
 function eventDescription(event) {
@@ -1144,20 +1144,12 @@ function eventDescription(event) {
     return `${name} — ${event.made ? "Made" : "Missed"} Free Throw`;
 }
   if (event.type === "opponent_score") return `Opponent — +${event.points} points`;
-  const names = { assist:"Assist", defensive_rebound:"Defensive rebound", offensive_rebound:"Offensive rebound", steal:"Steal", block:"Block", turnover:"Turnover", foul:"Personal foul" };
+  const names = { assist:"Assist", defensive_rebound:"Defensive rebound", offensive_rebound:"Offensive rebound", team_defensive_rebound:"Team defensive rebound", team_offensive_rebound:"Team offensive rebound", steal:"Steal", block:"Block", turnover:"Turnover", foul:"Personal foul" };
   const name = event.team === "opponent"
     ? currentGame?.opponent || "OPPONENT"
-    : playerName(event.playerId);
+    : (event.playerId == null ? teamName : playerName(event.playerId));
 if (event.type === "steal") {
-    const stealingTeam = event.team === "us"
-        ? playerName(event.playerId)
-        : currentGame?.opponent || "OPPONENT";
-
-    const losingTeam = event.team === "us"
-        ? currentGame?.opponent || "OPPONENT"
-        : teamName;
-
-    return `${stealingTeam} — Steal / ${losingTeam} Turnover`;
+    return `${name} — Steal`;
 }
 return `${name} — ${names[event.type] || event.type}`;
 }
@@ -1479,91 +1471,88 @@ function renderCourt() {
 }
 
 
-function renderUnassigned() {
-  const list = $("unassigned-list"); list.replaceChildren();
-  const unassigned = state.events
-    .filter(e => e.team === "us" && e.playerId == null)
-    .reverse();
-  $("tab-unassigned-count").textContent =
-    unassigned.length > 0 ? `(${unassigned.length})` : "";
-  if (!unassigned.length) { list.textContent = "All caught up."; return; }
-  unassigned.forEach(event => {
-    const row = document.createElement("div"); row.className = "unassigned-item";
-    const label = document.createElement("span"); if (event.type === "turnover" && event.linkedEventId) {
-    const opponent = currentGame?.opponent || "OPPONENT";
-
-    label.textContent =
-        `${periodName(event.period)} — ${opponent} Steal / Unassigned Turnover`;
-} else {
-    label.textContent =
-        `${periodName(event.period)} — ${eventDescription(event)}`;
+// Only tracked-team individual statistics need a jersey. Team rebounds,
+// team turnovers, team fouls and opponent events are valid without one.
+// Legacy no_assist records represent a workflow decision, not a player stat.
+function needsPlayerReview(event) {
+  if (event.team !== "us" || event.playerId != null) return false;
+  return ["shot", "free_throw", "assist", "steal", "block",
+          "offensive_rebound", "defensive_rebound"].includes(event.type);
 }
+
+function renderUnassigned() {
+  const list = $("unassigned-list");
+  if (!list) return;
+  list.replaceChildren();
+  const needsReview = state.events.filter(needsPlayerReview).slice().reverse();
+  $("tab-unassigned-count").textContent = needsReview.length ? `(${needsReview.length})` : "";
+  const badge = $("unassigned-count");
+  if (badge) badge.textContent = String(needsReview.length);
+  if (!needsReview.length) {
+    list.textContent = "No player assignments need review.";
+    return;
+  }
+  for (const event of needsReview) {
+    const row = document.createElement("div");
+    row.className = "unassigned-item";
+    const description = document.createElement("div");
+    const label = document.createElement("strong");
+    label.textContent = `${periodName(event.period)} · ${teamName} — ${eventDescription(event).replace(/^Unknown Player — /, "")}`;
+    const help = document.createElement("div");
+    help.className = "muted";
+    help.textContent = "Player missing. Choose who recorded this stat; the existing event will be updated, not duplicated.";
+    description.append(label, help);
     const select = document.createElement("select");
-    const placeholder = document.createElement("option"); placeholder.value = ""; placeholder.textContent = "Assign player";
-    select.appendChild(placeholder);
-    players.forEach(player => {
-      const option = document.createElement("option"); option.value = String(player.id);
-      option.textContent = playerName(player.id); select.appendChild(option);
-    });
-    
-select.addEventListener("change", async () => {
-    if (!select.value) return;
-
-    if (
-        pendingEventSyncs > 0 ||
-        eventSyncHasFailed ||
-        getEventRecoveryQueue().length > 0
-    ) {
+    select.setAttribute("aria-label", `Assign player for ${event.type} in ${periodName(event.period)}`);
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "Choose player";
+    select.append(placeholder);
+    for (const player of players) {
+      const option = document.createElement("option");
+      option.value = String(player.id);
+      option.textContent = playerName(player.id);
+      select.append(option);
+    }
+    select.addEventListener("change", async () => {
+      if (!select.value) return;
+      if (pendingEventSyncs > 0 || eventSyncHasFailed || getEventRecoveryQueue().length > 0) {
         alert("Please finish synchronizing before assigning a player.");
+        select.value = "";
         return;
-    }
-
-    const expectedVersion = Number(event.version);
-
-    if (!Number.isInteger(expectedVersion) || expectedVersion < 1) {
+      }
+      const expectedVersion = Number(event.version);
+      if (!Number.isInteger(expectedVersion) || expectedVersion < 1) {
         alert("Event version unavailable. Refresh the game.");
+        select.value = "";
         return;
-    }
-
-    event.playerId = select.value;
-
-    save();
-    render();
-
-    const updatedEvent = {
-        ...event,
-        expectedVersion
-    };
-
-    // This requires the recovery dispatcher to support player updates.
-    const success = await trackEventWrite(
-        "player_update",
-        [event.id],
-        updatedEvent
-    );
-
-    if (!success) {
+      }
+      const previousPlayer = event.playerId;
+      const chosenPlayer = select.value;
+      select.disabled = true;
+      // Use the existing versioned player-update/recovery pipeline. Keep the
+      // original event ID and never create a replacement scoring event.
+      event.playerId = chosenPlayer;
+      save();
+      const success = await trackEventWrite("player_update", [event.id], {
+        ...event, expectedVersion
+      });
+      if (!success) {
         const queued = getEventRecoveryQueue();
-
-        console.warn(
-            "Player assignment awaits synchronization:",
-            event.id
-        );
-
-        alert(
-            queued?.some(operation => operation.eventId === event.id)
-                ? "Player assignment saved locally. It will retry automatically when Supabase is reachable."
-                : "Player assignment was not confirmed. Check synchronization before changing it again."
-        );
-    }
-});
-
-row.appendChild(label);
-row.appendChild(select);
-list.appendChild(row);
-
-  }); // End unassigned.forEach()
-} // End renderUnassigned()
+        if (queued?.some(op => op.eventId === event.id || op.eventIds?.includes(event.id))) {
+          alert("Assignment saved locally; synchronization will retry automatically.");
+        } else {
+          event.playerId = previousPlayer;
+          save();
+          alert("Assignment was not confirmed. Try again after synchronization completes.");
+        }
+      }
+      render();
+    });
+    row.append(description, select);
+    list.append(row);
+  }
+}
 
 function renderQuarterBox() {
   const holder = $("quarter-box"); holder.replaceChildren();
@@ -1653,11 +1642,9 @@ function renderPlayByPlay() {
     }
 
     matching
-        // Related assists/rebounds can be hidden as supporting events, but
-        // each free-throw attempt is a scoring play in its own right.
-        // Quick Track links FTs to the shooting foul, so filtering all
-        // linked events accidentally removed made AND missed FTs from PBP.
-        .filter(({ event }) => !event.linkedEventId || event.type === "free_throw")
+        // Every saved basketball action belongs in Play-by-Play, even if it
+        // links to a shot or foul. Ignore legacy no_assist metadata only.
+        .filter(({ event }) => event.type !== "no_assist")
         .reverse()
         .forEach(({ event, index }) => {
             const row = document.createElement("div");
@@ -1755,6 +1742,22 @@ edit.addEventListener("click", async () => {
             return;
         }
 
+        // Assists cannot remain attached to a missed field goal. The shot
+        // update must be acknowledged before deleting the invalid children.
+        if (event.type === "shot" && previousMade === true && event.made === false) {
+            const invalidAssists = state.events.filter(child =>
+                child.type === "assist" && child.linkedEventId === eventId
+            ).map(child => child.id);
+            if (invalidAssists.length) {
+                state.events = state.events.filter(child => !invalidAssists.includes(child.id));
+                save();
+                render();
+                const removed = await trackEventWrite("delete", invalidAssists);
+                if (!removed) {
+                    alert("Shot saved, but removing its previous assist is pending synchronization. Review this play.");
+                }
+            }
+        }
         console.log(
             "Shot edit synchronized:",
             eventId
@@ -1774,23 +1777,31 @@ edit.addEventListener("click", async () => {
                 remove.textContent = "DELETE";
 
                 remove.addEventListener("click", () => {
+                    if (pendingEventSyncs > 0 || eventSyncHasFailed ||
+                        (getEventRecoveryQueue()?.length ?? 1) > 0) {
+                        alert("Finish syncing pending event changes before deleting.");
+                        return;
+                    }
                     if (!confirm(
                         "Delete this event? Scores and stats will be recalculated."
                     )) {
                         return;
                     }
 
+                    // Only delete descendants of the selected event. Never walk upward
+                    // to its linked parent (e.g. an assist's made shot).
                     const linkedIds = new Set([event.id]);
-
-                    if (event.linkedEventId) {
-                        linkedIds.add(event.linkedEventId);
+                    let changed = true;
+                    while (changed) {
+                        changed = false;
+                        state.events.forEach(child => {
+                            if (child.linkedEventId && linkedIds.has(child.linkedEventId)
+                                && !linkedIds.has(child.id)) {
+                                linkedIds.add(child.id);
+                                changed = true;
+                            }
+                        });
                     }
-
-                    state.events.forEach(e => {
-                        if (e.linkedEventId === event.id) {
-                            linkedIds.add(e.id);
-                        }
-                    });
 
                     state.events = state.events.filter(
                         e => !linkedIds.has(e.id)
@@ -2369,16 +2380,14 @@ $("undo-event").addEventListener("click", () => {
 
     const lastEvent = state.events.pop();
 
-    if (lastEvent.linkedEventId) {
-        state.events = state.events.filter(
-            event => event.id !== lastEvent.linkedEventId
-        );
-    }
-
+    // Linked free throws, assists, rebounds, and blocks are independently recorded
+    // events. Undo must not erase their parent shot or foul.
+    const parent = state.events.find(event => event.id === lastEvent.linkedEventId);
+    const autoStealTurnover = lastEvent.type === 'turnover' && parent?.type === 'steal';
     const eventIds = [lastEvent.id];
-
-    if (lastEvent.linkedEventId) {
-        eventIds.push(lastEvent.linkedEventId);
+    if (autoStealTurnover) {
+        state.events = state.events.filter(event => event.id !== parent.id);
+        eventIds.push(parent.id);
     }
 
     // Keep local statistics updated.

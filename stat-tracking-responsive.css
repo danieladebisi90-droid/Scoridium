@@ -1,0 +1,460 @@
+/* ApexVision Stat Tracking — canonical responsive layout.
+   Applies to stat mode ONLY. No device-named variants. */
+html:has(body.pg-v3-stat),
+body.postgame-fullscreen.pg-v3-stat {
+  height: auto !important;
+  min-height: 100% !important;
+  max-height: none !important;
+  overflow-x: clip !important;
+  overflow-y: auto !important;
+}
+body.postgame-fullscreen.pg-v3-stat {
+  --st-gap: clamp(6px, 0.7vw + 0.35dvh, 14px);
+  --st-pad: clamp(8px, 0.9vw + 0.35dvh, 18px);
+  --st-opp-btn: clamp(44px, 5dvh + 2vw, 86px);
+  --st-tracked-h: clamp(140px, 16dvh + 6vw, 310px);
+}
+body.postgame-fullscreen.pg-v3-stat .film-shell {
+  width: 100% !important;
+  max-width: none !important;
+  height: auto !important;
+  min-height: 100dvh !important;
+  max-height: none !important;
+  overflow: visible !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: var(--st-gap) !important;
+  padding: var(--st-pad) !important;
+  box-sizing: border-box !important;
+}
+body.postgame-fullscreen.pg-v3-stat #postgame-screen {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+body.postgame-fullscreen.pg-v3-stat #postgame-screen[hidden],
+body.postgame-fullscreen.pg-v3-stat #post-stat-section[hidden],
+body.postgame-fullscreen.pg-v3-stat #post-quick-root[hidden] { display: none !important; }
+body.postgame-fullscreen.pg-v3-stat #post-stat-section {
+  width: 100% !important;
+  max-width: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  flex: 1 1 auto !important;
+  overflow: visible !important;
+  margin: 0 !important;
+}
+body.postgame-fullscreen.pg-v3-stat.pg-phone-review-open #post-stat-section { display: none !important; }
+body.postgame-fullscreen.pg-v3-stat #pg-ipad-review { display: none !important; }
+body.postgame-fullscreen.pg-v3-stat #post-quick-root {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+  position: relative !important;
+  width: 100% !important;
+  height: auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: none !important;
+  max-height: none !important;
+  overflow: visible !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+body.postgame-fullscreen.pg-v3-stat #post-quick-root .qv-layout {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  flex: 1 1 auto !important;
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) !important;
+  grid-template-rows: minmax(var(--st-tracked-h), 1.15fr) minmax(max-content, 1fr) auto !important;
+  align-items: stretch !important;
+  gap: var(--st-gap) !important;
+  overflow: visible !important;
+}
+body.postgame-fullscreen.pg-v3-stat #post-quick-root .qv-layout > * {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  grid-column: 1 !important;
+  grid-row: auto !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+body.postgame-fullscreen.pg-v3-stat #post-quick-root .qv-tracked,
+body.postgame-fullscreen.pg-v3-stat #post-quick-root .qv-opponent {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: visible !important;
+  flex: none !important;
+  padding: var(--st-pad) !important;
+  background: white !important;
+  border-radius: 11px !important;
+}
+body.postgame-fullscreen.pg-v3-stat #post-quick-root .qv-tracked {
+  min-height: var(--st-tracked-h) !important;
+  height: 100% !important;
+}
+body.postgame-fullscreen.pg-v3-stat #post-quick-root .qv-opponent {
+  border: 2px solid #b6c9dd !important;
+  background: #fff !important;
+}
+body.postgame-fullscreen.pg-v3-stat #post-quick-root .qv-tracked.qv-highlight,
+body.postgame-fullscreen.pg-v3-stat #post-quick-root .qv-opponent.qv-opponent-highlight {
+  border-color: var(--review-secondary,#e7b537) !important;
+}
+body.postgame-fullscreen.pg-v3-stat #post-quick-root .qv-team-heading {
+  flex: 0 0 auto !important;
+  min-height: clamp(34px, 4.2dvh, 54px) !important;
+  margin-bottom: var(--st-gap) !important;
+}
+body.postgame-fullscreen.pg-v3-stat #post-quick-root .qv-team-heading strong {
+  font-size: clamp(13px, 1.2vw + 0.5dvh, 21px) !important;
+}
+body.postgame-fullscreen.pg-v3-stat #post-quick-root .qv-action-surface {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  padding-top: 0 !important;
+  overflow: visible !important;
+}
+body.postgame-fullscreen.pg-v3-stat #post-quick-root .qv-grid {
+  display: grid !important;
+  height: auto !important;
+  grid-template-columns: repeat(4,minmax(0,1fr)) !important;
+  grid-template-rows: none !important;
+  grid-auto-rows: minmax(44px, auto) !important;
+  gap: var(--st-gap) !important;
+  overflow: visible !important;
+}
+body.postgame-fullscreen.pg-v3-stat #post-quick-root .qv-opp-buttons {
+  flex: 1 1 auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  display: grid !important;
+  grid-template-columns: repeat(3,minmax(0,1fr)) !important;
+  grid-template-rows: repeat(2, minmax(var(--st-opp-btn), 1fr)) !important;
+  grid-auto-rows: auto !important;
+  gap: var(--st-gap) !important;
+  align-content: start !important;
+}
+body.postgame-fullscreen.pg-v3-stat #post-quick-root .qv-opp-buttons > .qv-button {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  font-size: clamp(12px, 0.9vw + 0.55dvh, 18px) !important;
+  padding: 5px !important;
+}
+body.postgame-fullscreen.pg-v3-stat #post-quick-root .qv-grid .qv-button {
+  height: auto !important;
+  min-height: clamp(44px, 5dvh + 1vw, 80px) !important;
+  font-size: clamp(12px, 0.9vw + 0.5dvh, 18px) !important;
+}
+body.postgame-fullscreen.pg-v3-stat #post-quick-root .qv-choices,
+body.postgame-fullscreen.pg-v3-stat #post-quick-root .qv-foul,
+body.postgame-fullscreen.pg-v3-stat #post-quick-root .qv-ft-list {
+  height: auto !important;
+  min-height: 0 !important;
+}
+body.postgame-fullscreen.pg-v3-stat #post-quick-root .qv-last {
+  height: auto !important;
+  min-height: 42px !important;
+  padding: clamp(7px,0.8vw,13px) !important;
+  grid-column: 1 !important;
+  grid-row: auto !important;
+}
+body.postgame-fullscreen.pg-v3-stat #pg-phone-pages {
+  display: flex !important;
+  flex: 0 0 auto !important;
+  align-self: center !important;
+}
+body.postgame-fullscreen.pg-v3-stat #pg-phone-review { display: none !important; }
+body.postgame-fullscreen.pg-v3-stat.pg-phone-review-open #pg-phone-review {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  min-height: min(60dvh,460px) !important;
+}
+/* No forced page clipping in landscape. Height adapts; overflow scrolls. */
+
+/* The tracking grid is the remaining vertical workspace, not an auto-height card. */
+body.postgame-fullscreen.pg-v3-stat #post-stat-section > .postgame-section-top {
+  display: none !important; /* redundant QUICK TRACK heading */
+}
+body.postgame-fullscreen.pg-v3-stat #post-stat-section,
+body.postgame-fullscreen.pg-v3-stat #post-quick-root,
+body.postgame-fullscreen.pg-v3-stat #post-quick-root .qv-layout {
+  min-width: 0 !important;
+}
+/* If the viewport is too short for touch targets, scroll the page rather than clip. */
+@media (max-height: 620px) {
+  body.postgame-fullscreen.pg-v3-stat #post-quick-root .qv-layout {
+    grid-template-rows: minmax(125px, 1.15fr) minmax(max-content, 1fr) auto !important;
+  }
+}
+
+
+/* Fix Stat Tracking alignment and quarter toolbar */
+
+body.postgame-fullscreen.pg-v3-stat #post-stat-section {
+  box-sizing: border-box !important;
+  padding: 0 !important;
+}
+
+body.postgame-fullscreen.pg-v3-stat
+#post-stat-section #post-quick-root {
+  left: 0 !important;
+  right: auto !important;
+  top: auto !important;
+  bottom: auto !important;
+}
+
+body.postgame-fullscreen.pg-v3-stat
+#post-stat-section #post-quick-root,
+body.postgame-fullscreen.pg-v3-stat
+#post-stat-section .qv-layout {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Quarter selector and review buttons share one bar */
+
+body.postgame-fullscreen.pg-v3-stat
+#postgame-screen > .pg-review-toolbar {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  padding: clamp(7px, .7vw, 12px)
+           clamp(9px, 1vw, 16px) !important;
+  margin-bottom: var(--st-gap) !important;
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  gap: 8px !important;
+}
+
+body.postgame-fullscreen.pg-v3-stat
+.pg-review-toolbar > .postgame-controls {
+  flex: 0 0 auto !important;
+  min-width: 0 !important;
+}
+
+body.postgame-fullscreen.pg-v3-stat
+.pg-review-toolbar > .pg-floating-steps {
+  position: static !important;
+  inset: auto !important;
+  transform: none !important;
+  margin: 0 0 0 auto !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: clamp(5px, .7vw, 10px) !important;
+  flex: 0 0 auto !important;
+}
+
+body.postgame-fullscreen.pg-v3-stat
+.pg-review-toolbar > .pg-floating-steps button {
+  min-height: 36px !important;
+  padding: 7px clamp(8px, .9vw, 13px) !important;
+  white-space: nowrap !important;
+}
+
+body.postgame-fullscreen.pg-v3-stat
+.pg-review-toolbar > .postgame-quarter-actions {
+  flex: 0 1 auto !important;
+  min-width: 0 !important;
+}
+
+/* Phone toolbar */
+
+body.postgame-fullscreen.pg-v3-stat
+#postgame-screen > .pg-v8-review-bar
+.pg-floating-steps {
+  position: static !important;
+  inset: auto !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+@media (max-width: 700px) {
+  body.postgame-fullscreen.pg-v3-stat
+  #postgame-screen > .pg-v8-review-bar {
+    box-sizing: border-box !important;
+    width: 100% !important;
+  }
+}
+
+
+/* =============================================
+   STAT TRACKING — LANDSCAPE SIDE-BY-SIDE
+   ============================================= */
+
+@media (orientation: landscape) and (min-width: 700px) {
+
+  body.postgame-fullscreen.pg-v3-stat
+  #post-quick-root .qv-layout {
+    display: grid !important;
+    grid-template-columns:
+      minmax(0, 1fr) minmax(0, 1fr) !important;
+    grid-template-rows:
+      minmax(0, 1fr) auto !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    gap: var(--st-gap) !important;
+    align-items: stretch !important;
+  }
+
+  /* Tracked team on the left */
+  body.postgame-fullscreen.pg-v3-stat
+  #post-quick-root .qv-layout > .qv-tracked {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+
+  /* Opponent on the right */
+  body.postgame-fullscreen.pg-v3-stat
+  #post-quick-root .qv-layout > .qv-opponent {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+
+  /* Last Event spans both panels */
+  body.postgame-fullscreen.pg-v3-stat
+  #post-quick-root .qv-layout > .qv-last {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+  }
+
+
+/* Keep landscape tracking within the screen */
+
+body.postgame-fullscreen.pg-v3-stat
+#post-quick-root {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  overflow: hidden !important;
+}
+
+body.postgame-fullscreen.pg-v3-stat
+#post-quick-root .qv-layout {
+  overflow: hidden !important;
+}
+
+body.postgame-fullscreen.pg-v3-stat
+#post-quick-root .qv-tracked,
+body.postgame-fullscreen.pg-v3-stat
+#post-quick-root .qv-opponent {
+  min-height: 0 !important;
+  max-height: 100% !important;
+  overflow-y: auto !important;
+}
+
+
+}
+
+
+/* LANDSCAPE — SINGLE QUARTER TOOLBAR */
+
+@media (orientation: landscape) and (min-width: 700px) {
+
+  body.postgame-fullscreen.pg-v3-stat
+  #postgame-screen > .pg-review-toolbar {
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    padding: 8px 12px !important;
+    gap: 8px !important;
+    position: relative !important;
+  }
+
+  body.postgame-fullscreen.pg-v3-stat
+  .pg-review-toolbar .pg-floating-steps {
+    position: static !important;
+    inset: auto !important;
+    transform: none !important;
+    margin-left: auto !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+  }
+
+  body.postgame-fullscreen.pg-v3-stat
+  .pg-review-toolbar .postgame-quarter-actions {
+    flex: 0 0 auto !important;
+  }
+
+  body.postgame-fullscreen.pg-v3-stat
+  .pg-review-toolbar {
+    padding-right: 12px !important;
+  }
+}
+
+
+/* LANDSCAPE — CENTER HEADER TITLE */
+
+@media (orientation: landscape) and (min-width: 700px) {
+
+  body.postgame-fullscreen.pg-v3-stat
+  .postgame-topline {
+    display: grid !important;
+    grid-template-columns: 1fr auto 1fr !important;
+    align-items: center !important;
+  }
+
+  body.postgame-fullscreen.pg-v3-stat
+  .postgame-topline #back-to-room {
+    grid-column: 1 !important;
+    justify-self: start !important;
+  }
+
+  body.postgame-fullscreen.pg-v3-stat
+  .postgame-topline #page-title {
+    grid-column: 2 !important;
+    justify-self: center !important;
+    text-align: center !important;
+    margin: 0 !important;
+  }
+
+  body.postgame-fullscreen.pg-v3-stat
+  .postgame-topline #game-title {
+    grid-column: 3 !important;
+    justify-self: end !important;
+    text-align: right !important;
+  }
+}
+

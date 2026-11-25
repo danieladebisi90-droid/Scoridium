@@ -1,7 +1,105 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Film Analysis · ApexVision</title>
-<link rel="stylesheet" href="film-analysis.css"><link rel="manifest" href="manifest.webmanifest"></head>
-<body><main class="film-shell"><header><a href="gamehub.html" class="film-back">← Game Hub</a><span class="film-brand">APEXVISION</span></header>
-<h1>Advanced Film Analysis</h1><p>Classify recorded events without changing the official box score. All fields are optional.</p>
-<div class="film-toolbar"><label>Completed game<select id="film-game"><option value="">Loading games…</option></select></label><label>Event type<select id="film-type"><option value="all">Shots and turnovers</option><option value="shot">Shots</option><option value="turnover">Turnovers</option></select></label></div>
-<div class="film-alert" id="film-message" role="status" aria-live="polite">Loading…</div><section id="film-events" aria-label="Events available for analysis"></section>
-</main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="film-analysis.js" defer></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Advanced Film Analysis · ApexVision</title>
+<link rel="stylesheet" href="film-analysis.css"><link rel="manifest" href="manifest.webmanifest">
+</head>
+<body>
+<main class="film-shell film-analysis-shell">
+<header><a id="film-back" href="gamehub.html" class="film-back">← Film Room</a><span class="film-brand">APEXVISION</span></header>
+<h1>Advanced Film Analysis</h1>
+<p>Review each recorded shot beside its location on the court and classify what happened on film. These notes do not alter the official box score.</p>
+<div class="film-toolbar">
+<label>Completed game <select id="film-game"><option value="">Loading games…</option></select></label>
+<label>Event type <select id="film-type"><option value="shot">Shots</option><option value="all">Shots and turnovers</option><option value="turnover">Turnovers</option></select></label>
+<label>Quarter <select id="film-quarter"><option value="all">Full game</option></select></label>
+</div>
+<div id="film-message" class="film-alert" role="status" aria-live="polite">Loading…</div>
+<section id="film-workspace" class="film-workspace" hidden aria-label="Film review workspace">
+<div class="film-court-panel">
+<div class="film-panel-head">
+<h2>SHOT MAP</h2><span id="film-map-count">—</span>
+</div>
+<svg id="film-half-court" viewBox="0 0 470 440" preserveAspectRatio="xMidYMid meet"
+ role="img" aria-label="FIBA half-court diagram showing recorded shot locations">
+<g id="film-half-court-art" pointer-events="none" >
+
+    <!-- OUTER COURT BORDER -->
+<rect x="1.5" y="1.5" width="467" height="437"
+      rx="4"
+      fill="#B98556"
+      stroke="#A67245"
+      stroke-width="3"/>
+
+<!-- INNER COURT BOUNDARY -->
+<rect x="10" y="10" width="450" height="420"
+      fill="none"
+      stroke="white"
+      stroke-width="3"/>
+
+    <!-- Backboard -->
+    <line x1="208" y1="46" x2="262" y2="46"
+          stroke="white" stroke-width="4"/>
+
+    <!-- Basket -->
+    <circle cx="235" cy="57.25" r="7"
+            fill="none" stroke="white" stroke-width="3"/>
+
+    <!-- Paint -->
+    <rect x="161.5" y="10" width="147" height="174"
+          fill="none" stroke="white" stroke-width="3"/>
+
+    <!-- Free-throw circle -->
+    <circle cx="235" cy="184" r="54"
+            fill="none" stroke="white" stroke-width="3"/>
+
+    <!-- FIBA three-point line -->
+    <path d="M37 10 V99.69
+             A202.5 202.5 0 0 0 433 99.69
+             V10"
+          fill="none" stroke="white" stroke-width="3"/>
+
+    <!-- No-charge semicircle -->
+    <path d="M197.5 57.25
+             A37.5 37.5 0 0 0 272.5 57.25"
+          fill="none" stroke="white" stroke-width="3"/>
+
+    <!-- Team label -->
+    <text id="film-basket-label"
+          x="235" y="405"
+          text-anchor="middle"
+          font-size="24"
+          font-weight="700"
+          fill="#111"
+          opacity="0.55">
+        TEAM
+    </text>
+
+</g>
+<g id="film-shot-markers"></g>
+</svg>
+<p id="film-court-caption" class="film-court-caption" aria-live="polite">Select a recorded shot to see its location.</p>
+<div class="film-court-legend"><span><i class="film-legend-make"></i> Made</span><span><i class="film-legend-miss"></i> Missed</span><span>Outlined = selected</span></div>
+<div class="film-event-picker-head"><h3>Recorded events</h3><span id="film-event-count"></span></div>
+<div id="film-event-picker" class="film-event-picker" aria-label="Choose an event to classify"></div>
+</div>
+<div class="film-detail-panel">
+<div class="film-panel-head">
+<h2>EVENT DETAILS</h2><span id="film-selection-counter">—</span>
+</div>
+<div id="film-detail" aria-live="polite">
+<p class="film-empty">Select an event to begin analysis.</p>
+</div>
+<div class="film-nav-actions">
+<button type="button" id="film-prev" class="film-nav-button">← Previous</button>
+<button type="button" id="film-next" class="film-nav-button">Next →</button>
+</div>
+</div>
+</section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="film-analysis.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,344 @@
+/* Combined Tracking navigation only: leave court and stat-panel sizing intact. */
+body.pg-v3-combined.av-cn-active #postgame-screen > .pg-review-toolbar,
+body.pg-v3-combined.av-cn-active #postgame-screen > .pg-v8-review-bar,
+body.pg-v3-combined.av-cn-active #pg-mobile-more,
+body.pg-v3-combined.av-cn-active #pg-mobile-extra { display:none !important; }
+body.pg-v3-combined.av-cn-active #av-combined-nav {
+  display:grid !important;
+  grid-template-columns: minmax(55px,.8fr) minmax(110px,2fr) minmax(65px,1fr) minmax(65px,1fr) minmax(180px,2.4fr);
+  align-items:stretch; gap:clamp(3px,.55vw,9px);
+  width:100%; flex:0 0 auto; min-width:0; min-height:46px;
+  padding:6px; margin:0 0 5px; box-sizing:border-box;
+  border:1px solid #c5d6e9; border-radius:10px; background:#fff;
+  position:relative; z-index:30;
+}
+body.pg-v3-combined.av-cn-active #av-combined-nav > div:not(#av-cn-more-panel) {
+  display:flex; min-width:0; gap:4px; align-items:stretch;
+}
+body.pg-v3-combined.av-cn-active #av-combined-nav .pg-court-modes { display:flex !important; width:100%; min-width:0; gap:4px; margin:0; padding:0; }
+body.pg-v3-combined.av-cn-active #av-combined-nav .av-cn-quarter label {display:block; width:100%; margin:0;}
+body.pg-v3-combined.av-cn-active #av-combined-nav .av-cn-quarter select {width:100%; height:100%; min-height:38px; padding:4px;}
+body.pg-v3-combined.av-cn-active #av-combined-nav button {
+  position:static !important; transform:none !important;
+  display:inline-flex !important; align-items:center; justify-content:center;
+  flex:1 1 0 !important; min-width:0 !important; width:100% !important;
+  min-height:38px !important; margin:0 !important; padding:5px 5px !important;
+  border:1px solid #b9cbe1; border-radius:7px;
+  background:#f1f6fc; color:#143d76; font-weight:750;
+  font-size:clamp(9px,.85vw,13px); line-height:1.12;
+  white-space:normal; text-align:center; cursor:pointer;
+}
+body.pg-v3-combined.av-cn-active #av-combined-nav .av-cn-steps {display:flex !important;}
+body.pg-v3-combined.av-cn-active #av-combined-nav #post-end-review { background:#103f80; border-color:#103f80; color:#fff; }
+body.pg-v3-combined.av-cn-active #av-combined-nav .pg-court-modes button[aria-pressed=true] {background:#103f80; color:white;}
+body.pg-v3-combined.av-cn-active #av-cn-more-panel {
+  display:flex !important; flex-direction:column !important; gap:5px;
+  position:absolute !important; right:6px; top:calc(100% + 4px);
+  width:min(270px,calc(100vw - 20px)); padding:7px; background:#fff;
+  border:1px solid #b9cbe1; border-radius:9px;
+  box-shadow:0 7px 20px #092f5f2b; z-index:100;
+}
+body.pg-v3-combined.av-cn-active #av-cn-more-panel[hidden] {display:none !important;}
+body.pg-v3-combined.av-cn-active #av-cn-more-panel button[hidden] {display:none !important;}
+body.pg-v3-combined.av-cn-active #av-cn-review {
+  display:flex; flex-direction:column; flex:1 1 auto; min-height:0; overflow:hidden;
+  border:1px solid #c5d6e9; border-radius:9px; background:#fff; padding:10px;
+}
+body.pg-v3-combined.av-cn-active #av-cn-review[hidden] {display:none !important;}
+body.pg-v3-combined.av-cn-active #av-cn-review .av-cn-review-tabs {display:flex; gap:7px; margin-bottom:10px;}
+body.pg-v3-combined.av-cn-active #av-cn-review .av-cn-review-tabs button {flex:1; padding:9px; border:1px solid #c5d6e9; border-radius:7px; background:#f1f6fc; color:#103f80; font-weight:750;}
+body.pg-v3-combined.av-cn-active #av-cn-review .av-cn-review-tabs button[aria-pressed=true] {background:#103f80;color:#fff;}
+body.pg-v3-combined.av-cn-active .av-cn-review-body {min-height:0; overflow:auto; flex:1;}
+body.pg-v3-combined.av-cn-active .av-cn-review-heading {display:flex; align-items:center; justify-content:space-between; gap:10px;}
+body.pg-v3-combined.av-cn-active .av-cn-review-heading h3 {margin:4px 0 10px;}
+body.pg-v3-combined.av-cn-active .av-cn-scroll {overflow-x:auto; max-width:100%;}
+body.pg-v3-combined.av-cn-active #av-cn-box-table {border-collapse:collapse;width:100%; font-size:12px;}
+body.pg-v3-combined.av-cn-active #av-cn-box-table th,
+body.pg-v3-combined.av-cn-active #av-cn-box-table td {padding:9px 7px; border-bottom:1px solid #e0e8f1; white-space:nowrap; text-align:center;}
+body.pg-v3-combined.av-cn-active #av-cn-box-table th:first-child,
+body.pg-v3-combined.av-cn-active #av-cn-box-table td:first-child {position:sticky;left:0;background:white;text-align:left;}
+body.pg-v3-combined.av-cn-active .av-cn-play {padding:10px; border-bottom:1px solid #e0e8f1;}
+/* Compact portrait: same SINGLE row, all seven controls share available width. */
+@media (max-width:800px) {
+ body.pg-v3-combined.av-cn-active #av-combined-nav {grid-template-columns:minmax(35px,.75fr) minmax(70px,1.7fr) minmax(46px,.95fr) minmax(42px,.9fr) minmax(105px,2.3fr);gap:3px;padding:4px;min-height:42px;}
+ body.pg-v3-combined.av-cn-active #av-combined-nav button {font-size:clamp(8px,1.4vw,11px);padding:4px 2px !important;min-height:36px !important;}
+ body.pg-v3-combined.av-cn-active #av-combined-nav .av-cn-quarter select {font-size:11px;min-height:36px;}
+ body.pg-v3-combined.av-cn-active #av-cn-page-nav button {font-size:11px;padding:5px 9px;}
+}
+
+/* Swipe pages: retain the shared header / scoreboard / toolbar. */
+body.pg-v3-combined.av-cn-active #av-cn-review { width:100%; box-sizing:border-box; }
+body.pg-v3-combined.av-cn-active #av-cn-return { flex:0 0 auto; padding-inline:12px; }
+body.pg-v3-combined.av-cn-active #post-shot-section[hidden] { display:none !important; }
+
+/* V5: Details page mirrors the existing Stat Tracking review layout. */
+html body.pg-v3-combined.av-cn-active #postgame-screen #post-shot-section[hidden] {
+  display:none !important;
+}
+html body.pg-v3-combined.av-cn-active #postgame-screen #av-cn-review[hidden] {
+  display:none !important;
+}
+html body.pg-v3-combined.av-cn-active #postgame-screen > #av-cn-review:not([hidden]) {
+  display:flex !important;
+  flex:1 1 0 !important;
+  min-height:0 !important;
+  height:auto !important;
+  width:100% !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-sizing:border-box !important;
+  overflow:hidden !important;
+}
+html body.pg-v3-combined.av-cn-active #av-cn-review .av-cn-review-body {
+  display:flex !important;
+  flex-direction:column !important;
+  gap:10px !important;
+  flex:1 1 auto !important;
+  min-height:0 !important;
+  overflow:hidden !important;
+  padding:0 0 2px !important;
+}
+html body.pg-v3-combined.av-cn-active #av-cn-review .av-cn-card {
+  display:flex !important;
+  flex-direction:column !important;
+  min-height:0 !important;
+  background:#fff !important;
+  border:1px solid #c5d6e9 !important;
+  border-top:3px solid #103f80 !important;
+  border-radius:10px !important;
+  padding:12px !important;
+  box-sizing:border-box !important;
+  overflow:hidden !important;
+}
+html body.pg-v3-combined.av-cn-active #av-cn-review #av-cn-box {
+  flex:0 0 auto !important;
+  min-height:135px !important;
+  max-height:44% !important;
+}
+html body.pg-v3-combined.av-cn-active #av-cn-review #av-cn-plays {
+  flex:1 1 0 !important;
+  min-height:130px !important;
+}
+html body.pg-v3-combined.av-cn-active #av-cn-review .av-cn-review-heading {
+  display:flex; align-items:flex-start; justify-content:space-between;
+  gap:10px; margin:0 0 8px;
+}
+html body.pg-v3-combined.av-cn-active #av-cn-review .av-cn-review-heading h3 {
+  font-size:14px; color:#103f80; margin:0 0 3px; line-height:1.3;
+}
+html body.pg-v3-combined.av-cn-active #av-cn-review .av-cn-review-heading small {
+  font-size:10px; color:#6e839e;
+}
+html body.pg-v3-combined.av-cn-active #av-cn-review .av-cn-team-totals {
+  flex:0 0 auto; font-weight:750; font-size:11px;
+  background:#f1f6fc; color:#103f80;
+  border:1px solid #c5d6e9; border-radius:6px; padding:5px 7px;
+}
+html body.pg-v3-combined.av-cn-active #av-cn-review #av-cn-box .av-cn-scroll {
+  flex:1 1 auto; min-height:0; overflow:auto;
+}
+html body.pg-v3-combined.av-cn-active #av-cn-review #av-cn-play-list {
+  flex:1 1 auto; min-height:0; overflow-y:auto;
+  overscroll-behavior:contain;
+}
+html body.pg-v3-combined.av-cn-active #av-cn-review .av-cn-play-hint {
+  flex:0 0 auto; font-size:10px; color:#6e839e; margin:6px 0 0;
+}
+html body.pg-v3-combined.av-cn-active #av-cn-review .av-cn-play {
+  padding:14px 9px; font-size:12px;
+}
+
+/* Combined Tracking — page indicator across all screen sizes */
+body.pg-v3-combined.av-cn-active #av-cn-page-indicator {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  flex: 0 0 auto;
+  padding: 5px 0 7px;
+}
+
+body.pg-v3-combined.av-cn-active .av-cn-dot {
+  display: block;
+  width: 9px;
+  height: 9px;
+  background: #aabbd1;
+  border-radius: 999px;
+  transition: width 0.2s ease, background 0.2s ease;
+}
+
+body.pg-v3-combined.av-cn-active .av-cn-dot.active {
+  width: 23px;
+  background: #103f80;
+}
+/* Game-week Combined layout: preserve the existing court-left/team-right page. */
+body.pg-v3-combined.av-cn-active #av-combined-nav {
+  grid-template-columns:minmax(66px,.85fr) minmax(145px,2fr) minmax(75px,.9fr) minmax(195px,2.2fr) !important;
+}
+body.pg-v3-combined.av-cn-active #av-combined-nav .av-cn-team {display:none!important;}
+/* The removed redundant toolbar control makes the entire workspace taller. */
+body.pg-v3-combined.av-cn-active #post-shot-section,
+body.pg-v3-combined.av-cn-active .pg-shot-workspace,
+body.pg-v3-combined.av-cn-active .pg-combined-ipad-right,
+body.pg-v3-combined.av-cn-active #post-quick-root {min-height:0!important;flex:1 1 auto!important;}
+/* Review page 2: two distinct, independently scrolling cards. */
+html body.pg-v3-combined.av-cn-active #av-cn-review .av-cn-review-body {
+  display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  grid-template-rows:minmax(0,1fr)!important;gap:10px!important;
+  flex:1 1 auto!important;overflow:hidden!important;min-height:0!important;
+}
+html body.pg-v3-combined.av-cn-active #av-cn-review #av-cn-box,
+html body.pg-v3-combined.av-cn-active #av-cn-review #av-cn-plays {
+  flex:1 1 auto!important;min-height:0!important;max-height:none!important;height:100%!important;
+}
+html body.pg-v3-combined.av-cn-active #av-cn-review #av-cn-play-list,
+html body.pg-v3-combined.av-cn-active #av-cn-review #av-cn-box .av-cn-scroll {
+  flex:1 1 auto!important;min-height:0!important;overflow:auto!important;
+}
+html body.pg-v3-combined.av-cn-active #av-cn-review .av-cn-play {padding:9px 8px!important;line-height:1.4;}
+.av-cn-linked{white-space:normal;}
+@media(max-width:620px){
+  html body.pg-v3-combined.av-cn-active #av-cn-review .av-cn-review-body{
+    grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(135px,1fr) minmax(135px,1fr)!important;
+  }
+  body.pg-v3-combined.av-cn-active #av-combined-nav{grid-template-columns:minmax(52px,.8fr) minmax(90px,2fr) minmax(60px,.8fr) minmax(110px,1.5fr)!important;}
+}
+
+/* Combined Tracking — remove redundant team selector strip */
+
+body.pg-v3-combined.av-cn-active
+.postgame-controls:has(#post-team):not(:has(#post-period)) {
+  display: none !important;
+}
+
+body.pg-v3-combined.av-cn-active
+#av-combined-team-mode {
+  display: none !important;
+}
+
+
+/* Combined Tracking — final toolbar layout */
+
+body.pg-v3-combined.av-cn-active #av-combined-nav {
+  display: grid !important;
+
+  grid-template-columns:
+    minmax(55px, .8fr)
+    minmax(110px, 2fr)
+    minmax(78px, .9fr)
+    minmax(65px, .9fr)
+    minmax(180px, 2.4fr) !important;
+
+  gap: 5px;
+  align-items: stretch;
+}
+
+/* Team Mode belongs in the main toolbar */
+body.pg-v3-combined.av-cn-active
+#av-combined-nav .av-cn-team-mode {
+  display: flex !important;
+  min-width: 0;
+}
+
+/* Remove the redundant upper Team selector strip */
+body.pg-v3-combined.av-cn-active
+.postgame-controls:has(#post-team):not(:has(#post-period)) {
+  display: none !important;
+}
+
+/* Hide the old toolbar, not the new one */
+body.pg-v3-combined.av-cn-active
+#postgame-screen > .pg-review-toolbar {
+  display: none !important;
+}
+
+/* Allow tracking to use the freed vertical space */
+body.pg-v3-combined.av-cn-active
+#post-shot-section {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+@media (max-width: 800px) {
+  body.pg-v3-combined.av-cn-active #av-combined-nav {
+    grid-template-columns:
+      minmax(35px, .75fr)
+      minmax(70px, 1.7fr)
+      minmax(55px, .95fr)
+      minmax(46px, .85fr)
+      minmax(105px, 2.3fr) !important;
+  }
+}
+
+
+/* Remove the empty legacy toolbar in Combined Tracking */
+html body.pg-v3-combined.av-cn-active
+#postgame-screen > .pg-review-toolbar,
+html body.pg-v3-combined.av-cn-active
+#postgame-screen > .pg-v8-review-bar {
+  display: none !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+/* Keep the new toolbar visible */
+html body.pg-v3-combined.av-cn-active
+#av-combined-nav {
+  display: grid !important;
+}
+
+/* Allow tracking to occupy the freed space */
+html body.pg-v3-combined.av-cn-active
+#post-shot-section {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+}
+
+
+/* Combined Tracking — status message below toolbar */
+
+body.pg-v3-combined.av-cn-active #postgame-message {
+  margin: 2px 0 6px !important;
+  padding: 0 4px !important;
+  font-size: 11px;
+  line-height: 1.3;
+  flex: 0 0 auto;
+}
+
+
+/* Status message and page indicators on the same line */
+
+body.pg-v3-combined.av-cn-active #av-cn-status-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 2px 4px;
+  margin: 2px 0 4px;
+}
+
+body.pg-v3-combined.av-cn-active
+#av-cn-status-row #postgame-message {
+  flex: 1;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 11px;
+  line-height: 1.3;
+  min-width: 0;
+}
+
+body.pg-v3-combined.av-cn-active
+#av-cn-status-row #av-cn-page-indicator {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
