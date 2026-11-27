@@ -1,0 +1,29 @@
+/* Compact Film Room PBP editor. Scoped: does not change tracker buttons. */
+.av-pbp-line{display:flex;align-items:flex-start;gap:7px;min-width:0}
+.av-pbp-details{flex:1;min-width:0;overflow-wrap:anywhere;font-size:12px}
+.av-pbp-running-score{white-space:nowrap;font-size:12px;font-variant-numeric:tabular-nums;color:inherit}
+.av-pbp-handle{border:0;background:transparent;color:#64748b;cursor:grab;font-size:22px;padding:0 3px;touch-action:none}
+.av-pbp-more{position:relative;flex:none;z-index:2}.av-pbp-more summary{list-style:none;cursor:pointer;padding:2px 7px;font-size:19px}
+.av-pbp-more summary::-webkit-details-marker{display:none}
+.av-pbp-menu{position:absolute;right:0;top:100%;z-index:100;background:#fff;color:#14233b;border:1px solid #bcc8d8;border-radius:8px;box-shadow:0 6px 24px #0003;padding:4px;min-width:190px;max-height:240px;overflow:auto}
+.av-pbp-menu button{display:block;width:100%;text-align:left;border:0;background:transparent;border-radius:4px;padding:8px;font-size:12px;color:inherit;cursor:pointer}
+.av-pbp-menu button:hover{background:#e6eef9}
+#av-pbp-add{margin-left:auto;white-space:nowrap}
+#av-pbp-insert-dialog{border:1px solid #8da3bd;border-radius:12px;padding:16px;max-width:min(95vw,410px)}
+.av-pbp-form{display:grid;gap:10px}.av-pbp-form label{display:grid;gap:4px;font-size:12px}.av-pbp-form select{min-height:36px;padding:6px}
+.av-pbp-form footer{display:flex;justify-content:flex-end;gap:9px}.av-pbp-form footer button{min-height:36px}
+
+#av-ee-branch:not(:empty){display:flex;flex-wrap:wrap;gap:6px;padding:8px 0;border-top:1px solid #e2e8f0}
+#av-ee-branch strong{width:100%;font-size:12px}
+#av-ee-branch button{font-size:12px;padding:6px 8px}
+
+/* Update: row menu is opaque and above all other row controls. */
+#av-cn-play-list .av-cn-play {position:relative;z-index:0;}
+#av-cn-play-list .av-cn-play.av-pbp-menu-active {z-index:500;}
+#av-cn-play-list .av-pbp-more {z-index:2;}
+#av-cn-play-list .av-pbp-more[open] {z-index:501;}
+#av-cn-play-list .av-pbp-menu {display:none;background:#fff;opacity:1;z-index:502;isolation:isolate;box-shadow:0 10px 28px rgba(0,0,0,.28);}
+#av-cn-play-list .av-pbp-more[open] > .av-pbp-menu {display:block;}
+#av-cn-play-list .av-pbp-handle {margin-left:1px;flex:none;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;}
+#av-cn-play-list .av-pbp-moving {outline:2px dashed #3b82f6;outline-offset:-2px;}
+#av-cn-play-list .av-pbp-more summary {user-select:none;}

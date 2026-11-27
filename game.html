@@ -73,7 +73,7 @@
         </button>
 
         <button data-info-tab="unassigned" type="button">
-            Unassigned
+            Needs Review
             <span id="tab-unassigned-count">0</span>
         </button>
     </div>
@@ -130,7 +130,7 @@
         <div id="info-unassigned" class="info-tab-content" hidden>
 
             <div class="section-heading">
-                <h2>UNASSIGNED EVENTS</h2>
+                <h2>NEEDS REVIEW</h2>
                 <span class="count" id="unassigned-count">0</span>
             </div>
 
@@ -366,7 +366,7 @@
             <button id="end-quarter">END QUARTER</button>
             <button id="end-game" class="danger">END GAME</button>
           </div>
-          <p class="hint">After Q4, ending the quarter finishes the game unless the score is tied (overtime). Confirmations protect against accidental endings.</p>
+          <p class="hint">After Q4, a level score goes to overtime. Every completed game needs a winner. Confirmations protect against accidental endings.</p>
         </section>
         <section class="panel quick-track-panel" id="quick-track-panel" aria-label="Quick live tracking">
           <div class="quick-head"><h3>QUICK TRACK</h3><button type="button" id="quick-team-mode" aria-pressed="false">Team Mode</button><button type="button" id="quick-view-toggle">Court controls</button></div>
@@ -448,9 +448,10 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
-  <script src="script.js?v=assist-pbp-fix1"></script>
+  <script src="script.js?v=connected-1"></script>
   <script src="mobile-tracker.js?v=tipoff4"></script>
-  <script src="quick-track.js?v=collab1"></script>
+  <script src="apex-basketball-rules.js?v=connected-1"></script>
+  <script src="quick-track.js?v=connected-1"></script>
   <script src="tracking-layout.js?v=tipoff-dialog2"></script>
   <script src="collaboration.js?v=7"></script>
   <script src="independent-tracker.js?v=1"></script>

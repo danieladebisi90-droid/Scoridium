@@ -78,7 +78,7 @@ body{
     font-size: clamp(24px, 2.5vw, 36px);
     font-weight: 400;
     text-transform: uppercase;
-    color: white;
+    color: var(--team-secondary, #FFFFFF);
     margin: 0;
     white-space: nowrap;
 }
@@ -288,3 +288,12 @@ body{background:var(--team-primary)!important}
 #main-navigation .nav-links a.active::after{background:var(--team-secondary)}
 #team-news-ticker{background:var(--team-primary);color:var(--team-primary-ink)}
 #team-news-ticker .ticker-label{background:var(--team-secondary);color:var(--team-secondary-ink)}
+
+/* ApexVision brand-aligned team identity and evenly distributed navigation. */
+@media (min-width:701px){
+  #main-navigation .header-team{padding:0 12px;max-width:clamp(130px,20vw,320px);}
+  #main-navigation #shared-team-name{font-family:Inter,Arial,sans-serif!important;font-size:clamp(17px,2vw,27px)!important;font-weight:800!important;font-style:italic;letter-spacing:.012em;overflow:hidden;text-overflow:ellipsis;}
+  #main-navigation .nav-links{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:2px!important;flex:1 1 auto!important;}
+  #main-navigation .nav-links a{justify-content:center!important;text-align:center!important;padding:12px 4px!important;min-width:0;}
+  #main-navigation .nav-links a::after{left:22%!important;right:22%!important;width:auto!important;}
+}
