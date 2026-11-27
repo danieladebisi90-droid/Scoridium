@@ -2940,9 +2940,15 @@ document.querySelectorAll(".zone-preview[data-zone-side]").forEach(button => {
         openZonesModal();
     });
 });
-$('detail-content')?.addEventListener('click', event => {
+// The same per-game shot summary is rendered in both Game Stats and
+// Game Details. Delegate from document so re-rendered previews work in either.
+document.addEventListener('click', event => {
     const button=event.target.closest?.('.sc-game-zone-preview[data-game-zone-side]');
-    if(!button) return;
+    if(!button)return;
+    event.preventDefault();
+    const inGameSummary=!!button.closest('#game-summary-content');
+    const inGameDetails=!!button.closest('#detail-content');
+    if(!inGameSummary&&!inGameDetails)return;
     selectedAnalysisGame=selectedGame();
     if(!selectedAnalysisGame)return;
     selectedAnalysisSide=button.dataset.gameZoneSide;
