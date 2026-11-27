@@ -689,3 +689,44 @@ html body.pg-v3-combined #post-quick-root .qv-tracked .qv-action-surface > .qv-g
   margin:0!important;
   box-sizing:border-box!important;
 }
+
+
+/* Final postgame control polish: contained FT card and readable roster selection.
+   Limited to Combined Tracking; no changes to stored statistics or court geometry. */
+html body.pg-v3-combined #post-quick-root .qv-opponent .qv-opp-buttons:has(> .qv-ft-list) {
+  justify-content:center!important;
+  padding:8px 10px!important;
+}
+html body.pg-v3-combined #post-quick-root .qv-ft-list > .qv-ft-line.qv-current {
+  border:1px solid #bfd0e6!important;
+  background:#f3f7fc!important;
+  border-radius:10px!important;
+  padding:12px!important;
+  gap:9px!important;
+  box-shadow:none!important;
+}
+html body.pg-v3-combined #post-quick-root .qv-ft-heading strong {
+  min-width:0!important;
+  font-size:13px!important;
+  line-height:1.3!important;
+}
+html body.pg-v3-combined #post-quick-root .qv-ft-line .qv-ft-actions {
+  gap:8px!important;
+}
+html body.pg-v3-combined #post-quick-root .qv-ft-line .qv-ft-actions > .qv-button {
+  border-radius:8px!important;
+  font-size:13px!important;
+  letter-spacing:.01em!important;
+}
+html body.pg-v3-combined #post-quick-root .qv-tracked .qv-action-surface > .qv-grid {
+  grid-auto-rows:minmax(44px,auto)!important;
+  row-gap:8px!important;
+  column-gap:8px!important;
+  padding:4px 1px!important;
+}
+html body.pg-v3-combined #post-quick-root .qv-tracked .qv-action-surface > .qv-grid > .qv-tile {
+  min-height:44px!important;
+  border-radius:8px!important;
+  line-height:1.2!important;
+  font-size:clamp(12px,1.1vw,15px)!important;
+}
