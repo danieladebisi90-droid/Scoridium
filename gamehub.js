@@ -252,7 +252,16 @@ async function loadGameHubGames() {
         return;
     }
     gameHubGames = games;
-    displayPreviousGame(games);
+    const selectedDateKey = selectedGameDate
+        ? [selectedGameDate.getFullYear(),
+            String(selectedGameDate.getMonth() + 1).padStart(2, "0"),
+            String(selectedGameDate.getDate()).padStart(2, "0")].join("-")
+        : null;
+    const selectedCompletedGames = selectedDateKey
+        ? games.filter(game => game.status === "completed" &&
+            String(game.date).slice(0, 10) === selectedDateKey)
+        : [];
+    displayPreviousGame(selectedCompletedGames.length ? selectedCompletedGames : games);
     displayNextGame(games);
     renderGameCalendar();
     console.log("Game Hub games:", games);
@@ -1338,6 +1347,10 @@ async function createScheduledGame() {
 
         resetScheduleEditor();
 
+        if (gamePayload.status === "completed") {
+            selectedGameDate = new Date(date + "T12:00:00");
+            displayedMonth = new Date(selectedGameDate.getFullYear(), selectedGameDate.getMonth(), 1);
+        }
         await loadGameHubGames();
 
         message.textContent =
@@ -1436,6 +1449,10 @@ async function updateScheduledGame() {
         }
 
         resetScheduleEditor();
+        if (changes.status === "completed") {
+            selectedGameDate = new Date(changes.date + "T12:00:00");
+            displayedMonth = new Date(selectedGameDate.getFullYear(), selectedGameDate.getMonth(), 1);
+        }
         await loadGameHubGames();
 
         message.textContent = changes.status === "completed"
