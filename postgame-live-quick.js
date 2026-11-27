@@ -762,8 +762,12 @@ const trackedLeft = (displayQuarter <= 2) !==
       if(foul.type==='technical')content+=`<div class="qv-line"><strong>Technical foul</strong><div>1 FT · ${who?'Personal foul credited to selected player':'Team technical (no player PF)'}</div></div>`;
       content += `</div>`;
     }else if(mode==='ft'){
-      const attempts=Array.from({length:ft.total-ft.done},(_,i)=>`<div class="qv-ft-line ${i===0?'qv-current':''}"><strong>FT ${ft.done+i+1} / ${ft.total}</strong><div>${btn('ftMake','MAKE +1','qv-made',i?'disabled':'')}${btn('ftMiss','MISS','qv-miss',i?'disabled':'')}</div></div>`).join('');
-      content=`<div class="qv-ft-list">${attempts}</div>`;
+      // Display only the active attempt. The next FT appears automatically
+      // after this attempt is saved; no misleading disabled duplicate row.
+      content=`<div class="qv-ft-list"><div class="qv-ft-line qv-current">
+        <div class="qv-ft-heading"><strong>Free throw ${ft.done+1} of ${ft.total}</strong><span>${ft.total-ft.done} remaining</span></div>
+        <div class="qv-ft-actions">${btn('ftMake','MAKE +1','qv-made')}${btn('ftMiss','MISS','qv-miss')}</div>
+      </div></div>`;
     }else if(mode==='ftRebound')content=choice([
       ['reboundOff','OFFENSIVE REBOUND'],['reboundDef','DEFENSIVE REBOUND'],
       ['reboundOobUs','OUT OF BOUNDS — TRACKED BALL'],['reboundOobOpp','OUT OF BOUNDS — OPPONENT BALL'],
