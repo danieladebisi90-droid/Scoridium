@@ -329,6 +329,14 @@
         type="date"
         required>
 
+    <!-- Shown only when editing or creating a basketball game, across all viewport sizes. -->
+    <div id="schedule-already-played-field" hidden>
+        <label for="schedule-already-played" class="schedule-completed-toggle" style="display:flex;align-items:center;gap:10px;margin:12px 0;">
+            <input type="checkbox" id="schedule-already-played" style="width:18px;height:18px;flex:none;">
+            <span>Already Played / Completed</span>
+        </label>
+    </div>
+
     <!-- START AND END TIME -->
     <div class="schedule-time-row">
         <div>
