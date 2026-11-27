@@ -254,14 +254,14 @@ async function init(){
  game=response.data;
  try{
   const cached=sessionStorage.getItem('scoridium:team-preview:'+teamId);
-  if(cached){const theme=JSON.parse(cached);game.team_name=[theme.school_name||theme.club_name,theme.mascot].filter(Boolean).join(' ')||'Tracked team';
+  if(cached){const theme=JSON.parse(cached);game.team_name=String(theme.mascot||theme.club_name||theme.school_name||'Tracked team').trim();
     applyApexTeamPalette(theme.primary_color,theme.secondary_color);
   }
  }catch(error){console.warn('Stored team theme unavailable',error);}
  try{
-  const teamRes=await supabaseClient.from('teams').select('name,primary_color,secondary_color').eq('id',teamId).maybeSingle();
+  const teamRes=await supabaseClient.from('teams').select('mascot,club_name,school_name,primary_color,secondary_color').eq('id',teamId).maybeSingle();
   if(teamRes.data){
-   game.team_name=teamRes.data.name||game.team_name||'Tracked Team';
+   game.team_name=String(teamRes.data.mascot||teamRes.data.club_name||teamRes.data.school_name||game.team_name||'Tracked Team').trim();
    applyApexTeamPalette(teamRes.data.primary_color,teamRes.data.secondary_color);
   }
  }catch(error){console.warn('Team theme unavailable',error);}
