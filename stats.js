@@ -1014,16 +1014,27 @@ function scoreHTML(g) {
   return `<div class="score-side"><div class="team-badge">${escapeHTML(abbr(g.team))}</div><strong>${escapeHTML(g.team)}</strong></div><div><div class="score">${g.ourScore} – ${g.opponentScore}</div><div class="score-label">FINAL · ${escapeHTML(window.scoridiumFullDate?.(g.date)||g.date)}</div></div><div class="score-side"><div class="team-badge">${escapeHTML(abbr(g.opponent))}</div><strong>${escapeHTML(g.opponent)}</strong></div>`;
 }
 function boxHTML(g) {
-  if(!g)return '<div class="empty">No game</div>';
-  return `<div class="table-scroll"><table><thead><tr><th>#</th><th>PLAYER</th><th>MIN</th><th>PTS</th><th>FG</th><th>3PT</th><th>FT</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th><th>PF</th><th>EFF</th></tr></thead><tbody>${g.players.map(p=>`<tr><td>${escapeHTML(p.number)}</td><td>${escapeHTML(nameOf(p))}</td><td>${p.min}</td><td>${p.pts}</td><td>${p.fgm}-${p.fga}</td><td>${p.threeMade}-${p.threeAtt}</td><td>${p.ftm}-${p.fta}</td><td>${p.reb}</td><td>${p.ast}</td><td>${p.stl}</td><td>${p.blk}</td><td>${p.tov}</td><td>${p.pf}</td><td>${playerEFF(p)}</td></tr>`).join('')||'<tr><td colspan="14">No player statistics saved</td></tr>'}</tbody></table></div>`;
+ if(!g)return '<div class="empty">No game selected</div>';
+ const opponent=apexCountSide(g.events,'opponent');
+ const rows=g.players.map(p=>`<tr><td>${escapeHTML(p.number)}</td><td>${escapeHTML(nameOf(p))}</td><td>${p.min}</td><td>${p.pts}</td><td>${p.fgm}-${p.fga}</td><td>${p.threeMade}-${p.threeAtt}</td><td>${p.ftm}-${p.fta}</td><td>${p.reb}</td><td>${p.ast}</td><td>${p.stl}</td><td>${p.blk}</td><td>${p.tov}</td><td>${p.pf}</td><td>${playerEFF(p)}</td></tr>`).join('');
+ const oppRow=opponent.observed?`<tr><td colspan="2">${escapeHTML(g.opponent)} — team totals</td><td>—</td><td>${opponent.pts}</td><td>${opponent.fgm}-${opponent.fga}</td><td>${opponent.threeMade}-${opponent.threeAtt}</td><td>${opponent.ftm}-${opponent.fta}</td><td>${opponent.reb}</td><td>${opponent.ast}</td><td>${opponent.stl}</td><td>${opponent.blk}</td><td>${opponent.tov}</td><td>${opponent.pf}</td><td>—</td></tr>`:`<tr><td colspan="14">${escapeHTML(g.opponent)} — no opponent events recorded</td></tr>`;
+ return `<div class="table-scroll"><table><thead><tr><th>#</th><th>PLAYER / TEAM</th><th>MIN</th><th>PTS</th><th>FG</th><th>3PT</th><th>FT</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th><th>PF</th><th>EFF</th></tr></thead><tbody>${rows||'<tr><td colspan="14">No tracked-team player statistics recorded</td></tr>'}${oppRow}</tbody></table></div>`;
 }
 function shootingHTML(g) {
-  if(!g)return '';
-  const t=teamTotals([g]);
-  return `<div class="ring-grid">${[['FG%',t.fgm,t.fga,'#e9ac47'],['3PT%',t.threeMade,t.threeAtt,'#2678e8'],['FT%',t.ftm,t.fta,'#2aa452']].map(([k,m,a,color])=>`<div class="ring-item"><div class="ring" style="background:conic-gradient(${color} ${pct(m,a)}%,#e5eaf0 ${pct(m,a)}%)"><strong>${fmt(pct(m,a))}%</strong></div><b>${k}</b><small>${m}/${a}</small></div>`).join('')}</div>`;
+ if(!g)return '';
+ const us=apexCountSide(g.events,'us'),op=apexCountSide(g.events,'opponent');
+ return `<section class="sc-game-court-whole"><h3>Full Game · Shot Locations</h3><div class="sc-game-court-labels"><span>${escapeHTML(g.team)} · ${us.fgm}/${us.fga} FG</span><span>${escapeHTML(g.opponent)} · ${op.observed?op.fgm+'/'+op.fga+' FG':'No recorded shots'}</span></div>${courtSVG(g.shots||[],'full')}<div class="shot-legend"><span class="made-marker">●</span> Made <span class="miss-marker">✕</span> Missed</div></section>`;
 }
-function playsHTML(g){return `<ul class="play-list">${(g?.plays||[]).map(p=>`<li><strong>${escapeHTML(p.period??'')}</strong> ${escapeHTML(p.description??'')}</li>`).join('')||'<li>No play-by-play recorded</li>'}</ul>`;}
-function compareHTML(g){if(!g)return '';const t=teamTotals([g]);return [['Points',g.ourScore,g.opponentScore],['Rebounds',t.reb,0],['Assists',t.ast,0],['Steals',t.stl,0],['Blocks',t.blk,0]].map(([label,us,opp],i)=>`<div class="comparison"><div class="values"><strong>${label}: ${us}</strong><span>${i===0?opp:'Opponent not tracked'}</span></div><div class="compare-track"><div class="compare-fill" style="width:${i===0?pct(us,us+opp):100}%"></div></div></div>`).join('');}
+function playsHTML(g){
+ if(!g)return '<p>No game selected</p>';
+ return `<div class="sc-readonly-pbp" aria-label="Read-only game play-by-play">${(g.plays||[]).map(p=>`<article class="sc-pbp-event"><div><strong>${escapeHTML(p.period)}</strong> <b>${escapeHTML(p.team)}</b> — ${escapeHTML(p.action)}</div>${p.linked?`<div class="sc-pbp-link">↳ ${escapeHTML(p.linked)}</div>`:''}</article>`).join('')||'<p>No recorded plays</p>'}</div>`;
+}
+function compareHTML(g){
+ if(!g)return '';
+ const us=apexCountSide(g.events,'us'),op=apexCountSide(g.events,'opponent');
+ const rows=[['Points',g.ourScore,g.opponentScore,true],['Rebounds',us.reb,op.reb,op.observed],['Offensive rebounds',us.oreb,op.oreb,op.observed],['Defensive rebounds',us.dreb,op.dreb,op.observed],['Assists',us.ast,op.ast,op.observed],['Steals',us.stl,op.stl,op.observed],['Blocks',us.blk,op.blk,op.observed],['Turnovers',us.tov,op.tov,op.observed],['Fouls',us.pf,op.pf,op.observed],['Field goals made',us.fgm,op.fgm,op.observed],['Free throws made',us.ftm,op.ftm,op.observed]];
+ return `<div class="sc-comparison-label"><strong>${escapeHTML(g.team)}</strong><strong>${escapeHTML(g.opponent)}</strong></div>`+rows.map(([label,a,b,known])=>{const left=Math.max(0,Number(a)||0),right=known?Math.max(0,Number(b)||0):0;const width=known?(left+right?left/(left+right)*100:50):50;return `<div class="comparison sc-full-comparison"><div class="values"><strong>${escapeHTML(label)}: ${left}</strong><span>${known?right:'Not recorded'}</span></div><div class="compare-track"><div class="compare-fill" style="width:${width}%"></div></div></div>`;}).join('');
+}
 function summaryHTML(g,mode){if(mode==='shooting')return shootingHTML(g);if(mode==='plays')return playsHTML(g);if(mode==='compare')return compareHTML(g);return boxHTML(g);}
 function renderGames(){
   const games=filteredGames().slice().sort((a,b)=>b.date.localeCompare(a.date));
