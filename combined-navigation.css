@@ -547,3 +547,53 @@ body.pg-v3-combined #post-quick-root .qv-opponent .qv-ft-line .qv-button {
   white-space:normal!important;
   box-sizing:border-box!important;
 }
+
+/* Single active FT: full-width, balanced buttons in either team's panel. */
+body.pg-v3-combined #post-quick-root .qv-ft-list {
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+}
+body.pg-v3-combined #post-quick-root .qv-ft-line.qv-current {
+  display:flex!important;
+  flex-direction:column!important;
+  gap:10px!important;
+  padding:10px!important;
+  border:1px solid #b8cee9!important;
+  border-radius:10px!important;
+  background:#f5f8fd!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
+body.pg-v3-combined #post-quick-root .qv-ft-heading {
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  flex-wrap:wrap!important;
+  gap:4px 10px!important;
+  width:100%!important;
+  font-size:13px!important;
+  color:#173965!important;
+}
+body.pg-v3-combined #post-quick-root .qv-ft-heading span {
+  font-size:11px!important;
+  font-weight:600!important;
+  color:#657c9a!important;
+}
+body.pg-v3-combined #post-quick-root .qv-ft-actions {
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  width:100%!important;
+  min-width:0!important;
+  gap:10px!important;
+}
+body.pg-v3-combined #post-quick-root .qv-ft-actions .qv-button {
+  width:100%!important;
+  min-width:0!important;
+  min-height:52px!important;
+  border-radius:9px!important;
+  font-size:14px!important;
+  font-weight:800!important;
+  box-sizing:border-box!important;
+}
