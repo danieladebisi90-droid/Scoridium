@@ -87,9 +87,10 @@ tracker.before(pages);
       const made = e.made === true;
 
       if (e.type === "shot") {
-        s.FGA++;
-
-        if (Number(e.points) === 3) s["3PA"]++;
+        if (!e.non_fga) {
+          s.FGA++;
+          if (Number(e.points) === 3) s["3PA"]++;
+        }
 
         if (made) {
           s.FGM++;

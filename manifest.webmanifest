@@ -6,8 +6,8 @@
   "start_url": "./myTeams.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#10233F",
-  "theme_color": "#10233F",
+  "background_color": "#0b0d12",
+  "theme_color": "#0b0d12",
   "orientation": "any",
   "icons": [
     {

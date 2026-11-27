@@ -116,3 +116,4 @@ html.focus-tracker #quick-track-root{flex:1;min-height:0;display:flex;overflow:h
 
 /* More than 12 players remain accessible within the same fixed-height panel. */
 .qv-grid{grid-auto-rows:minmax(42px,1fr);overflow-y:auto;scrollbar-width:thin}
+

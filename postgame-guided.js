@@ -262,7 +262,14 @@ function show(){
     return;
   }
 
-  const trackedLeft=(Number(period())<=2)!==reversed;
+  
+const selectedView = document.getElementById('av-cn-shot-filter')?.value;
+const displayQuarter = selectedView && selectedView !== 'all'
+  ? Number(selectedView)
+  : Number(period());
+
+const trackedLeft = (displayQuarter <= 2) !== reversed;
+
   const left=opponent?!trackedLeft:trackedLeft;
 
   court.setAttribute('viewBox',(left?'10':'430')+' 10 420 450');
@@ -283,7 +290,14 @@ function show(){
   const title=team==='us'?(game?.team_name||'Tracked Team'):(game?.opponent||'Opponent');
   const heading=document.getElementById('pg-court-team-label');
   if(heading)heading.textContent=courtView==='half'?title+' OFFENSE':'FULL COURT';
-  const trackedLeft=(Number(period())<=2)!==reversed;
+  
+const selectedView = document.getElementById('av-cn-shot-filter')?.value;
+const displayQuarter = selectedView && selectedView !== 'all'
+  ? Number(selectedView)
+  : Number(period());
+
+const trackedLeft = (displayQuarter <= 2) !== reversed;
+
   const labels=[document.getElementById('left-basket-label'),document.getElementById('right-basket-label')];
   for(let i=0;i<2;i++)if(labels[i]){
    const name=(i===0?trackedLeft:!trackedLeft)?(game?.team_name||'Tracked Team'):(game?.opponent||'Opponent');
@@ -313,7 +327,11 @@ function show(){
  $('pg-court-half')?.addEventListener('click',()=>setCourtView('half'));
  media.addEventListener('change',()=>{if(media.matches&&courtView==='full'){courtView='half';$('pg-court-full')?.setAttribute('aria-pressed','false');$('pg-court-half')?.setAttribute('aria-pressed','true');}show();});
  tablet.addEventListener('change',show);
- window.addEventListener('apex:review-direction-changed',ev=>{reversed=!!ev.detail?.reversed;show();highlightGuidedHalf(sequence[index]);});
+ 
+window.addEventListener('apex:shot-view-change', () => {
+  show();
+});
+
  window.addEventListener('apex:guided-shot-selected',ev=>{if(ev.detail?.guided&&!insertActive){opponent=ev.detail.team==='opponent';show();}});
  window.addEventListener('apex:insert-shot-focus',ev=>{opponent=ev.detail.team==='opponent';show();});
  $('post-period')?.addEventListener('change',()=>{opponent=false;show();});

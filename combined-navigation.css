@@ -342,3 +342,167 @@ body.pg-v3-combined.av-cn-active
   margin: 0 !important;
   padding: 0 !important;
 }
+
+/* Game-week: dedicated, opt-in court marker editing control. */
+body.pg-v3-combined.av-cn-active #av-combined-nav {
+  grid-template-columns: minmax(50px,.8fr) minmax(105px,2fr) minmax(65px,1fr) minmax(60px,.9fr) minmax(65px,1fr) minmax(180px,2.4fr) !important;
+}
+body.pg-v3-combined.av-cn-active #av-combined-nav #av-cn-edit-mode {
+  min-width:0 !important; width:100% !important;
+  border:1px solid #b9cbe1; border-radius:7px; padding:5px;
+  background:#f1f6fc; color:#143d76; font-weight:750;
+  cursor:pointer; white-space:normal;
+}
+body.pg-v3-combined.av-cn-active #av-combined-nav #av-cn-edit-mode[aria-pressed="true"] {
+  color:white; background:#103f80; border-color:#103f80;
+}
+@media (max-width:800px) {
+ body.pg-v3-combined.av-cn-active #av-combined-nav {
+   grid-template-columns:minmax(30px,.8fr) minmax(60px,1.6fr) minmax(40px,1fr) minmax(45px,.9fr) minmax(40px,.8fr) minmax(102px,2.2fr) !important;
+ }
+ body.pg-v3-combined.av-cn-active #av-combined-nav #av-cn-edit-mode { font-size:10px; padding:3px; }
+}
+
+/* Gameweek: independent quarter viewing + opponent team box-score */
+.av-
+
+/* ==========================================
+   APEXVISION — BOX SCORE VISIBILITY FIX
+   ========================================== */
+
+/* Make the entire Box Score card scroll */
+html body.pg-v3-combined.av-cn-active #av-cn-review #av-cn-box {
+  display: block !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain;
+}
+
+/* Prevent the Falcons table from collapsing */
+html body.pg-v3-combined.av-cn-active #av-cn-review #av-cn-box .av-cn-scroll {
+  display: block !important;
+  flex: none !important;
+  width: 100% !important;
+  min-height: auto !important;
+  max-height: none !important;
+  height: auto !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+}
+
+/* Preserve full tracked-team table */
+html body.pg-v3-combined.av-cn-active #av-cn-review #av-cn-box-table {
+  width: max-content !important;
+  min-width: 100% !important;
+  border-collapse: collapse;
+}
+
+/* Separate opponent section cleanly */
+html body.pg-v3-combined.av-cn-active #av-cn-review #av-cn-box .av-cn-opponent-heading {
+  margin-top: 18px !important;
+  padding-top: 14px !important;
+  border-top: 1px solid #dce5f0;
+}
+
+/* Keep opponent statistics within card width */
+html body.pg-v3-combined.av-cn-active #av-cn-review #av-cn-box #av-cn-opponent-table {
+  width: 100%;
+}
+
+
+/* Hide the old quarter dropdown in Combined Tracking */
+body.pg-v3-combined.av-cn-active
+#av-combined-nav .av-cn-quarter > label:not(.av-cn-shot-view) {
+  display: none !important;
+}
+
+/* Let Show Shots use the available space */
+body.pg-v3-combined.av-cn-active
+#av-combined-nav .av-cn-shot-view {
+  display: flex !important;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+}
+
+body.pg-v3-combined.av-cn-active
+#av-combined-nav #av-cn-shot-filter {
+  width: 100%;
+  min-width: 0;
+}
+
+
+/* ========================================
+   COMBINED TRACKING — REGULAR OPPONENT TABLE
+   ======================================== */
+
+/* Allow both team tables to remain visible */
+html body.pg-v3-combined.av-cn-active
+#av-cn-review #av-cn-box {
+  display: block !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* Each table gets its natural height */
+html body.pg-v3-combined.av-cn-active
+#av-cn-review #av-cn-box .av-cn-scroll {
+  display: block !important;
+  flex: none !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+}
+
+/* Standard table formatting for opponent */
+html body.pg-v3-combined.av-cn-active
+#av-cn-review #av-cn-opponent-table,
+html body.pg-v3-combined.av-cn-active
+#av-cn-review #av-cn-opponent-table table {
+  display: table !important;
+  width: 100% !important;
+  min-width: 650px !important;
+  border-collapse: collapse !important;
+  table-layout: auto !important;
+}
+
+/* Match Falcons Box Score appearance */
+#av-cn-opponent-table th,
+#av-cn-opponent-table td {
+  padding: 9px 7px !important;
+  border-bottom: 1px solid #e0e8f1 !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  font-size: 12px !important;
+  background: #fff !important;
+}
+
+#av-cn-opponent-table th {
+  font-weight: 700 !important;
+  color: #60758f !important;
+}
+
+/* Separate the two tables */
+#av-cn-review .av-cn-opponent-heading {
+  margin-top: 18px !important;
+  padding-top: 12px !important;
+  border-top: 1px solid #dce5f0 !important;
+}
+
+/* Game-day event correction controls */
+.av-cn-play-edit-actions{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.av-cn-play-edit{font-size:11px!important;padding:5px 8px!important;min-height:26px!important;border:1px solid #7f9bbb!important;border-radius:6px!important;background:#ebf3ff!important;color:#16426d!important;cursor:pointer}
+#av-event-editor{border:1px solid #b5c8e0;border-radius:12px;padding:0;width:min(470px,95vw);max-height:90vh;color:#143b70;background:#fff}
+#av-event-editor::backdrop{background:#03142caa}
+.av-event-editor-inner{padding:16px;display:flex;flex-direction:column;gap:10px;max-height:85vh;overflow:auto}
+.av-event-editor-inner label{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.av-event-editor-inner select{width:60%;padding:8px}
+.av-event-editor-inner footer{display:flex;justify-content:space-between;gap:8px}
+.av-event-editor-inner footer button{padding:9px 13px;cursor:pointer}
+#av-edit-links{border:1px solid #d1dcec;border-radius:8px;padding:9px;display:flex;flex-direction:column;gap:7px;font-size:12px}
+#av-edit-links button{font-size:12px;cursor:pointer}

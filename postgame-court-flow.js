@@ -13,11 +13,28 @@ let guidedTarget=null,insertedShot=null;
 let teamName='Tracked Team';
 const opponentName=()=>api.getGame()?.opponent||'Opponent';
 const period=()=>api.getPeriod();
+
+const viewPeriod = () => {
+  const selected = document.getElementById('av-cn-shot-filter')?.value;
+
+  if (selected && selected !== 'all') {
+    return Number(selected);
+  }
+
+  return Number(api.getPeriod());
+};
+
 const complete=()=>step==='idle';
-function basketSide(team){
- const trackedLeft=(period()<=2)!==directionOverride;
- return team==='us'?(trackedLeft?'left':'right'):(trackedLeft?'right':'left');
+
+function basketSide(team) {
+  const activeQuarter = viewPeriod();
+  const trackedLeft = (activeQuarter <= 2) !== directionOverride;
+
+  return team === 'us'
+    ? (trackedLeft ? 'left' : 'right')
+    : (trackedLeft ? 'right' : 'left');
 }
+
 function teamAt(x){return x<430?(basketSide('us')==='left'?'us':'opponent'):(basketSide('us')==='right'?'us':'opponent');}
 function courtPoint(ev){
  const matrix=court?.getScreenCTM();if(!matrix)return null;
@@ -80,7 +97,13 @@ function begin(location,made){
  if(shotMode&&!insertedShot&&document.body.classList.contains('pg-guided-on')&&!guidedTarget){api.notify('This recorded shot is already located. Choose Next or another pending shot.');return;}
  if(shotMode&&!complete()){api.notify('Finish or cancel the current shot before selecting another location.');return;}
  const team=teamAt(location.x),value=api.shotValue(location.x,location.y);
- if(combined&&window.apexPostgameQuick?.linkIntent())made=window.apexPostgameQuick.linkIntent()==='ast';
+ if(combined&&window.apexPostgameQuick?.linkIntent()){
+  const intent=window.apexPostgameQuick.linkIntent();
+  // Only AST/BLK/REB have a fixed shot result. A shooting foul uses the
+  // actual single-tap MADE / double-tap MISSED gesture.
+  if(intent==='ast')made=true;
+  else if(intent==='blk'||intent==='reb')made=false;
+ }
  if(shotMode&&insertedShot){
   if(team!==insertedShot.team||value!==insertedShot.points){api.notify('Choose the '+insertedShot.points+'PT area on the selected team’s basket.');return;}
   shot={position:location,made:insertedShot.made,points:value,team,inserted:true};
@@ -274,6 +297,7 @@ window.apexCourtReview={
  reset:()=>{guidedTarget=null;insertedShot=null;clear();document.body.classList.remove('pg-guided-on');}
 };
 $('post-period')?.addEventListener('change',()=>{periodStamp++;guidedTarget=null;insertedShot=null;document.body.classList.remove('pg-guided-on');clear();updateScoreboard();});
+window.addEventListener('apex:shot-view-change',updateScoreboard);
 window.addEventListener('apex:postgame-events-updated',updateScoreboard);
 window.addEventListener('focus',()=>void refreshScoreboard());
 setInterval(()=>{if(!document.hidden)void refreshScoreboard();},7000);

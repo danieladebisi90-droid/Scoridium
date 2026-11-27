@@ -40,6 +40,7 @@
 <link rel="stylesheet" href="revision44.css?v=2">
 <link rel="stylesheet" href="phase2-fixes.css?v=1">
 <script src="sc-date-display.js" defer></script>
+<link rel="stylesheet" href="stats-redesign.css?v=1">
 </head>
 <body>
   <div id="shared-header"><header id="app-header"><nav id="main-navigation" aria-label="Main navigation">
@@ -103,6 +104,37 @@
                 </div>
 
             </article>
+
+            <!-- OFFENCE & DEFENCE -->
+            <article class="panel">
+                <h2>OFFENCE & DEFENCE ZONES</h2>
+
+                <div class="zone-comparison">
+    <div class="zone-side">
+        <button type="button"
+        class="zone-preview"
+        data-zone-side="offence"
+        aria-label="Expand offensive shooting zones"
+        aria-haspopup="dialog"
+        aria-controls="shooting-zones-modal">
+            <div id="offensive-zone-court"></div>
+        </button>
+    </div>
+
+    <div class="zone-side">
+        <button type="button"
+        class="zone-preview"
+        data-zone-side="defence"
+        aria-label="Expand defensive shooting zones"
+        aria-haspopup="dialog"
+        aria-controls="shooting-zones-modal">
+            <div id="defensive-zone-court"></div>
+        </button>
+    </div>
+
+</div>
+            </article>
+
         </div>
 
         <!-- RIGHT COLUMN -->
@@ -145,35 +177,6 @@
             <!-- Linked assists only: no guessed passer/scorer relationships. -->
             <article class="panel"><h2>ASSIST CONNECTIONS</h2><div id="assist-connections" class="apex-assist-connections"></div></article>
 
-            <!-- OFFENCE & DEFENCE -->
-            <article class="panel">
-                <h2>OFFENCE & DEFENCE ZONES</h2>
-
-                <div class="zone-comparison">
-    <div class="zone-side">
-        <button type="button"
-        class="zone-preview"
-        data-zone-side="offence"
-        aria-label="Expand offensive shooting zones"
-        aria-haspopup="dialog"
-        aria-controls="shooting-zones-modal">
-            <div id="offensive-zone-court"></div>
-        </button>
-    </div>
-
-    <div class="zone-side">
-        <button type="button"
-        class="zone-preview"
-        data-zone-side="defence"
-        aria-label="Expand defensive shooting zones"
-        aria-haspopup="dialog"
-        aria-controls="shooting-zones-modal">
-            <div id="defensive-zone-court"></div>
-        </button>
-    </div>
-
-</div>
-            </article>
 
         </div>
     </div>
@@ -200,8 +203,8 @@
 
     <section id="games-view" class="view" aria-label="Game statistics">
       <div class="games-layout">
-        <article class="panel"><div class="panel-heading"><h2>SEASON GAMES</h2><span class="muted" id="game-count"></span></div><div class="table-scroll"><table><thead><tr><th>DATE</th><th>OPPONENT</th><th>LOCATION</th><th>RESULT</th><th>SCORE</th></tr></thead><tbody id="games-body"></tbody></table></div></article>
-        <article class="panel"><div class="panel-heading"><h2>GAME SUMMARY</h2><span class="muted" id="selected-game-date"></span></div><div id="game-score" class="game-score"></div><div class="mini-tabs" id="game-summary-tabs"><button data-summary="box" class="active">Box Score</button><button data-summary="shooting">Shooting</button><button data-summary="plays">Play-by-Play</button><button data-summary="compare">Team Comparison</button></div><div id="game-summary-content"></div><button type="button" id="open-game-details" class="text-button">VIEW FULL GAME DETAILS →</button></article>
+        <article class="panel sc-games-combined"><div class="panel-heading"><h2>SEASON GAMES</h2><span class="muted" id="game-count"></span></div><div class="table-scroll"><table><thead><tr><th>DATE</th><th>OPPONENT</th><th>LOCATION</th><th>RESULT</th><th>SCORE</th></tr></thead><tbody id="games-body"></tbody></table></div>
+        <div id="game-summary-expand" class="sc-game-summary-expand" hidden><div class="panel-heading"><h2>GAME SUMMARY</h2><button type="button" id="close-game-summary" class="sc-summary-close" aria-label="Close game summary">CLOSE</button><span class="muted" id="selected-game-date"></span></div><div id="game-score" class="game-score"></div><div class="mini-tabs" id="game-summary-tabs"><button data-summary="box" class="active">Box Score</button><button data-summary="shooting">Shooting</button><button data-summary="plays">Play-by-Play</button><button data-summary="compare">Team Comparison</button></div><div id="game-summary-content"></div><button type="button" id="open-game-details" class="text-button">VIEW FULL GAME DETAILS →</button></div></article>
       </div>
     </section>
 

@@ -108,7 +108,23 @@
     const actions = $('post-next-quarter')?.closest('.pg-floating-steps');
 
     if (quarter) move(quarter, toolbar);
-    if (modes) move(modes, toolbar);
+    
+if (modes) {
+  const combinedModesSlot = document.querySelector(
+    '#av-combined-nav .av-cn-modes'
+  );
+
+  if (combinedModesSlot) {
+    // Keep court controls in the visible Combined toolbar.
+    if (modes.parentElement !== combinedModesSlot) {
+      combinedModesSlot.appendChild(modes);
+    }
+  } else if (!document.body.classList.contains('av-cn-active')) {
+    // Original layout fallback.
+    move(modes, toolbar);
+  }
+}
+
     
 // Let Combined Navigation own the Team Mode button.
 
@@ -131,13 +147,47 @@ if (teamToolbarButton) {
 
     // Some older mobile scripts may have moved individual review buttons.
     // Return them to their ORIGINAL group, not to More.
-    if (tools) {
-      for (const id of ['post-switch-direction', 'post-quick-review', 'post-shot-links-open', 'pg-unmatched-open']) {
-        const button = $(id);
-        if (button && button.parentElement !== tools) move(button, tools);
+    
+if (tools) {
+  const combinedMorePanel = document.getElementById(
+    'av-cn-more-panel'
+  );
+
+  if (
+    document.body.classList.contains('av-cn-active') &&
+    combinedMorePanel
+  ) {
+    // Keep More actions in the visible Combined Tracking popup.
+    for (const id of [
+      'post-switch-direction',
+      'post-shot-links-open',
+      'pg-unmatched-open'
+    ]) {
+      const button = $(id);
+
+      if (button && button.parentElement !== combinedMorePanel) {
+        combinedMorePanel.appendChild(button);
       }
-      move(tools, toolbar);
     }
+  } else {
+    // Preserve original behavior outside Combined Navigation.
+    for (const id of [
+      'post-switch-direction',
+      'post-quick-review',
+      'post-shot-links-open',
+      'pg-unmatched-open'
+    ]) {
+      const button = $(id);
+
+      if (button && button.parentElement !== tools) {
+        move(button, tools);
+      }
+    }
+
+    move(tools, toolbar);
+  }
+}
+
     if (actions) move(actions, toolbar);
 
     // No More or Free/Guided popup in the wide Combined toolbar.

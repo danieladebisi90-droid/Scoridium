@@ -1,15 +1,15 @@
-/* Scoridium PWA — intentionally conservative.
+/* ApexVision PWA — intentionally conservative.
    Only the offline fallback and icons are cached. Game data, HTML, CSS,
    JS, auth and Supabase responses are never cached by this service worker. */
-const CACHE = 'scoridium-pwa-shell-v46';
-const STATIC = 'scoridium-pwa-static-v46';
+const CACHE = 'apexvision-pwa-shell-v47';
+const STATIC = 'apexvision-pwa-static-v47';
 const SHELL = ['./offline.html', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 self.addEventListener('install', event => {
   event.waitUntil(Promise.all([caches.open(CACHE).then(cache => cache.addAll(SHELL)),caches.open(STATIC)]));
 });
 self.addEventListener('activate', event => {
   event.waitUntil(Promise.all([
-    caches.keys().then(keys => Promise.all(keys.filter(k => k.startsWith('scoridium-pwa-') && k !== CACHE && k !== STATIC).map(k => caches.delete(k)))),
+    caches.keys().then(keys => Promise.all(keys.filter(k => (k.startsWith('scoridium-pwa-') || k.startsWith('apexvision-pwa-')) && k !== CACHE && k !== STATIC).map(k => caches.delete(k)))),
     self.clients.claim()
   ]));
 });

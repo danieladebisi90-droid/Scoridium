@@ -123,11 +123,13 @@ function refreshChoices(){
 }
 function renderShotMarkers(){
  const host=$('postgame-markers');host.replaceChildren();
+ // The view selector never changes the quarter assigned to new events.
+ const selectedView=document.getElementById('av-cn-shot-filter')?.value||String(currentPeriod());
  for(const event of events){
    if(event.type!=='shot'||event.x==null||event.y==null)continue;
+   if(selectedView!=='all'&&Number(event.period)!==Number(selectedView))continue;
    const circle=document.createElementNS('http://www.w3.org/2000/svg','circle');
-   const otherHalf=(Number(event.period)<=2)!==(Number(currentPeriod())<=2);
-   circle.setAttribute('cx',otherHalf?860-Number(event.x):event.x);circle.setAttribute('cy',event.y);
+   circle.setAttribute('cx',event.x);circle.setAttribute('cy',event.y);
    circle.setAttribute('r','5');circle.setAttribute('stroke',event.made?'#16763c':'#9c2a2a');
    circle.setAttribute('fill',event.made?'#42d784':'#f87d7d');circle.setAttribute('stroke-width','2');
    host.append(circle);
@@ -150,6 +152,13 @@ async function refresh(){
   if((r.data||[]).length<500)break;
  }
  events=results;
+ // Mark shooting-foul misses as visible but non-counting field-goal observations.
+ const foulTags=await supabaseClient.from('apexvision_postgame_foul_shots')
+   .select('event_id').eq('game_id',gameId);
+ if(!foulTags.error){
+   const nonFga=new Set((foulTags.data||[]).map(e=>String(e.event_id)));
+   events.forEach(e=>{e.non_fga=nonFga.has(String(e.id));});
+ }
  if(mode!=='stat'){
   const o=await supabaseClient.from('tracker_observations').select('id,period,kind,team,points,made,x,y,matched_event_id').eq('game_id',gameId).eq('kind','shot').is('matched_event_id',null).limit(1000);
   observationError=o.error;observations=o.data||[];
@@ -219,6 +228,7 @@ async function init(){
  players=roster.data||[];
  for(const player of players)$('post-player').add(new Option('#'+(player.number??'?')+' '+(player.first_name||'')+' '+(player.last_name||''),player.id));
  $('post-period').addEventListener('change',()=>{resetPending();renderEvents();renderShotMarkers();refreshChoices();renderObservations();});
+ window.addEventListener('apex:shot-view-change',()=>{renderShotMarkers();renderEvents();});
  $('post-team').addEventListener('change',()=>{resetPending();updatePlayer();});
  $('post-player').addEventListener('change',resetPending);
  $('post-refresh').addEventListener('click',async()=>{try{await refresh();say('Event list refreshed.');}catch(e){say('Refresh failed: '+e.message);}});

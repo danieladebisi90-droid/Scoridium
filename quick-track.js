@@ -138,7 +138,7 @@
       tile('back','BACK','qv-neutral'),tile('skip','SKIP','qv-neutral')]);
     else if(['assist','steal','blocker','reboundPlayer','ftShooter'].includes(mode)){
       const action={assist:'assistPlayer',steal:'stealPlayer',blocker:'blockPlayer',reboundPlayer:'rebPlayer',ftShooter:'shooterPlayer'}[mode];
-      const special={assist:['noAssist','NO AST'],steal:['noSteal','NO STL'],reboundPlayer:['unknownReb','UNKNOWN'],ftShooter:['unknownShooter','UNKNOWN PLAYER']}[mode];
+      const special={assist:['noAssist','NO AST'],steal:['noSteal','NO STL'],reboundPlayer:['unknownReb','SKIP'],ftShooter:['unknownShooter','SKIP']}[mode];
       content=roster(action,mode==='assist'?who:null,special);
     }else if(mode==='reboundChoice')content=choice([
       ['reboundOff','OFFENSIVE REBOUND','qv-neutral'],
