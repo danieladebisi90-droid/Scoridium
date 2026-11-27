@@ -8,7 +8,11 @@ const mode=api.mode,shotMode=mode==='shot',combined=mode==='combined';
 const court=$('postgame-court'),prompt=$('postgame-court-prompt');
 const escapeHTML=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const categories=[['catch_shoot','Catch & Shoot'],['pull_up','Dribble Pull-Up'],['drive','Drive / Layup'],['post','Post Move'],['putback','Putback'],['other','Other']];
-let shot=null,selectedJersey=null,step='idle',timer=null,directionOverride=false,saving=false,periodStamp=0;
+// Direction is game-specific. Q1/Q2 use the chosen side; Q3/Q4 flip automatically.
+const directionKey='apex:film:first-half-right:'+api.gameId;
+let firstHalfRight=false;
+try{firstHalfRight=sessionStorage.getItem(directionKey)==='true';}catch(_){}
+let shot=null,selectedJersey=null,step='idle',timer=null,saving=false,periodStamp=0;
 let guidedTarget=null,insertedShot=null;
 let teamName='Tracked Team';
 const opponentName=()=>api.getGame()?.opponent||'Opponent';
@@ -28,7 +32,7 @@ const complete=()=>step==='idle';
 
 function basketSide(team) {
   const activeQuarter = viewPeriod();
-  const trackedLeft = (activeQuarter <= 2) !== directionOverride;
+  const trackedLeft = (activeQuarter <= 2) !== firstHalfRight;
 
   return team === 'us'
     ? (trackedLeft ? 'left' : 'right')
@@ -132,14 +136,29 @@ function begin(location,made){
 if(shotMode||combined){
  const selector=$('post-switch-direction');
  selector.hidden=false;
+ const syncDirections=()=>{
+  selector.setAttribute('aria-pressed',String(firstHalfRight));
+  const q=viewPeriod(),trackedBasket=basketSide('us');
+  selector.title='Switch basket sides · '+labelPeriod(q)+' · '+teamName+' attacks '+trackedBasket;
+  selector.setAttribute('aria-label','Switch basket sides. '+teamName+' attacks the '+trackedBasket+' basket in '+labelPeriod(q));
+  window.dispatchEvent(new CustomEvent('apex:review-direction-changed',{
+   detail:{reversed:firstHalfRight,quarter:q,trackedBasket}
+  }));
+ };
  selector.addEventListener('click',()=>{
   if(!complete()&&shotMode&&!confirm('Cancel the current shot selection and switch directions?'))return;
+  if(combined&&window.apexPostgameQuick?.hasPending?.()){
+   api.notify('Finish or cancel the current stat before switching sides.');return;
+  }
   if(shotMode)clear();
-  directionOverride=!directionOverride;
-  selector.setAttribute('aria-pressed',String(directionOverride));
-  window.dispatchEvent(new CustomEvent('apex:review-direction-changed',{detail:{reversed:directionOverride}}));
-  api.notify('Court directions switched for this review. Previously saved locations are unchanged.');
+  firstHalfRight=!firstHalfRight;
+  try{sessionStorage.setItem(directionKey,String(firstHalfRight));}catch(_){}
+  syncDirections();
+  api.notify(teamName+' now attacks '+basketSide('us')+' in '+labelPeriod(viewPeriod())+'. The opposite basket is used after halftime. Previously saved shots are unchanged.');
  });
+ syncDirections();
+ $('post-period')?.addEventListener('change',syncDirections);
+ window.addEventListener('apex:shot-view-change',syncDirections);
  const captureClick=ev=>{
   ev.stopImmediatePropagation();ev.preventDefault();
   if(Date.now()<(window.__apexCourtSwipeUntil||0))return;
