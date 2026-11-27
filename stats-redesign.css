@@ -152,24 +152,33 @@
   stroke:var(--team-primary,#233f85)!important;
 }
 
-/* Coaches report action in Game Details */
-#details-view .details-head{
+/* Subtle download link beneath Game Details statistics. */
+#details-view .sc-coaches-report-footer{
   display:flex;
+  justify-content:flex-start;
   align-items:center;
-  flex-wrap:wrap;
-  gap:10px;
+  padding:12px 4px 20px;
 }
-#details-view .details-head h2{margin-right:auto}
-.sc-coaches-report-btn{
-  background:var(--team-primary,#233f85);
-  color:var(--team-primary-ink,#fff);
-  border:1px solid var(--team-primary,#233f85);
-  border-radius:8px;
-  padding:10px 15px;
-  font-size:13px;
-  font-weight:800;
+#details-view .sc-coaches-report-link{
+  appearance:none;
+  display:inline-block;
+  width:auto;
+  min-height:0;
+  margin:0;
+  padding:2px 0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  color:var(--team-primary,#233f85);
+  font:inherit;
+  font-size:12px;
+  font-weight:650;
+  text-decoration:underline;
+  text-underline-offset:3px;
   cursor:pointer;
 }
-.sc-coaches-report-btn:hover{filter:brightness(1.12)}
-.sc-coaches-report-btn:focus-visible{outline:3px solid var(--team-secondary,#d1a155);outline-offset:3px}
-@media(max-width:650px){.sc-coaches-report-btn{width:100%;min-height:42px}}
+#details-view .sc-coaches-report-link:hover{opacity:.78}
+#details-view .sc-coaches-report-link:focus-visible{
+  outline:2px solid var(--team-secondary,#d1a155);
+  outline-offset:4px;
+}
