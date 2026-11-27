@@ -65,3 +65,7 @@
   #details-view .sc-game-court-whole>.court-svg{max-height:none!important}
   .sc-game-court-labels{display:grid;gap:4px}
 }
+
+.sc-pbp-event.sc-pbp-child{margin-left:clamp(14px,3vw,34px);border-left:4px solid var(--stats-assist-outline,var(--team-primary));background:var(--team-soft,#f3f6fa)}
+.sc-pbp-main{display:flex;align-items:baseline;gap:5px;flex-wrap:wrap}
+.sc-pbp-score{font-size:11px;font-weight:700;color:var(--team-strong,currentColor);margin-left:auto}
