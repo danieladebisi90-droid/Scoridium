@@ -74,11 +74,11 @@ window.apexOpenCoachesReport=function({game,tracked,opponent,fullCourt,offenseCo
     '.leaders{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.leader{padding:11px;background:#f0f4fa;border-radius:8px}.leader small{display:block;font-size:10px;color:var(--muted)}.leader b{display:block;font-size:12px;margin-top:5px}',
     '.boxscore{font-size:10px}.boxscore td,.boxscore th{padding:8px 6px}',
     '.court-card{border:1px solid var(--line);border-radius:9px;padding:10px;margin:0 auto 14px;break-inside:avoid}',
-    '.court-card h2{margin:0 0 9px}.court-card svg{display:block;width:100%;height:auto;max-height:100%}.court-card.full{max-width:850px}',
-    '.halves{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.halves .court-card svg{max-height:111mm}',
+    '.court-card h2{margin:0 0 9px}.court-card svg{display:block;width:100%;height:auto;max-height:100%}.court-card.full{max-width:850px}.court-card.full svg{max-height:74mm;width:auto;max-width:100%;margin:auto}',
+    '.halves{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.halves .court-card svg{max-height:65mm;width:auto;max-width:100%;margin:auto}',
     '.small{font-size:10px;color:var(--muted);line-height:1.4}.legend{font-size:11px;text-align:center;margin:9px 0 0}',
     'footer{border-top:1px solid var(--line);padding-top:8px;margin-top:12px;font-size:10px;color:var(--muted)}footer span{float:right}',
-    '@page{size:A4 landscape;margin:0}@media print{html,body{width:297mm;background:white}.toolbar{display:none}.page{width:297mm;height:210mm;min-height:0;margin:0;padding:11mm 14mm;box-shadow:none;break-after:page}.page:last-child{break-after:auto}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}'
+    '@page{size:A4 landscape;margin:0}@media print{html,body{width:297mm;background:white}.toolbar{display:none}.page{width:297mm;min-height:210mm;height:auto;margin:0;padding:11mm 14mm;box-shadow:none;break-after:page}.page:last-child{break-after:auto}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}'
   ].join('\n');
 
   const html='<!doctype html><html lang="en"><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>'+style+'</style></head><body>'+
