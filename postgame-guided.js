@@ -242,6 +242,7 @@ async function resolvePending(o,action,matchId=null){
 }
 function initHalfCourt(){
  if(!hasCourt)return;
+ reversed=$('post-switch-direction')?.getAttribute('aria-pressed')==='true';
  const court=$('postgame-court'),toggle=$('pg-half-toggle');
  const media=window.matchMedia('(orientation: portrait) and (max-width: 700px)');
  const tablet=window.matchMedia('(orientation: portrait) and (min-width: 701px) and (max-width: 1100px)');
@@ -331,6 +332,10 @@ const trackedLeft = (displayQuarter <= 2) !== reversed;
 window.addEventListener('apex:shot-view-change', () => {
   show();
 });
+ window.addEventListener('apex:review-direction-changed',event=>{
+   reversed=Boolean(event.detail?.reversed);
+   show();
+ });
 
  window.addEventListener('apex:guided-shot-selected',ev=>{if(ev.detail?.guided&&!insertActive){opponent=ev.detail.team==='opponent';show();}});
  window.addEventListener('apex:insert-shot-focus',ev=>{opponent=ev.detail.team==='opponent';show();});
