@@ -78,3 +78,19 @@
   background:var(--team-soft,#eef3fa);
   border-top:2px solid var(--team-primary,#233f85);
 }
+
+
+/* The selected game's offence and defence use the familiar Team Stats
+   zone diagrams, sized independently of the full-court chart above. */
+.sc-game-zones {margin-top:20px;padding-top:15px;border-top:1px solid #d7e2ef}
+.sc-game-zones > h3 {margin:0 0 12px;color:var(--team-primary,#173a77)}
+.sc-game-zones-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+.sc-game-zone-card {min-width:0;padding:12px;background:#f7f9fd;border:1px solid #d7e2ef;border-radius:10px}
+.sc-game-zone-card h4 {margin:0 0 5px;font-size:14px;color:var(--team-primary,#173a77)}
+.sc-game-zone-card p {margin:0 0 10px;color:#59708d;font-size:12px}
+.sc-game-zone-card .zone-court-svg,
+.sc-game-zone-card svg {display:block;width:100%;height:auto;max-height:none;margin:0 auto}
+@media(max-width:650px){
+ .sc-game-zones-grid {grid-template-columns:1fr;gap:10px}
+ .sc-game-zone-card {padding:10px}
+}
