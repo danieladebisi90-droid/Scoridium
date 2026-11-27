@@ -166,7 +166,7 @@ async function loadSupabaseStatistics() {
         .select("mascot,club_name,team_type").eq("id",teamId).maybeSingle();
     if (!teamResponse.error && teamResponse.data) {
         const t = teamResponse.data;
-        displayTeamName = String((t.team_type === "club" ? (t.club_name || t.mascot) : t.mascot) || "Tracked Team");
+        displayTeamName = String(t.mascot || t.club_name || "Tracked Team").trim();
     }
 
     // 2. Fetch recorded events.
