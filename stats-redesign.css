@@ -33,3 +33,35 @@
 #opponent-analysis .opponent-zone-panel>.sc-opponent-zone-controls button{flex:initial!important;min-width:0!important;font-size:clamp(10px,1vw,12px)!important;padding:7px 2px!important;white-space:nowrap}
 #opponent-analysis .opponent-zone-panel .apex-zone-diagram{max-width:100%;width:100%}
 @media(max-width:700px){#team-view .team-layout{grid-template-columns:1fr}#opponent-analysis .opponent-courts-stack{grid-template-columns:1fr}#team-view .zone-comparison{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* ApexVision 2026-11 whole-game stats refinement */
+#opponent-analysis .opponent-full-court>.court-svg,
+#opponent-analysis .opponent-full-court .sc-no-shot-overlay>.court-svg,
+#games-view .sc-game-court-whole>.court-svg,
+#details-view .sc-game-court-whole>.court-svg {
+  display:block!important;
+  width:100%!important;
+  height:auto!important;
+  max-width:none!important;
+  max-height:none!important;
+  aspect-ratio:860 / 470;
+}
+#opponent-analysis .opponent-full-court,
+#opponent-analysis .opponent-full-court .sc-no-shot-overlay,
+.sc-game-court-whole {width:100%;min-width:0;overflow:hidden}
+.sc-game-court-whole{padding:8px 0}
+.sc-game-court-whole h3{margin:0 0 8px;color:var(--team-strong,currentColor)}
+.sc-game-court-labels{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:8px 0 12px;font-size:13px;font-weight:700}
+.sc-readonly-pbp{display:grid;gap:8px}
+.sc-pbp-event{padding:11px 13px;border:1px solid #d9e3ee;border-radius:8px;background:#fff;line-height:1.55;font-size:13px}
+.sc-pbp-event strong{color:var(--team-strong,currentColor);margin-right:8px}
+.sc-pbp-link{margin-top:5px;margin-left:15px;padding-left:10px;border-left:3px solid var(--team-secondary,var(--team-primary));color:#475569;font-size:12px}
+.sc-full-comparison .compare-track{background:var(--team-soft,#e6eaf0)}
+#assist-connections .sc-assist-node circle{stroke:var(--team-secondary,var(--team-primary))}
+/* Never override the SVG aspect ratio with a short fixed height. */
+@media(max-width:700px){
+  #opponent-analysis .opponent-full-court>.court-svg,
+  #games-view .sc-game-court-whole>.court-svg,
+  #details-view .sc-game-court-whole>.court-svg{max-height:none!important}
+  .sc-game-court-labels{display:grid;gap:4px}
+}
