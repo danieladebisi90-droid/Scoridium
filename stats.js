@@ -1113,12 +1113,16 @@ function renderOpponents(){
     ? `<h3>${escapeHTML(selected.opponent)}</h3><p class="muted">${escapeHTML(fullDate(selected.date))} · ${escapeHTML(selected.team)} ${selected.ourScore} – ${selected.opponentScore} ${escapeHTML(selected.opponent)}</p>`
     : `<h3>${escapeHTML(scoped)} · Combined games</h3>`;
   const opponentColor=getComputedStyle(document.documentElement).getPropertyValue('--team-secondary').trim()||'currentColor';
+  const opposing=apexSideTotals(games,'opponent');
   const contrastData=[
     ...(!single?[['Wins',wins,losses]]:[]),
     ['Total Points',totals.pts,totals.allowed],
-    ['Rebounds',totals.reb,null],['Assists',totals.ast,null],
-    ['Steals',totals.stl,null],['Blocks',totals.blk,null],
-    ['Turnovers',totals.tov,null],['Fouls',totals.pf,null]
+    ['Rebounds',totals.reb,opposing.observed?opposing.reb:null],
+    ['Assists',totals.ast,opposing.observed?opposing.ast:null],
+    ['Steals',totals.stl,opposing.observed?opposing.stl:null],
+    ['Blocks',totals.blk,opposing.observed?opposing.blk:null],
+    ['Turnovers',totals.tov,opposing.observed?opposing.tov:null],
+    ['Fouls',totals.pf,opposing.observed?opposing.pf:null]
   ];
   const bars=`<div class="sc-comparison" style="--opponent-color:${escapeHTML(opponentColor)}">
     <div class="sc-comparison-label"><strong>${escapeHTML(games[0]?.team||'Our team')}</strong><strong>${escapeHTML(scoped)}</strong></div>
@@ -1141,8 +1145,8 @@ function renderOpponents(){
    <h3>Shot locations & shooting zones</h3>
    <div class="opponent-courts-stack">
     <section class="opponent-full-court"><h4>Full Court · Shot Locations</h4>${courtOrOverlay}</section>
-    <section class="opponent-zone-panel"><h4>Our Offence · Zones</h4>${opponentZoneControls('offence')}${opponentZoneDiagram(our,'offence')}</section>
-    <section class="opponent-zone-panel"><h4>Our Defence · Zones</h4>${opponentZoneControls('defence')}${opponentZoneDiagram(opp,'defence')}</section>
+    <section class="opponent-zone-panel"><h4>${escapeHTML(games[0]?.team||'Tracked Team')} · Shooting Zones</h4>${opponentZoneControls('offence')}${opponentZoneDiagram(our,'offence')}</section>
+    <section class="opponent-zone-panel"><h4>${escapeHTML(scoped)} · Shooting Zones</h4>${opponentZoneControls('defence')}${opponentZoneDiagram(opp,'defence')}</section>
    </div>
    <p class="muted">Each half-court can use its own Basic, Traditional or Distance view. Our Offence shows our shots; Our Defence shows opponents' shots against us. Missing data is not zero.</p>`;
 }
