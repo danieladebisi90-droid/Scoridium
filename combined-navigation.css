@@ -506,3 +506,44 @@ html body.pg-v3-combined.av-cn-active
 .av-event-editor-inner footer button{padding:9px 13px;cursor:pointer}
 #av-edit-links{border:1px solid #d1dcec;border-radius:8px;padding:9px;display:flex;flex-direction:column;gap:7px;font-size:12px}
 #av-edit-links button{font-size:12px;cursor:pointer}
+
+
+/* Opponent shooting-foul free throws: the FT sequence must occupy the
+   entire opponent pane, not a single cell of its normal 3-column stat grid. */
+body.pg-v3-combined #post-quick-root .qv-opponent .qv-opp-buttons:has(> .qv-ft-list) {
+  display:block!important;
+  min-width:0!important;
+  overflow:visible!important;
+}
+body.pg-v3-combined #post-quick-root .qv-opponent .qv-opp-buttons > .qv-ft-list {
+  display:flex!important;
+  flex-direction:column!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+  gap:8px!important;
+}
+body.pg-v3-combined #post-quick-root .qv-opponent .qv-ft-line {
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  gap:5px!important;
+  box-sizing:border-box!important;
+}
+body.pg-v3-combined #post-quick-root .qv-opponent .qv-ft-line > div {
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:7px!important;
+  width:100%!important;
+  min-width:0!important;
+}
+body.pg-v3-combined #post-quick-root .qv-opponent .qv-ft-line .qv-button {
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  white-space:normal!important;
+  box-sizing:border-box!important;
+}
