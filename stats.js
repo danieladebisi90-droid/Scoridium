@@ -639,7 +639,10 @@ function detailedGamePlays(events,players,teamName,opponentName,order,fouls){
     seq.forEach((e,i)=>ftLabels.set(String(e.id),"FT "+(i+1)+" of "+seq.length));
   }
   const actor=e=>{
-    const team=["us","our","ours"].includes(String(e.team).toLowerCase())?teamName:opponentName;
+    if(e.type==='game_end')return 'Game';
+    const side=String(e.team||'').toLowerCase();
+    const team=['us','our','ours'].includes(side)?teamName:
+      ['opponent','away','them'].includes(side)?opponentName:'Unassigned team';
     const p=e.player_id?players.get(String(e.player_id)):null;
     return team+(p?" #"+(p.number??"?"):"");
   };
@@ -663,15 +666,20 @@ function detailedGamePlays(events,players,teamName,opponentName,order,fouls){
     if(Number.isFinite(va)&&Number.isFinite(vb)&&va!==vb)return va-vb;
     return String(a.created_at||a.id).localeCompare(String(b.created_at||b.id));
   });
+  let ourScore=0,opponentScore=0;
   return rows.map(e=>{
     const parent=e.linked_event_id?byId.get(String(e.linked_event_id)):null;
     const foul=fouls.get(String(e.id));
     const related=foul?.shot_event_id?byId.get(String(foul.shot_event_id)):null;
     const period=Number(e.period)||1;
+    const points=e.made===true?(e.type==='free_throw'?1:e.type==='shot'?Number(e.points)||0:0):0;
+    if(['us','our','ours'].includes(String(e.team).toLowerCase()))ourScore+=points;
+    else if(['opponent','away','them'].includes(String(e.team).toLowerCase()))opponentScore+=points;
     return {id:String(e.id),period:period<=4?"Q"+period:"OT"+(period-4),
-      team:actor(e),action:action(e),
+      team:actor(e),action:action(e),parentId:parent?String(parent.id):null,
       linked:parent?"Linked to "+actor(parent)+" · "+action(parent):
         related?"Linked shot: "+actor(related)+" · "+action(related):"",
+      score:points?ourScore+' – '+opponentScore:'',
       type:e.type};
   });
 }
@@ -1036,7 +1044,23 @@ function shootingHTML(g) {
 }
 function playsHTML(g){
  if(!g)return '<p>No game selected</p>';
- return `<div class="sc-readonly-pbp" aria-label="Read-only game play-by-play">${(g.plays||[]).map(p=>`<article class="sc-pbp-event"><div><strong>${escapeHTML(p.period)}</strong> <b>${escapeHTML(p.team)}</b> — ${escapeHTML(p.action)}</div>${p.linked?`<div class="sc-pbp-link">↳ ${escapeHTML(p.linked)}</div>`:''}</article>`).join('')||'<p>No recorded plays</p>'}</div>`;
+ const plays=g.plays||[];
+ if(!plays.length)return '<p>No recorded plays</p>';
+ const byId=new Map(plays.map(p=>[p.id,p]));
+ const children=new Map();
+ for(const p of plays){
+   if(!p.parentId||!byId.has(p.parentId))continue;
+   if(!children.has(p.parentId))children.set(p.parentId,[]);
+   children.get(p.parentId).push(p);
+ }
+ const root=plays.filter(p=>!p.parentId||!byId.has(p.parentId));
+ const printed=new Set();
+ const renderEntry=(p,level=0)=>{
+   if(printed.has(p.id))return '';printed.add(p.id);
+   const label=`<article class="sc-pbp-event ${level?'sc-pbp-child':''}"><div class="sc-pbp-main"><strong>${escapeHTML(p.period)}</strong> <b>${escapeHTML(p.team)}</b> — ${escapeHTML(p.action)} ${p.score?`<span class="sc-pbp-score">${escapeHTML(p.score)}</span>`:''}</div>${p.linked?`<div class="sc-pbp-link">↳ ${escapeHTML(p.linked)}</div>`:''}</article>`;
+   return label+(children.get(p.id)||[]).map(c=>renderEntry(c,level+1)).join('');
+ };
+ return `<div class="sc-readonly-pbp" aria-label="Read-only game play-by-play">${root.map(p=>renderEntry(p)).join('')}${plays.filter(p=>!printed.has(p.id)).map(p=>renderEntry(p)).join('')}</div>`;
 }
 function compareHTML(g){
  if(!g)return '';
