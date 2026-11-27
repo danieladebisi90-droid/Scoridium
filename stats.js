@@ -674,12 +674,11 @@ function detailedGamePlays(events,players,teamName,opponentName,order,fouls){
   });
 }
 function teamTotals(games) {
-  const players=games.flatMap(g=>g.players), shots=games.flatMap(g=>g.shots);
-  return {gp:games.length,pts:games.reduce((v,g)=>v+g.ourScore,0),allowed:games.reduce((v,g)=>v+g.opponentScore,0),
-    reb:sum(players,'reb'),oreb:sum(players,'oreb'),dreb:sum(players,'dreb'),ast:sum(players,'ast'),
-    stl:sum(players,'stl'),blk:sum(players,'blk'),tov:sum(players,'tov'),pf:sum(players,'pf'),
-    fgm:sum(players,'fgm'),fga:sum(players,'fga'),threeMade:sum(players,'threeMade'),
-    threeAtt:sum(players,'threeAtt'),ftm:sum(players,'ftm'),fta:sum(players,'fta'),shots};
+  const recorded=apexSideTotals(games,"us");
+  return {...recorded,gp:games.length,
+    pts:games.reduce((v,g)=>v+g.ourScore,0),
+    allowed:games.reduce((v,g)=>v+g.opponentScore,0),
+    shots:games.flatMap(g=>g.shots||[])};
 }
 
 function setView(view) {
