@@ -20,7 +20,16 @@
       siteInput.autocomplete='url';siteInput.spellcheck=false;
       const currentDirectory=new URL('./',location.href).href;
       const storedSite=localStorage.getItem('apex_invite_site_base');
-      siteInput.value=storedSite||currentDirectory;
+      // A previously saved Main/other-site URL must never silently point a Test QR away from this deployment.
+      let safeStoredSite='';
+      if(storedSite){
+        try{
+          const url=new URL(storedSite);
+          const current=new URL(currentDirectory);
+          if(url.origin===current.origin || (current.hostname==='localhost' && /^192\\.168\\.|^10\\.|^172\\./.test(url.hostname))) safeStoredSite=storedSite;
+        }catch{}
+      }
+      siteInput.value=safeStoredSite||currentDirectory;
       const siteSave=document.createElement('button');siteSave.type='button';siteSave.textContent='Use Address';
       const siteNote=document.createElement('p');siteNote.className='invite-site-note';siteNote.setAttribute('role','status');
       panel.append(siteLabel,siteInput,siteSave,siteNote);
