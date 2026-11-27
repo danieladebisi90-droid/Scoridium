@@ -240,7 +240,7 @@ async function loadGameHubGames() {
     if (teamError) {
         console.error("Error loading team name:", teamError);
         } else {
-        gameHubTeamName = (team.team_type === "club" ? (team.club_name || team.mascot) : team.mascot) || "Team";
+        gameHubTeamName = (team.mascot || team.club_name) || "Team";
     }
     const { data: games, error } = await supabaseClient
         .from("games")
