@@ -1,0 +1,35 @@
+/* ApexVision Stats redesign — layout only; no score or shot calculation changes. */
+#team-view .team-layout{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;gap:12px}
+#team-view .column-stack{min-width:0}
+#team-view .zone-comparison{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#team-view .zone-side{min-width:0}
+#team-view .zone-preview{width:100%;max-width:100%}
+#team-view .zone-preview svg{max-width:100%;height:auto}
+#assist-connections{position:relative;min-height:270px}
+#assist-connections>svg{width:100%;height:auto;display:block;max-height:310px}
+#assist-connections .sc-assist-node{cursor:pointer;outline:none}
+#assist-connections .sc-assist-node:focus circle,#assist-connections .sc-assist-node:hover circle{stroke-width:5}
+.sc-assist-popup{position:absolute;z-index:10;width:min(240px,95%);max-height:240px;overflow:auto;padding:12px;border:1px solid #c1ccda;border-radius:10px;background:#fff;box-shadow:0 10px 30px #132a4650;color:#103667;font-size:12px;line-height:1.4}
+.sc-assist-popup[hidden]{display:none!important}
+.sc-assist-popup>strong{display:block;margin-bottom:8px}
+.sc-assist-popup>div{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid #e8edf5}
+#player-zones .sc-player-zone-controls{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px!important;flex-wrap:nowrap!important;margin:6px 0!important}
+#player-zones .sc-player-zone-controls button{min-width:0!important;padding:8px 3px!important;font-size:clamp(10px,1vw,12px)!important;white-space:nowrap!important}
+#games-view .games-layout{display:block!important}
+#games-view .sc-games-combined{width:100%;min-height:0}
+#games-view .sc-game-summary-expand{margin-top:18px;padding-top:14px;border-top:2px solid #dbe3ee}
+#games-view .sc-game-summary-expand[hidden]{display:none!important}
+#games-view .sc-game-summary-expand .panel-heading{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+#games-view .sc-game-summary-expand #selected-game-date{margin-left:auto}
+#games-view .sc-summary-close{order:3;margin-left:0;border:1px solid #bfd0e0;border-radius:6px;padding:7px 10px;font-size:11px;font-weight:700;background:#edf2f8;color:#103667}
+#games-view #games-body tr{cursor:pointer}
+#games-view #games-body tr:focus-visible{outline:2px solid var(--team-secondary,#ffd600)}
+#opponents-view>article.panel{max-width:none!important}
+#opponent-analysis .opponent-courts-stack{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#opponent-analysis .opponent-full-court{grid-column:1/-1;min-width:0}
+#opponent-analysis .opponent-full-court>svg,#opponent-analysis .opponent-full-court .sc-no-shot-overlay>svg{display:block;width:100%!important;max-width:none!important;height:auto!important}
+#opponent-analysis .opponent-zone-panel{grid-column:auto;min-width:0}
+#opponent-analysis .opponent-zone-panel>.sc-opponent-zone-controls{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px!important;flex-wrap:nowrap!important}
+#opponent-analysis .opponent-zone-panel>.sc-opponent-zone-controls button{flex:initial!important;min-width:0!important;font-size:clamp(10px,1vw,12px)!important;padding:7px 2px!important;white-space:nowrap}
+#opponent-analysis .opponent-zone-panel .apex-zone-diagram{max-width:100%;width:100%}
+@media(max-width:700px){#team-view .team-layout{grid-template-columns:1fr}#opponent-analysis .opponent-courts-stack{grid-template-columns:1fr}#team-view .zone-comparison{grid-template-columns:repeat(2,minmax(0,1fr))}}

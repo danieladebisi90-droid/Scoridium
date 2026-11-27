@@ -1,0 +1,13 @@
+#av-shot-editor{border:1px solid #b5c8e0;border-radius:12px;padding:0;width:min(430px,95vw);max-height:92vh;color:#143b70;background:#fff;box-shadow:0 16px 42px #071c3f55}
+#av-shot-editor::backdrop{background:#03142caa}
+.av-shot-editor-shell{padding:15px;display:flex;flex-direction:column;gap:10px;max-height:89vh;overflow:auto}
+.av-shot-editor-shell header,.av-shot-editor-shell footer{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.av-shot-editor-shell header button{font-size:24px;border:0;background:transparent;cursor:pointer}
+.av-shot-editor-shell label{display:flex;justify-content:space-between;gap:12px;align-items:center;font-size:13px;font-weight:700}
+.av-shot-editor-shell select{width:60%;max-width:225px;padding:7px;border-radius:5px;border:1px solid #b5c8e0}
+#av-edit-location-label{font-size:12px;margin:2px 0}
+#av-edit-court-wrap{display:flex;justify-content:center;min-height:190px;max-height:270px;border-radius:8px;background:#d2a06d;overflow:hidden}
+#av-edit-mini-court{width:100%;height:auto;max-height:270px;touch-action:manipulation;cursor:crosshair}
+#av-edit-feedback{font-size:12px;min-height:16px;color:#96462d;margin:0}
+.av-shot-editor-shell footer button{padding:10px;border:1px solid #aabdd4;border-radius:7px;cursor:pointer;background:#164b91;color:#fff;font-weight:700}
+.av-shot-editor-shell footer .av-shot-danger{background:#fff;color:#a22f2f;border-color:#cd8585}

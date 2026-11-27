@@ -622,11 +622,9 @@ function renderAssistConnections(games){
     const [from,to]=key.split('|');const a=coords.get(from),b=coords.get(to);
     return `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="#7493c4" stroke-width="${(2+7*value/max).toFixed(1)}" stroke-linecap="round"><title>${escapeHTML(names.get(from)||from)} assisted ${escapeHTML(names.get(to)||to)} · ${value} baskets</title></line>`;
   }).join('');
-  const circles=weighted.map(id=>{const c=coords.get(id),p=players.find(p=>String(p.id)===id);return `<g><circle cx="${c.x}" cy="${c.y}" r="25" fill="#123b78" stroke="#ffd600" stroke-width="3"/><text x="${c.x}" y="${c.y+5}" text-anchor="middle" font-size="13" fill="#fff" font-weight="bold">${escapeHTML('#'+(p?.number||'?'))}</text><title>${escapeHTML(names.get(id)||id)}</title></g>`;}).join('');
-  const list=[...counts].sort((a,b)=>b[1]-a[1]).slice(0,8).map(([key,value])=>{
-    const [from,to]=key.split('|');return `<li>${escapeHTML(names.get(from)||'Unknown')} → ${escapeHTML(names.get(to)||'Unknown')} <strong>${value}</strong></li>`;
-  }).join('');
-  host.innerHTML=`<svg viewBox="0 0 400 350" role="img" aria-label="Assist network; thicker lines mean more recorded assisted baskets">${lines}${circles}</svg><p class="muted">Directional connections: passer → scorer. Line thickness represents recorded assisted baskets.</p><ol class="apex-assist-list">${list}</ol>`;
+  const circles=weighted.map(id=>{const c=coords.get(id),p=players.find(p=>String(p.id)===id);return `<g class="sc-assist-node" tabindex="0" role="button" aria-label="Connections for ${escapeHTML(names.get(id)||id)}" data-assist-id="${escapeHTML(id)}"><circle cx="${c.x}" cy="${c.y}" r="25" fill="#123b78" stroke="#ffd600" stroke-width="3"/><text x="${c.x}" y="${c.y+5}" text-anchor="middle" font-size="13" fill="#fff" font-weight="bold" pointer-events="none">${escapeHTML('#'+(p?.number||'?'))}</text></g>`;}).join('');
+  host.innerHTML=`<svg viewBox="0 0 400 350" role="group" aria-label="Assist connections. Select a player to inspect connections.">${lines}${circles}</svg><div class="sc-assist-popup" role="status" hidden></div>`;
+  host.__assistConnections={counts,names};
 }
 
 function renderTeam() {
@@ -892,7 +890,7 @@ function renderPlayerShots() {
   if(!host)return;
   const controls=document.createElement('div');controls.className='sc-player-zone-controls';
   const surface=document.createElement('div');surface.className='sc-player-zone-surface';
-  for(const [key,label] of [['basic','Basic Zones'],['traditional','Traditional Zones'],['distance','Distance Zones']]){
+  for(const [key,label] of [['basic','Basic'],['traditional','Traditional'],['distance','Distance']]){
     const b=document.createElement('button');b.type='button';b.textContent=label;
     b.setAttribute('aria-pressed',String(scPlayerZoneMode===key));
     b.addEventListener('click',()=>{scPlayerZoneMode=key;renderPlayerShots();});
@@ -926,7 +924,8 @@ function summaryHTML(g,mode){if(mode==='shooting')return shootingHTML(g);if(mode
 function renderGames(){
   const games=filteredGames().slice().sort((a,b)=>b.date.localeCompare(a.date));
   $('game-count').textContent=`${games.length} games`;
-  if(!games.some(g=>g.id===state.selectedGame)) state.selectedGame=games[0]?.id ?? null;
+  if(!games.some(g=>g.id===state.selectedGame)){ state.selectedGame=games[0]?.id ?? null; state.gameSummaryExpanded=false; }
+  const expanded=$('game-summary-expand');if(expanded)expanded.hidden=!state.gameSummaryExpanded;
   $('games-body').innerHTML=games.map(g=>`<tr data-game-id="${escapeHTML(g.id)}" class="${g.id===state.selectedGame?'selected':''}"><td>${escapeHTML(window.scoridiumFullDate?.(g.date)||g.date)}</td><td>${escapeHTML(g.opponent)}</td><td>${escapeHTML(g.location)}</td><td><span class="${g.ourScore>g.opponentScore?'win':'loss'}">${g.ourScore>g.opponentScore?'W':g.ourScore<g.opponentScore?'L':'T'}</span></td><td>${g.ourScore} - ${g.opponentScore}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">No games available</td></tr>';
   const g=selectedGame();$('selected-game-date').textContent=g?.date??'';$('game-score').innerHTML=scoreHTML(g);
   document.querySelectorAll('[data-summary]').forEach(b=>b.classList.toggle('active',b.dataset.summary===state.summary));
@@ -1390,7 +1389,31 @@ function renderTeamShotProfile() {
 }
 
 
+function attachAssistInteractions(){
+  const host=$('assist-connections');if(!host)return;
+  function dismiss(){const popup=host.querySelector('.sc-assist-popup');if(popup)popup.hidden=true;}
+  function show(node){
+    const id=node?.dataset.assistId, data=host.__assistConnections;
+    const popup=host.querySelector('.sc-assist-popup');if(!id||!data||!popup)return;
+    const pairs=[...data.counts].map(([key,n])=>{const [from,to]=key.split('|');return {from,to,n};});
+    const bestGiven=pairs.filter(p=>p.from===id).sort((a,b)=>b.n-a.n)[0];
+    const bestReceived=pairs.filter(p=>p.to===id).sort((a,b)=>b.n-a.n)[0];
+    const teammate=pid=>escapeHTML(data.names.get(pid)||'Unassigned player');
+    popup.innerHTML=`<strong>${escapeHTML(data.names.get(id)||'Player')} · Assist Leaders</strong>`+
+      `<div>Most assisted teammate: <b>${bestGiven?teammate(bestGiven.to)+' ('+bestGiven.n+')':'None recorded'}</b></div>`+
+      `<div>Most assists received from: <b>${bestReceived?teammate(bestReceived.from)+' ('+bestReceived.n+')':'None recorded'}</b></div>`;
+    const box=host.getBoundingClientRect(), rect=node.getBoundingClientRect();
+    popup.style.left=Math.max(6,Math.min(box.width-240,rect.left-box.left+rect.width/2-110))+'px';
+    popup.style.top=Math.max(5,rect.bottom-box.top+8)+'px';popup.hidden=false;
+  }
+  host.addEventListener('pointerover',e=>{if(e.pointerType==='mouse'){const n=e.target.closest?.('[data-assist-id]');if(n)show(n);}});
+  host.addEventListener('click',e=>{const n=e.target.closest?.('[data-assist-id]');if(n){show(n);host.dataset.activeAssist=n.dataset.assistId;}else if(!e.target.closest?.('.sc-assist-popup'))dismiss();});
+  host.addEventListener('keydown',e=>{const n=e.target.closest?.('[data-assist-id]');if(n&&(e.key==='Enter'||e.key===' ')){e.preventDefault();show(n);}if(e.key==='Escape')dismiss();});
+  document.addEventListener('pointerdown',e=>{if(!host.contains(e.target))dismiss();});
+}
+
 function init(){
+  attachAssistInteractions();
   fillGameOptions('player-game-filter');fillGameOptions('shot-game-filter');
   document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
   $('opponent-analysis')?.addEventListener('click',e=>{const button=e.target.closest('[data-opponent-zone-mode][data-opponent-zone-side]');if(!button)return;const side=button.dataset.opponentZoneSide;if(!Object.prototype.hasOwnProperty.call(opponentZoneModes,side))return;const mode=button.dataset.opponentZoneMode;if(!['basic','traditional','distance'].includes(mode))return;opponentZoneModes[side]=mode;renderOpponents();});
@@ -1404,8 +1427,9 @@ function init(){
   $('shot-player-filter').addEventListener('change',renderPlayerShots);
   $('shot-game-filter').addEventListener('change',renderPlayerShots);
   document.addEventListener('click',e=>{const btn=e.target.closest('[data-shot-layer][data-shot-side]');if(!btn)return;const layer=btn.dataset.shotLayer;if(!['results','creation'].includes(layer))return;if(btn.dataset.shotSide==='team'){apexTeamShotLayer=layer;renderTeamShotProfile();}else if(btn.dataset.shotSide==='player'){apexPlayerShotLayer=layer;renderPlayerShots();}});
-  $('games-body').addEventListener('click',e=>{const row=e.target.closest('[data-game-id]');if(!row)return;state.selectedGame=row.dataset.gameId;renderGames();});
+  $('games-body').addEventListener('click',e=>{const row=e.target.closest('[data-game-id]');if(!row)return;state.selectedGame=row.dataset.gameId;state.gameSummaryExpanded=true;renderGames();});
   document.querySelectorAll('[data-summary]').forEach(b=>b.addEventListener('click',()=>{state.summary=b.dataset.summary;renderGames();}));
+  $('close-game-summary')?.addEventListener('click',()=>{state.gameSummaryExpanded=false;renderGames();});
   $('open-game-details').addEventListener('click',()=>{state.detail='box';setView('details');});
   $('back-to-games').addEventListener('click',()=>setView('games'));
   document.querySelectorAll('[data-detail]').forEach(b=>b.addEventListener('click',()=>{state.detail=b.dataset.detail;renderDetails();}));

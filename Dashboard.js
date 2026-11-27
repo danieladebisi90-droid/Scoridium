@@ -64,9 +64,16 @@ if (gamesError) {
       window.__scoridiumLiveScoreRefresh=setInterval(async()=>{
         if(document.hidden)return;
         const {data,error}=await supabaseClient.from('games')
-          .select('id,opponent,team_score,opponent_score,status,date,period')
+          .select('id,opponent,team_score,opponent_score,status,date')
           .eq('team_id',selectedTeamId).eq('status','live').limit(5);
-        if(!error)showDashboardLiveGame(data||[]);
+        if(error){
+          // Avoid repeated requests when Supabase rejects a schema/permission query.
+          console.warn('Dashboard live-game refresh stopped:', error.message || error);
+          clearInterval(window.__scoridiumLiveScoreRefresh);
+          window.__scoridiumLiveScoreRefresh=null;
+          return;
+        }
+        showDashboardLiveGame(data||[]);
       },7000);
     }
 
@@ -1343,32 +1350,107 @@ async function loadDashboardRoster() {
             )
         );
     });
-    // On phones use a native swipeable roster. Do not clone or animate cards.
-    const isPortraitPhone = window.matchMedia('(max-width: 700px) and (orientation: portrait)').matches;
-    track.getAnimations().forEach(animation => animation.cancel());
-    track.classList.remove('roster-auto-scroll');
-    track.style.transform = '';
-    if (isPortraitPhone) {
-        track.scrollLeft = 0;
-        startMobileRosterMarquee(track);
-        return;
-    }
-
-    // Duplicate the cards for seamless infinite scrolling.
-    const cards = [...track.children];
-
-    cards.forEach(card => {
-        const duplicate = card.cloneNode(true);
-        duplicate.setAttribute("aria-hidden", "true");
-        duplicate.setAttribute("inert", "");
-        track.appendChild(duplicate);
+    // One complete duplicate of the entire roster, INCLUDING coach cards,
+    // makes the wrap seamless rather than jumping between players and staff.
+    const originals = [...track.children];
+    originals.forEach(card => {
+      const copy = card.cloneNode(true);
+      copy.classList.add('av-roster-clone');
+      copy.setAttribute('aria-hidden', 'true');
+      copy.setAttribute('inert', '');
+      copy.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+      track.appendChild(copy);
     });
+    startUnifiedDashboardRosterScroll(track);
+}
 
-    track.scrollLeft = 0;
-    track.classList.add("roster-auto-scroll");
+let stopUnifiedDashboardScroll = null;
+function startUnifiedDashboardRosterScroll(track) {
+  if (stopUnifiedDashboardScroll) stopUnifiedDashboardScroll();
+  if (!track || !track.firstElementChild || !track.querySelector('.av-roster-clone')) return;
 
-    startDashboardRosterAutoScroll();
+  // The element being transformed is the inner track; the outer viewport clips it.
+  // This avoids scrollLeft/snap-point conflicts in the existing Dashboard CSS.
+  let viewport = track.parentElement;
+  if (!viewport?.classList.contains('av-roster-viewport')) {
+    viewport = document.createElement('div');
+    viewport.className = 'av-roster-viewport';
+    track.before(viewport);
+    viewport.appendChild(track);
+  }
+  track.scrollLeft = 0;
+  let running = true, raf = 0, previous = 0, offset = 0;
+  let down = false, downX = 0, lastX = 0, moved = false, holdUntil = 0;
+  const first = track.firstElementChild;
+  const duplicate = track.querySelector('.av-roster-clone');
+  const getCycle = () => Math.max(0, duplicate.offsetLeft - first.offsetLeft);
+  const wrap = (value, cycle) => ((value % cycle) + cycle) % cycle;
+  const draw = () => track.style.setProperty('transform',
+    `translate3d(${-offset}px,0,0)`, 'important');
 
+  function tick(time) {
+    if (!running) return;
+    const delta = previous ? Math.min(60, time - previous) : 0;
+    previous = time;
+    const cycle = getCycle();
+    if (cycle > 0) {
+      if (!down && time > holdUntil && !document.hidden &&
+          !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        offset = wrap(offset + delta * 0.048, cycle);
+      } else {
+        offset = wrap(offset, cycle);
+      }
+      draw();
+    }
+    raf = requestAnimationFrame(tick);
+  }
+  function onDown(event) {
+    if (event.button != null && event.button !== 0) return;
+    down = true; moved = false;
+    downX = lastX = event.clientX;
+    viewport.setPointerCapture?.(event.pointerId);
+  }
+  function onMove(event) {
+    if (!down) return;
+    const difference = event.clientX - lastX;
+    lastX = event.clientX;
+    if (Math.abs(event.clientX - downX) > 6) moved = true;
+    if (moved) {
+      const cycle = getCycle();
+      if (cycle > 0) offset = wrap(offset - difference, cycle);
+      draw();
+    }
+  }
+  function onUp() {
+    if (!down) return;
+    down = false;
+    holdUntil = performance.now() + 1200;
+  }
+  function onClick(event) {
+    if (moved) {
+      event.preventDefault();
+      event.stopPropagation();
+      moved = false;
+    }
+  }
+  viewport.addEventListener('pointerdown', onDown);
+  viewport.addEventListener('pointermove', onMove);
+  viewport.addEventListener('pointerup', onUp);
+  viewport.addEventListener('pointercancel', onUp);
+  viewport.addEventListener('lostpointercapture', onUp);
+  viewport.addEventListener('click', onClick, true);
+  raf = requestAnimationFrame(tick);
+  stopUnifiedDashboardScroll = () => {
+    running = false;
+    cancelAnimationFrame(raf);
+    track.style.removeProperty('transform');
+    viewport.removeEventListener('pointerdown', onDown);
+    viewport.removeEventListener('pointermove', onMove);
+    viewport.removeEventListener('pointerup', onUp);
+    viewport.removeEventListener('pointercancel', onUp);
+    viewport.removeEventListener('lostpointercapture', onUp);
+    viewport.removeEventListener('click', onClick, true);
+  };
 }
 
 
@@ -1379,194 +1461,6 @@ function initializeDashboardRoster() {
 
 window.addEventListener("seasonChanged", loadDashboardRoster);
 
-
-/* =========================================
-   AUTOMATIC ROSTER SCROLLING
-   ========================================= */
-
-let rosterAnimationFrame = null;
-let rosterLastFrameTime = null;
-
-
-/* =========================================
-   SMOOTH AUTOMATIC ROSTER SCROLLING
-   ========================================= */
-
-
-function startDashboardRosterAutoScroll() {
-    if (window.matchMedia('(max-width: 700px) and (orientation: portrait)').matches) return;
-    const track = document.getElementById("dashboard-roster-track");
-    if (!track) return;
-
-    // Stop any existing animations.
-    track.getAnimations().forEach(animation => animation.cancel());
-
-    // Find the first duplicated card.
-    const firstDuplicate = track.querySelector(
-        '[aria-hidden="true"]'
-    );
-
-    const firstCard = track.firstElementChild;
-
-    if (!firstDuplicate || !firstCard) return;
-
-    // Calculate the distance between original and duplicate cards.
-    
-const cardCount = track.querySelectorAll(
-    ".dashboard-player-card"
-).length / 2;
-
-const trackStyles = getComputedStyle(track);
-const gap = parseFloat(trackStyles.columnGap) || 0;
-
-const originalCards = [...track.children].slice(0, cardCount);
-
-const loopDistance = originalCards.reduce(
-    (total, card) => total + card.getBoundingClientRect().width + gap,
-    0
-);
-
-console.log("Roster loop distance:", loopDistance);
-
-
-    // Prevent invalid animation durations.
-    if (!Number.isFinite(loopDistance) || loopDistance <= 0) {
-        console.warn("Invalid roster scroll distance:", loopDistance);
-        return;
-    }
-
-    const speed = 28;
-    const duration = (loopDistance / speed) * 1000;
-
-    if (!Number.isFinite(duration) || duration <= 0) {
-        console.warn("Invalid roster animation duration:", duration);
-        return;
-    }
-
-    // Respect reduced-motion preferences.
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        return;
-    }
-
-    const animation = track.animate(
-        [
-            { transform: "translateX(0px)" },
-            { transform: `translateX(-${loopDistance}px)` }
-        ],
-        {
-            duration: duration,
-            iterations: Infinity,
-            easing: "linear"
-        }
-    );
-
-    const pause = () => animation.pause();
-
-    const resume = () => {
-        if (!document.hidden) {
-            animation.play();
-        }
-    };
-
-    track.addEventListener("mouseenter", pause);
-    track.addEventListener("mouseleave", resume);
-    track.addEventListener("focusin", pause);
-    track.addEventListener("focusout", resume);
-}
-
-let mobileRosterMarqueeStop = null;
-
-function startMobileRosterMarquee(track) {
-  if (!track) return;
-
-  if (mobileRosterMarqueeStop) {
-    mobileRosterMarqueeStop();
-    mobileRosterMarqueeStop = null;
-  }
-
-  const reducedMotion = window.matchMedia(
-    "(prefers-reduced-motion: reduce)"
-  ).matches;
-
-  if (reducedMotion) return;
-
-  let stopped = false;
-  let isPaused = false;
-  let animationFrame = null;
-  let lastTime = 0;
-  let currentPosition = track.scrollLeft;
-  let resumeTimeout = null;
-
-  function pauseAutoScroll() {
-    isPaused = true;
-    currentPosition = track.scrollLeft;
-
-    if (resumeTimeout) {
-      clearTimeout(resumeTimeout);
-      resumeTimeout = null;
-    }
-  }
-
-  function scheduleResume() {
-    if (resumeTimeout) clearTimeout(resumeTimeout);
-
-    resumeTimeout = setTimeout(() => {
-      currentPosition = track.scrollLeft;
-      isPaused = false;
-    }, 1500); // resumes 1.5s after touching stops
-  }
-
-  function step(timestamp) {
-    if (stopped) return;
-
-    if (!lastTime) lastTime = timestamp;
-    const delta = Math.min(timestamp - lastTime, 40);
-    lastTime = timestamp;
-
-    if (!isPaused && document.visibilityState === "visible") {
-      const maxScroll = track.scrollWidth - track.clientWidth;
-
-      if (maxScroll > 0) {
-        currentPosition += delta * 0.035;
-
-        if (currentPosition >= maxScroll) {
-          currentPosition = 0;
-        }
-
-        track.scrollLeft = currentPosition;
-      }
-    }
-
-    animationFrame = requestAnimationFrame(step);
-  }
-
-  track.addEventListener("touchstart", pauseAutoScroll, { passive: true });
-  track.addEventListener("touchmove", pauseAutoScroll, { passive: true });
-  track.addEventListener("touchend", scheduleResume, { passive: true });
-
-  track.addEventListener("pointerdown", pauseAutoScroll);
-  track.addEventListener("pointerup", scheduleResume);
-  track.addEventListener("mouseenter", pauseAutoScroll);
-  track.addEventListener("mouseleave", scheduleResume);
-
-  animationFrame = requestAnimationFrame(step);
-
-  mobileRosterMarqueeStop = function () {
-    stopped = true;
-
-    if (animationFrame) cancelAnimationFrame(animationFrame);
-    if (resumeTimeout) clearTimeout(resumeTimeout);
-
-    track.removeEventListener("touchstart", pauseAutoScroll);
-    track.removeEventListener("touchmove", pauseAutoScroll);
-    track.removeEventListener("touchend", scheduleResume);
-
-    track.removeEventListener("pointerdown", pauseAutoScroll);
-    track.removeEventListener("pointerup", scheduleResume);
-    track.removeEventListener("mouseenter", pauseAutoScroll);
-    track.removeEventListener("mouseleave", scheduleResume);
-  };
-}
 
 // Refresh ticker when returning to the dashboard, including after other devices update a game.
 let lastTickerRefresh=0;

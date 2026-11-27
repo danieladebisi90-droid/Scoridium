@@ -1,0 +1,38 @@
+/* ApexVision Dashboard final polish: iPad + desktop. No impact on other pages. */
+#app-content .recent-leader-container .dashboard-roster { min-width:0!important; overflow:hidden!important; }
+#app-content .dashboard-roster-track { position:relative; min-width:0!important; overflow-x:auto!important; overflow-y:hidden!important; scroll-snap-type:none!important; scroll-behavior:auto!important; overscroll-behavior-x:contain; }
+#app-content .dashboard-roster-track .dashboard-player-card { flex:0 0 clamp(145px,46%,195px)!important; width:clamp(145px,46%,195px)!important; box-sizing:border-box!important; }
+#app-content .dashboard-roster-track [aria-hidden="true"] {display:flex!important;}
+/* Live Game: compact premium scoreboard, no large blank central region. */
+#app-content .recent-games:has(.dashboard-live-score) { gap:12px; justify-content: flex-start!important; }
+#app-content .recent-games:has(.dashboard-live-score) .recent-games-header { margin-bottom:0; }
+#app-content .recent-games .dashboard-live-score { min-height:0!important; flex:1 1 auto!important; padding:clamp(8px,1.4vw,18px)!important; border:1px solid #d8e2f0; border-radius:12px; background:linear-gradient(135deg,#f6f9fe,#edf3fb); display:flex!important; align-items:center!important; justify-content:center!important; }
+#app-content .recent-games .sc-dashboard-live-teams { width:100%; max-width:none; gap:8px; }
+#app-content .recent-games .sc-dashboard-live-team { border-radius:10px; min-width:0; padding:8px 3px; }
+#app-content .recent-games .sc-dashboard-live-points { font-size:clamp(40px,5vw,60px); line-height:1.05; }
+#app-content .recent-games .sc-dashboard-live-center { gap:5px; }
+#app-content .recent-games .sc-dashboard-live-period { font-size:11px; }
+@media (orientation:landscape) and (min-width:701px) and (max-height:850px) {
+  #app-content .recent-games:has(.dashboard-live-score) { padding:12px!important; gap:8px!important; }
+  #app-content .recent-games .dashboard-live-score { padding:8px!important; }
+  #app-content .recent-games .sc-dashboard-live-points { font-size:clamp(38px,4vw,54px); }
+}
+
+/* Dashboard roster v3 — single transform-based continuous track. */
+#app-content .dashboard-roster .av-roster-viewport {
+  display:block; position:relative; flex:1 1 auto; width:100%; min-width:0;
+  min-height:0; overflow:hidden!important; touch-action:pan-y;
+}
+#app-content .dashboard-roster .av-roster-viewport #dashboard-roster-track {
+  display:flex!important; flex:0 0 auto!important;
+  width:max-content!important; min-width:max-content!important;
+  max-width:none!important; overflow:visible!important;
+  scroll-snap-type:none!important; scroll-behavior:auto!important;
+  gap:12px; padding-right:0;
+  will-change:transform!important; touch-action:pan-y;
+}
+#app-content .dashboard-roster .av-roster-viewport .dashboard-player-card,
+#app-content .dashboard-roster .av-roster-viewport > #dashboard-roster-track > * {
+  flex-shrink:0!important;
+}
+#app-content .dashboard-roster .av-roster-viewport .av-roster-clone { display:flex!important; }

@@ -57,3 +57,4 @@ html.focus-tracker .qv-button:focus-visible{outline:3px solid #2563EB;outline-of
 
 .qv-opponent .qv-opp-buttons{grid-template-rows:repeat(2,minmax(0,1fr));align-content:start}
 .qv-opponent.qv-opponent-highlight .qv-opp-buttons{grid-template-rows:repeat(3,minmax(0,1fr))}
+

@@ -74,6 +74,10 @@ function renderGameCalendar() {
             String(event.event_date).slice(0, 10) === dateKey
         );
 
+        // Highlight scheduled, live and completed games regardless of venue.
+        if (gamesOnDate.length) dayButton.classList.add('sc-has-game');
+        if (gamesOnDate.some(game => game.status === 'live')) dayButton.classList.add('sc-live-date');
+
         // Preserve existing home/away game colours.
         if (gamesOnDate.some(game =>
             String(game.location || "").toLowerCase() === "home"
@@ -188,6 +192,7 @@ if (totalItems === 1 && eventsForDay.length === 1) {
             renderGameCalendar();
             renderMobileSelectedDay();
             renderMobileGameCard();
+    renderMobilePreviousGame();
             window.scoridiumTournaments?.renderSelectedDate();
             const selectedCompleted = selectedGameDate ? gameHubGames.filter(g =>
                 String(g.date).slice(0,10) === dateKey && g.status === "completed") : [];
@@ -255,6 +260,7 @@ async function loadGameHubGames() {
     window.scoridiumTournaments?.renderSelectedDate();
     renderMobileSelectedDay();
     renderMobileGameCard();
+    renderMobilePreviousGame();
 
     if (scheduleModal && !scheduleModal.hidden) {
     renderExistingScheduleEvents();
@@ -399,11 +405,11 @@ async function displayPreviousGame(games) {
     if(scoreLink)scoreLink.hidden=!game;
     if(filmLink)filmLink.hidden=true;
     if(game){
-      if(scoreLink)scoreLink.href=`add-score.html?gameId=${encodeURIComponent(game.id)}`;
+      if(scoreLink){scoreLink.dataset.gameId='?gameId='+encodeURIComponent(game.id);scoreLink.dataset.matchup=gameHubTeamName+' vs '+(game.opponent||'Opponent');}
       void scMayTrack(game).then(allowed=>{
         if(requestId!==previousGameRequest||!filmLink)return;
         filmLink.hidden=!allowed;
-        if(allowed)filmLink.href=`film-analysis.html?gameId=${encodeURIComponent(game.id)}`;
+        if(allowed)filmLink.href=`film-room.html?gameId=${encodeURIComponent(game.id)}`;
       });
     }
 
@@ -751,22 +757,28 @@ function renderPreviousGameLeaders(events, players) {
 
 // Check game-specific or season-scoped tracking grants before showing edit entry points.
 // This only selects the link label; Supabase RLS must still enforce all writes.
-const scTrackingGrants=new Map();
+// Re-check grants on every use: revocations must not be masked by an old
+// resolved promise. RLS remains authoritative for any write.
 async function scMayTrack(game){
-  const key=String(game.id);if(scTrackingGrants.has(key))return scTrackingGrants.get(key);
-  const promise=(async()=>{
-    try{
-      const user=(await supabaseClient.auth.getUser()).data.user;if(!user)return false;
-      const team=sessionStorage.getItem('selectedTeamId');
-      const [membership,permission]=await Promise.all([
-        supabaseClient.from('team_members').select('role').eq('team_id',team).eq('user_id',user.id),
-        supabaseClient.from('game_tracking_permissions').select('game_id,season_id').eq('user_id',user.id)
-      ]);
-      const coach=(membership.data||[]).some(x=>['head_coach','coach','assistant_coach','manager'].includes(x.role));
-      return coach||(permission.data||[]).some(x=>x.game_id===game.id||Boolean(x.season_id&&x.season_id===game.seasons_id));
-    }catch(e){return false;}
-  })();
-  scTrackingGrants.set(key,promise);return promise;
+  try {
+    const user=(await supabaseClient.auth.getUser()).data.user;
+    if(!user)return false;
+    const team=sessionStorage.getItem('selectedTeamId');
+    const [membership,permission]=await Promise.all([
+      supabaseClient.from('team_members').select('role').eq('team_id',team).eq('user_id',user.id),
+      supabaseClient.from('game_tracking_permissions')
+        .select('game_id,season_id,revoked_at,expires_at').eq('user_id',user.id)
+    ]);
+    if(membership.error || permission.error)return false;
+    const coach=(membership.data||[]).some(x=>
+      ['head_coach','coach','assistant_coach','manager'].includes(x.role));
+    const now=Date.now();
+    const granted=(permission.data||[]).some(x=>
+      !x.revoked_at && (!x.expires_at || Date.parse(x.expires_at)>now) &&
+      (String(x.game_id)===String(game.id) ||
+       Boolean(x.season_id && String(x.season_id)===String(game.seasons_id))));
+    return coach||granted;
+  } catch(e){console.warn('Tracker permission check failed:',e);return false;}
 }
 
 function scFullDate(value){
@@ -787,13 +799,15 @@ function displayNextGame(games){
  const {game,live}=scCurrentGameCard(games),card=document.querySelector('.next-game');if(!card)return;
  document.getElementById('sc-live-game-room')?.remove();
  card.classList.toggle('sc-is-live',live);
+ card.classList.toggle('sc-no-upcoming',!game);
  const heading=card.querySelector('.next-game-header h2'),date=document.getElementById('next-game-date');
  const home=document.getElementById('next-home-name'),away=document.getElementById('next-away-name');
  const vs=card.querySelector('.next-vs'),time=document.getElementById('next-game-time');
  const locationEl=document.getElementById('next-game-location'),action=document.getElementById('open-next-game');
+ const scoreButton=document.getElementById('apex-next-score-link');if(scoreButton){scoreButton.hidden=!game;if(game){scoreButton.dataset.gameId='?gameId='+encodeURIComponent(game.id);scoreButton.dataset.matchup=gameHubTeamName+' vs '+(game.opponent||'Opponent');}}
  heading.textContent=live?'LIVE GAME':'NEXT GAME';vs.textContent='VS';
  const oldHome=card.querySelector('.next-home .sc-score'),oldAway=card.querySelector('.next-away .sc-score');oldHome?.remove();oldAway?.remove();
- if(!game){date.textContent='No upcoming games';home.textContent=gameHubTeamName;away.textContent='TBD';time.textContent='';locationEl.textContent='';action.disabled=true;action.textContent='No Upcoming Game';action.onclick=null;return;}
+ if(!game){date.textContent='';home.textContent='';away.textContent='';time.textContent='';locationEl.textContent='';action.disabled=true;action.textContent='No upcoming games';action.onclick=null;return;}
  const isHome=String(game.location||'').toLowerCase()==='home';
  home.textContent=isHome?gameHubTeamName:(game.opponent||'Opponent');
  away.textContent=isHome?(game.opponent||'Opponent'):gameHubTeamName;
@@ -2007,6 +2021,7 @@ console.log("Game Hub events loaded:", gameHubEvents.length);
 renderGameCalendar();
 renderMobileSelectedDay();
 renderMobileGameCard();
+    renderMobilePreviousGame();
 
 // Refresh the editor list if the popup is open.
 if (scheduleModal && !scheduleModal.hidden) {
@@ -2197,12 +2212,62 @@ function renderMobileSelectedDay() {
     }
 }
 
+function renderMobilePreviousGame(){
+ const card=document.getElementById('apex-mobile-previous-game');
+ if(!card)return;
+ const completed=gameHubGames.filter(g=>g.status==='completed'&&g.team_score!=null&&g.opponent_score!=null)
+   .slice().sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+ const day=selectedGameDate?
+   [selectedGameDate.getFullYear(),String(selectedGameDate.getMonth()+1).padStart(2,'0'),
+    String(selectedGameDate.getDate()).padStart(2,'0')].join('-'):null;
+ const game=(day&&completed.find(g=>String(g.date).slice(0,10)===day))||completed[0];
+ const submit=document.getElementById('apex-mobile-previous-submit');
+ const film=document.getElementById('apex-mobile-previous-film');
+ const box=document.getElementById('apex-mobile-previous-box');
+ const date=document.getElementById('apex-mobile-previous-date');
+ const note=document.getElementById('apex-mobile-previous-note');
+ if(submit)submit.hidden=!game;
+ if(film)film.hidden=true;
+ if(box)box.hidden=!game;
+ if(!game){
+  card.classList.add('apex-mobile-no-previous');
+  date.textContent='No completed games';
+  document.getElementById('apex-mobile-previous-home').textContent='HOME';
+  document.getElementById('apex-mobile-previous-away').textContent='AWAY';
+  document.getElementById('apex-mobile-previous-home-score').textContent='—';
+  document.getElementById('apex-mobile-previous-away-score').textContent='—';
+  note.textContent='Completed game results and review actions will appear here.';
+  return;
+ }
+ card.classList.remove('apex-mobile-no-previous');
+ const home=String(game.location||'').toLowerCase()==='home';
+ document.getElementById('apex-mobile-previous-home').textContent=home?gameHubTeamName:game.opponent||'Opponent';
+ document.getElementById('apex-mobile-previous-away').textContent=home?game.opponent||'Opponent':gameHubTeamName;
+ document.getElementById('apex-mobile-previous-home-score').textContent=home?game.team_score:game.opponent_score;
+ document.getElementById('apex-mobile-previous-away-score').textContent=home?game.opponent_score:game.team_score;
+ date.textContent=scFullDate(game.date);
+ const ours=Number(game.team_score),theirs=Number(game.opponent_score);
+ note.textContent=(ours>theirs?'Win':ours<theirs?'Loss':'Final')+' · '+gameHubTeamName+' '+ours+' – '+theirs+' '+(game.opponent||'Opponent');
+ if(submit){
+  submit.dataset.gameId='?gameId='+encodeURIComponent(game.id);
+  submit.dataset.matchup=gameHubTeamName+' vs '+(game.opponent||'Opponent');
+ }
+ if(box)box.href='stats.html?gameId='+encodeURIComponent(game.id);
+ if(film){
+  film.href='film-room.html?gameId='+encodeURIComponent(game.id);
+  void scMayTrack(game).then(allowed=>{
+   if(!film.isConnected||film.href!==new URL('film-room.html?gameId='+encodeURIComponent(game.id),location.href).href)return;
+   film.hidden=!allowed;
+  }).catch(()=>{film.hidden=true;});
+ }
+}
 function renderMobileGameCard(){
  const card=document.getElementById('mobile-context-game');if(!card)return;
  const heading=card.querySelector('[data-mobile-game-heading]'),date=card.querySelector('[data-mobile-game-date]');
  const matchup=card.querySelector('[data-mobile-game-matchup]'),result=card.querySelector('[data-mobile-game-result]'),action=card.querySelector('[data-mobile-game-action]');
  const {game,live}=scCurrentGameCard(gameHubGames);
- card.classList.toggle('sc-is-live',live);heading.textContent=live?'LIVE GAME':'NEXT GAME';
+ const scoreButton=document.getElementById('apex-mobile-score-link');if(scoreButton){scoreButton.hidden=!game;if(game){scoreButton.dataset.gameId='?gameId='+encodeURIComponent(game.id);scoreButton.dataset.matchup=gameHubTeamName+' vs '+(game.opponent||'Opponent');}}
+ card.classList.toggle('sc-is-live',live);card.classList.toggle('sc-no-upcoming',!game);heading.textContent=live?'LIVE GAME':'NEXT GAME';
  date.textContent=game?scFullDate(game.date):'No upcoming games';
  const isHome=String(game?.location||'').toLowerCase()==='home';
  const left=isHome?gameHubTeamName:(game?.opponent||'Opponent');
@@ -2218,3 +2283,43 @@ function renderMobileGameCard(){
   action.onclick=()=>location.href=`${canTrack?'game':'watch-game'}.html?gameId=${encodeURIComponent(game.id)}`;
  });
 }
+
+/* Film Room mode selection overlays Game Hub; trackers use full pages. */
+document.addEventListener('DOMContentLoaded',()=>{
+ const link=document.getElementById('apex-film-analysis-link');
+ const mobileLink=document.getElementById('apex-mobile-previous-film');
+ const dlg=document.getElementById('apex-film-room-modal'),frame=document.getElementById('apex-film-room-frame');
+ if(!link||!dlg||!frame)return;
+ const openFilm=(event)=>{
+  event.preventDefault();
+  const source=event.currentTarget;
+  if(source.hidden)return;
+  frame.src=source.href;
+  dlg.showModal();
+ };
+ link.addEventListener('click',openFilm);
+ mobileLink?.addEventListener('click',openFilm);
+ document.getElementById('apex-film-room-close')?.addEventListener('click',()=>dlg.close());
+ dlg.addEventListener('click',event=>{if(event.target===dlg)dlg.close();});
+ dlg.addEventListener('close',()=>{frame.removeAttribute('src');});
+});
+
+/* Return from a review page to the same Game Hub + Film Room chooser. */
+document.addEventListener('DOMContentLoaded',()=>{
+ const gameId=new URLSearchParams(location.search).get('filmRoomGameId');
+ if(!gameId)return;
+ let attempts=0,finished=false;
+ const resume=setInterval(async()=>{
+  if(finished){clearInterval(resume);return;}
+  if(++attempts>48){clearInterval(resume);return;}
+  const dialog=document.getElementById('apex-film-room-modal'),frame=document.getElementById('apex-film-room-frame');
+  if(!dialog||!frame||dialog.open)return;
+  const listed=gameHubGames.find(g=>String(g.id)===String(gameId)&&g.status==='completed');
+  if(!listed)return;
+  finished=true;clearInterval(resume);
+  const allowed=await scMayTrack(listed);
+  if(!allowed)return;
+  frame.src='film-room.html?gameId='+encodeURIComponent(gameId);
+  dialog.showModal();
+ },250);
+});
