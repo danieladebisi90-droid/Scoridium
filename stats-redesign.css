@@ -151,3 +151,25 @@
   fill:none!important;
   stroke:var(--team-primary,#233f85)!important;
 }
+
+/* Coaches report action in Game Details */
+#details-view .details-head{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
+}
+#details-view .details-head h2{margin-right:auto}
+.sc-coaches-report-btn{
+  background:var(--team-primary,#233f85);
+  color:var(--team-primary-ink,#fff);
+  border:1px solid var(--team-primary,#233f85);
+  border-radius:8px;
+  padding:10px 15px;
+  font-size:13px;
+  font-weight:800;
+  cursor:pointer;
+}
+.sc-coaches-report-btn:hover{filter:brightness(1.12)}
+.sc-coaches-report-btn:focus-visible{outline:3px solid var(--team-secondary,#d1a155);outline-offset:3px}
+@media(max-width:650px){.sc-coaches-report-btn{width:100%;min-height:42px}}
