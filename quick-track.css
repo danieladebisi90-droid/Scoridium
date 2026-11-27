@@ -78,7 +78,7 @@ html.focus-tracker #quick-track-root{flex:1;min-height:0;display:flex;overflow:h
 .qv-ft-line{display:flex;align-items:center;gap:7px;padding:6px;border:1px solid #d5dfeb;border-radius:8px;flex:1;min-height:0;max-height:75px;opacity:.45}
 .qv-ft-line.qv-current{opacity:1;border-color:#347ce4;background:#f0f5fc}
 .qv-ft-line strong{min-width:62px;font-size:clamp(10px,1.1vw,14px)}
-.qv-ft-line>div{display:flex;gap:5px;flex:1;height:100%}
+.qv-ft-line>div:not(.qv-ft-heading):not(.qv-ft-actions){display:flex;gap:5px;flex:1;height:100%}
 .qv-ft-line .qv-button{flex:1}
 @media(max-width:740px){
  html.focus-tracker #quick-track-panel{padding:1px!important}
@@ -117,3 +117,19 @@ html.focus-tracker #quick-track-root{flex:1;min-height:0;display:flex;overflow:h
 /* More than 12 players remain accessible within the same fixed-height panel. */
 .qv-grid{grid-auto-rows:minmax(42px,1fr);overflow-y:auto;scrollbar-width:thin}
 
+
+/* The modern single-attempt free throw row has its own header and action
+   heights. Never inherit the old 100%-height layout for these elements. */
+.qv-ft-line > .qv-ft-heading {
+  flex:0 0 auto!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  margin:0!important;
+  padding:0!important;
+}
+.qv-ft-line > .qv-ft-actions {
+  flex:0 0 auto!important;
+  align-self:stretch!important;
+  box-sizing:border-box!important;
+}
