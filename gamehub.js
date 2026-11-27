@@ -391,13 +391,11 @@ async function displayPreviousGame(games) {
     const boxScoreLink =
         document.getElementById("previous-box-score-link");
 
+    // A completed game may be waiting for Film Room review.
+    // Do not require a final score just to make the game accessible.
     const completedGames = games
-        .filter(game =>
-            game.status === "completed" &&
-            game.team_score != null &&
-            game.opponent_score != null
-        )
-        .sort((a, b) => b.date.localeCompare(a.date));
+        .filter(game => game.status === "completed")
+        .sort((a, b) => String(b.date).localeCompare(String(a.date)));
 
     const game = completedGames[0];
     const scoreLink=document.getElementById('apex-add-score-link');
@@ -462,19 +460,18 @@ async function displayPreviousGame(games) {
         .textContent = awayName;
 
     document.getElementById("previous-home-score")
-        .textContent = isHome
-            ? game.team_score
-            : game.opponent_score;
+        .textContent = (isHome ? game.team_score : game.opponent_score) ?? "—";
 
     document.getElementById("previous-away-score")
-        .textContent = isHome
-            ? game.opponent_score
-            : game.team_score;
+        .textContent = (isHome ? game.opponent_score : game.team_score) ?? "—";
 
     boxScoreLink.href =
         `stats.html?gameId=${encodeURIComponent(game.id)}`;
 
-    quartersContainer.textContent = "Loading quarter scores...";
+    const awaitingScoreReview = game.team_score == null || game.opponent_score == null;
+    quartersContainer.textContent = awaitingScoreReview
+        ? "Final score pending Film Room review."
+        : "Loading quarter scores...";
     leadersContainer.textContent = "Loading player statistics...";
 
     // Fetch recorded events and player names.
@@ -518,11 +515,15 @@ async function displayPreviousGame(games) {
         console.error("Box score players error:", playersError);
     }
 
-    renderPreviousQuarterScores(game, events);
+    if (awaitingScoreReview) {
+        quartersContainer.textContent = "Final score pending Film Room review.";
+    } else {
+        renderPreviousQuarterScores(game, events);
+    }
     renderPreviousGameLeaders(events, players || []);
     // A score-only approved submission has no fabricated game_events.
     // Read its original quarter breakdown as a separate verified source.
-    if(!events.some(e=>getEventPoints(e)>0)){
+    if(!awaitingScoreReview && !events.some(e=>getEventPoints(e)>0)){
       const {data:approved}=await supabaseClient.from('apexvision_score_submissions')
         .select('quarter_scores').eq('game_id',game.id).eq('status','approved')
         .order('reviewed_at',{ascending:false}).limit(1);
@@ -2229,7 +2230,7 @@ function renderMobileSelectedDay() {
 function renderMobilePreviousGame(){
  const card=document.getElementById('apex-mobile-previous-game');
  if(!card)return;
- const completed=gameHubGames.filter(g=>g.status==='completed'&&g.team_score!=null&&g.opponent_score!=null)
+ const completed=gameHubGames.filter(g=>g.status==='completed')
    .slice().sort((a,b)=>String(b.date).localeCompare(String(a.date)));
  const day=selectedGameDate?
    [selectedGameDate.getFullYear(),String(selectedGameDate.getMonth()+1).padStart(2,'0'),
@@ -2257,11 +2258,14 @@ function renderMobilePreviousGame(){
  const home=String(game.location||'').toLowerCase()==='home';
  document.getElementById('apex-mobile-previous-home').textContent=home?gameHubTeamName:game.opponent||'Opponent';
  document.getElementById('apex-mobile-previous-away').textContent=home?game.opponent||'Opponent':gameHubTeamName;
- document.getElementById('apex-mobile-previous-home-score').textContent=home?game.team_score:game.opponent_score;
- document.getElementById('apex-mobile-previous-away-score').textContent=home?game.opponent_score:game.team_score;
+ document.getElementById('apex-mobile-previous-home-score').textContent=(home?game.team_score:game.opponent_score)??'—';
+ document.getElementById('apex-mobile-previous-away-score').textContent=(home?game.opponent_score:game.team_score)??'—';
  date.textContent=scFullDate(game.date);
+ const awaitingScoreReview=game.team_score==null||game.opponent_score==null;
  const ours=Number(game.team_score),theirs=Number(game.opponent_score);
- note.textContent=(ours>theirs?'Win':ours<theirs?'Loss':'Final')+' · '+gameHubTeamName+' '+ours+' – '+theirs+' '+(game.opponent||'Opponent');
+ note.textContent=awaitingScoreReview
+  ? 'Completed · Final score pending Film Room review'
+  : (ours>theirs?'Win':ours<theirs?'Loss':'Final')+' · '+gameHubTeamName+' '+ours+' – '+theirs+' '+(game.opponent||'Opponent');
  if(submit){
   submit.dataset.gameId='?gameId='+encodeURIComponent(game.id);
   submit.dataset.matchup=gameHubTeamName+' vs '+(game.opponent||'Opponent');
