@@ -51,6 +51,15 @@ window.apexOpenCoachesReport=function({game,tracked,opponent,fullCourt,offenseCo
   ];
   const allRows=comparisons.map(a=>row(a[0],a[1],a[2])).join('');
   const quarterRows=quarters.map((q,i)=>row(i<4?'Q'+(i+1):'OT'+(i-3),q.us,q.opponent)).join('');
+  const glance=[['FG%',percent(tracked.fgm,tracked.fga),observed?percent(opponent.fgm,opponent.fga):'—'],
+    ['3PT%',percent(tracked.threeMade,tracked.threeAtt),observed?percent(opponent.threeMade,opponent.threeAtt):'—'],
+    ['FT%',percent(tracked.ftm,tracked.fta),observed?percent(opponent.ftm,opponent.fta):'—'],
+    ['Rebounds',tracked.reb,observed?opponent.reb:'—'],
+    ['Assists',tracked.ast,observed?opponent.ast:'—'],
+    ['Turnovers',tracked.tov,observed?opponent.tov:'—']];
+  const glanceHTML=glance.map(([label,a,b])=>'<div class="glance-cell"><div class="glance-label">'+esc(label)+
+    '</div><div class="glance-values"><strong>'+esc(a)+'</strong><span>vs</span><strong>'+esc(b)+
+    '</strong></div><div class="glance-names"><small>'+us+'</small><small>'+them+'</small></div></div>').join('');
   const title='ApexVision Coaches Report - '+(game.team||'Team')+' vs '+(game.opponent||'Opponent');
   const date=esc(game.date||'');
   const header='<div class="head"><div><div class="brand">APEXVISION.</div><div class="subbrand">COACHES GAME REPORT</div></div>'+
@@ -79,7 +88,8 @@ window.apexOpenCoachesReport=function({game,tracked,opponent,fullCourt,offenseCo
     '.halves{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.halves .court-card svg{max-height:65mm;width:auto;max-width:100%;margin:auto}',
     '.small{font-size:10px;color:var(--muted);line-height:1.4}.legend{font-size:11px;text-align:center;margin:9px 0 0}',
     'footer{border-top:1px solid var(--line);padding-top:8px;margin-top:12px;font-size:10px;color:var(--muted)}footer span{float:right}',
-    '@page{size:A4 landscape;margin:0}@media print{html,body{width:297mm;background:white}.toolbar{display:none}.page{width:297mm;min-height:210mm;height:auto;margin:0;padding:11mm 14mm;box-shadow:none;break-after:page}.page:last-child{break-after:auto}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}'
+    '@page{size:A4 landscape;margin:0}@media print{html,body{width:297mm;background:white}.toolbar{display:none}.page{width:297mm;min-height:210mm;height:auto;margin:0;padding:11mm 14mm;box-shadow:none;break-after:page}.page:last-child{break-after:auto}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}',
+    "\n/* Report redesign v2: print-page-safe editorial layout */\n.page{display:flex;flex-direction:column;gap:0;padding:11mm 13mm;min-height:0;height:209mm;overflow:hidden;border-radius:0}\n.page>.head{flex:0 0 auto}\n.head{padding-bottom:8px;margin-bottom:13px}\n.brand{font-size:21px;letter-spacing:1.5px}\n.subbrand{letter-spacing:2.2px}\nh1{font-size:25px;margin:0 0 10px}\nh2{font-size:14px;margin-bottom:8px}\n.panel{padding:12px 14px;margin-bottom:12px;border-radius:10px}\n.scoreboard{background:var(--primary);color:white;border:0;padding:14px 16px;margin-bottom:14px;border-radius:10px}\n.scoreboard b{font-size:17px;color:white}\n.scoreboard strong{font-size:44px;color:white;line-height:1.15}\n.scoreboard small{color:#dae4fa;letter-spacing:1px}\n.cols{gap:12px}\n.cols>.panel{margin-bottom:12px}\n.cols th,.cols td{padding:5px 8px}\n.leaders{gap:7px}\n.leader{padding:9px 8px;background:#f0f4fa}\n.leader b{font-size:12px}\n.leader small{font-size:9px;letter-spacing:.5px;font-weight:700}\n.section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:9px}\n.section-title h2{margin:0}\n.section-title>span{color:var(--muted);font-size:9px;font-weight:800;letter-spacing:1px}\n.glance-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}\n.glance-cell{padding:11px 12px;border:1px solid var(--line);border-radius:9px;background:#f7f9fc;min-width:0}\n.glance-label{font-weight:800;font-size:11px;color:var(--primary);margin-bottom:8px}\n.glance-values{display:flex;align-items:center;justify-content:space-between;gap:7px}\n.glance-values strong{font-size:22px;color:var(--primary);white-space:nowrap}\n.glance-values span{font-size:9px;color:var(--muted);text-transform:uppercase}\n.glance-names{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:9px;margin-top:5px}\n.glance-names small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:48%}\nfooter{margin-top:auto;padding-top:8px;font-size:9px;flex:0 0 auto}\n.boxscore{font-size:11px}\n.boxscore td,.boxscore th{padding:8px 7px}\n.compact-comparison td,.compact-comparison th{padding:5px 9px;font-size:10px}\n.compact-comparison tbody tr:nth-child(2n){background:#f4f7fb}\n.court-page h1{margin-bottom:9px}\n.court-page .court-card{margin-bottom:10px}\n.court-page .court-card.full{width:100%;max-width:none;padding:8px 11px}\n.court-page .court-card.full svg{display:block;width:100%;max-width:100%;max-height:79mm;height:auto;margin:auto}\n.court-page .halves{width:100%;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr))}\n.court-page .halves .court-card{width:100%;max-width:none;padding:10px 11px;margin-bottom:6px}\n.court-page .halves .court-card svg{display:block;max-height:71mm;height:auto;width:100%;max-width:100%;margin:auto}\n.court-page .court-card .small{margin:0 0 4px}\n.court-page .legend{margin:5px 0 0}\n.court-page>p.small{margin:3px 0 2px}\n@page{size:A4 landscape;margin:0}\n@media print{\n html,body{margin:0!important;width:297mm!important;min-width:0!important;background:white!important}\n .toolbar{display:none!important}\n .page{width:297mm!important;height:209mm!important;min-height:0!important;max-height:209mm!important;overflow:hidden!important;margin:0!important;padding:10mm 13mm!important;box-shadow:none!important;break-after:page!important;page-break-after:always!important}\n .page:last-child{break-after:auto!important;page-break-after:auto!important}\n .court-page .court-card.full svg{max-height:76mm!important}\n .court-page .halves .court-card svg{max-height:68mm!important}\n *{-webkit-print-color-adjust:exact;print-color-adjust:exact}\n}"
   ].join('\n');
 
   const html='<!doctype html><html lang="en"><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>'+style+'</style></head><body>'+
@@ -90,7 +100,7 @@ window.apexOpenCoachesReport=function({game,tracked,opponent,fullCourt,offenseCo
     (quarterRows||'<tr><td colspan="3">No quarter breakdown recorded</td></tr>')+
     '<tr class="total"><th>Final</th>'+td(game.ourScore)+td(game.opponentScore)+'</tr></tbody></table></div>'+
     '<div class="panel"><h2>Tracked Team Leaders</h2><div class="leaders"><div class="leader"><small>POINTS</small><b>'+leader('pts')+'</b></div><div class="leader"><small>REBOUNDS</small><b>'+leader('reb')+'</b></div><div class="leader"><small>ASSISTS</small><b>'+leader('ast')+'</b></div></div><p class="small">Player leaders are calculated only from the tracked team roster.</p></div></div>'+
-    '<div class="panel"><h2>Team Comparison</h2><table><thead><tr><th>Statistic</th><th>'+us+'</th><th>'+them+'</th></tr></thead><tbody>'+allRows+'</tbody></table></div>'+
+    '<div class="panel overview-pulse"><div class="section-title"><h2>Game at a Glance</h2><span>TEAM PERFORMANCE</span></div><div class="glance-grid">'+glanceHTML+'</div></div>'+
     footer('1','Overview')+'</section>'+
     '<section class="page">'+header+'<h1>Detailed Box Score</h1>'+
     '<div class="panel"><h2>'+us+' — Players & Team Totals</h2><table class="boxscore">'+tableHead+'<tbody>'+(
@@ -98,11 +108,10 @@ window.apexOpenCoachesReport=function({game,tracked,opponent,fullCourt,offenseCo
       total(game.team+' — Team Total',tracked)+
       (observed?total(game.opponent+' — Team Total',opponent):'<tr><td colspan="11">No opponent statistics recorded</td></tr>')+
       '</tbody></table><p class="small">Team-level events (including team rebounds) are included in team totals. Opponent data is team-level only.</p></div>'+
-    '<div class="panel"><h2>Shooting Breakdown</h2><table><thead><tr><th>Statistic</th><th>'+us+'</th><th>'+them+'</th></tr></thead><tbody>'+
-    comparisons.filter(a=>['Field goals','FG%','Three-pointers','3PT%','Free throws','FT%'].includes(a[0])).map(a=>row(a[0],a[1],a[2])).join('')+
-    '</tbody></table></div>'+footer('2','Box Score')+'</section>'+
-    '<section class="page">'+header+'<h1>Shot Location Analysis</h1>'+
-    '<div class="court-card full"><h2>Full Court · Both Teams</h2>'+(fullCourt||'<p>No shots recorded</p>')+
+    '<div class="panel compact-comparison"><div class="section-title"><h2>Team Comparison</h2><span>FULL GAME TOTALS</span></div><table><thead><tr><th>Statistic</th><th>'+us+'</th><th>'+them+'</th></tr></thead><tbody>'+
+    allRows+'</tbody></table></div>'+footer('2','Box Score & Comparison')+'</section>'+
+    '<section class="page court-page">'+header+'<h1>Shot Location Analysis</h1>'+
+    '<div class="court-card full"><div class="section-title"><h2>Full Court · Both Teams</h2><span>ALL RECORDED SHOTS</span></div>'+(fullCourt||'<p>No shots recorded</p>')+
     '<div class="legend">● Made &nbsp; ○ Missed · Markers use team colours</div></div>'+
     '<div class="halves"><div class="court-card"><h2>Offence · '+us+'</h2>'+
     '<p class="small">'+shots.filter(s=>teamOf(s)==='us').length+' recorded shot locations</p>'+
