@@ -1032,10 +1032,12 @@ function scoreHTML(g) {
 }
 function boxHTML(g) {
  if(!g)return '<div class="empty">No game selected</div>';
+ const tracked=apexCountSide(g.events,'us');
  const opponent=apexCountSide(g.events,'opponent');
  const rows=g.players.map(p=>`<tr><td>${escapeHTML(p.number)}</td><td>${escapeHTML(nameOf(p))}</td><td>${p.min}</td><td>${p.pts}</td><td>${p.fgm}-${p.fga}</td><td>${p.threeMade}-${p.threeAtt}</td><td>${p.ftm}-${p.fta}</td><td>${p.reb}</td><td>${p.ast}</td><td>${p.stl}</td><td>${p.blk}</td><td>${p.tov}</td><td>${p.pf}</td><td>${playerEFF(p)}</td></tr>`).join('');
+ const trackedRow=`<tr class="sc-tracked-team-total"><td colspan="2">${escapeHTML(g.team)} — team totals</td><td>—</td><td>${tracked.pts}</td><td>${tracked.fgm}-${tracked.fga}</td><td>${tracked.threeMade}-${tracked.threeAtt}</td><td>${tracked.ftm}-${tracked.fta}</td><td>${tracked.reb}</td><td>${tracked.ast}</td><td>${tracked.stl}</td><td>${tracked.blk}</td><td>${tracked.tov}</td><td>${tracked.pf}</td><td>—</td></tr>`;
  const oppRow=opponent.observed?`<tr><td colspan="2">${escapeHTML(g.opponent)} — team totals</td><td>—</td><td>${opponent.pts}</td><td>${opponent.fgm}-${opponent.fga}</td><td>${opponent.threeMade}-${opponent.threeAtt}</td><td>${opponent.ftm}-${opponent.fta}</td><td>${opponent.reb}</td><td>${opponent.ast}</td><td>${opponent.stl}</td><td>${opponent.blk}</td><td>${opponent.tov}</td><td>${opponent.pf}</td><td>—</td></tr>`:`<tr><td colspan="14">${escapeHTML(g.opponent)} — no opponent events recorded</td></tr>`;
- return `<div class="table-scroll"><table><thead><tr><th>#</th><th>PLAYER / TEAM</th><th>MIN</th><th>PTS</th><th>FG</th><th>3PT</th><th>FT</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th><th>PF</th><th>EFF</th></tr></thead><tbody>${rows||'<tr><td colspan="14">No tracked-team player statistics recorded</td></tr>'}${oppRow}</tbody></table></div>`;
+ return `<div class="table-scroll"><table><thead><tr><th>#</th><th>PLAYER / TEAM</th><th>MIN</th><th>PTS</th><th>FG</th><th>3PT</th><th>FT</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th><th>PF</th><th>EFF</th></tr></thead><tbody>${rows||'<tr><td colspan="14">No tracked-team player statistics recorded</td></tr>'}${trackedRow}${oppRow}</tbody></table></div>`;
 }
 function shootingHTML(g) {
  if(!g)return '';
