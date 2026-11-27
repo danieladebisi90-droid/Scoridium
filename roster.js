@@ -75,7 +75,7 @@ function jerseySVG(player) {
         const element = document.createElementNS(svgNS, tag);
 
         for (const [name, value] of Object.entries(attrs)) {
-            element.setAttribute(name, value);
+            if (value != null) element.setAttribute(name, value);
         }
 
         if (content !== undefined) {
