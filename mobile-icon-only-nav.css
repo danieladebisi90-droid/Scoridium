@@ -4,7 +4,7 @@
   body.scoridium-shell nav.mobile-bottom-nav {
     position:fixed!important;
     left:calc(10px + env(safe-area-inset-left))!important;right:auto!important;
-    bottom:calc(8px + env(safe-area-inset-bottom))!important;top:auto!important;
+    bottom:calc(2px + env(safe-area-inset-bottom))!important;top:auto!important;
     width:clamp(164px, calc(100vw - 212px), 244px)!important;
     max-width:calc(100vw - 24px)!important;height:48px!important;min-height:48px!important;
     margin:0!important;padding:3px 5px!important;
