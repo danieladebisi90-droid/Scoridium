@@ -68,7 +68,7 @@
     <button
       type="button"
       id="post-end-review"
-      title="Finish the review without changing the official completed game">
+      title="Finish the review and choose whether to update the official score">
       Finish Review
     </button>
   </div>
@@ -254,6 +254,19 @@
 </section></dialog>
 </section>
 </main>
+
+<dialog id="post-final-score-dialog" class="postgame-dialog" aria-labelledby="post-final-score-title">
+  <div class="postgame-dialog-top"><strong id="post-final-score-title">Finish Game Review</strong></div>
+  <p id="post-final-score-comparison" role="status">Checking reviewed scoring events...</p>
+  <p class="postgame-subtitle">Only save the reviewed final score when both teams' scoring events have been recorded. You can finish without changing the existing score.</p>
+  <p id="post-final-score-error" role="alert" hidden></p>
+  <div class="schedule-form-actions" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;">
+    <button id="post-final-score-continue" type="button">Continue Reviewing</button>
+    <button id="post-final-score-keep" type="button">Keep Existing Score</button>
+    <button id="post-final-score-save" type="button" class="film-save">Update Final Score</button>
+  </div>
+</dialog>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script src="apex-basketball-rules.js?v=connected-1" defer></script>
