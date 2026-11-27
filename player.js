@@ -84,9 +84,16 @@ let inDemo = false;
     for(const shot of shots){
       const x=Number(shot.x),y=Number(shot.y);
       if(!Number.isFinite(x)||!Number.isFinite(y)||x<10||x>850||y<10||y>460) continue;
-      const shape=document.createElementNS(NS,shot.made?'circle':'path');
-      if(shot.made){shape.setAttribute('cx',x);shape.setAttribute('cy',y);shape.setAttribute('r','7');shape.setAttribute('fill','#178c31');shape.setAttribute('stroke','white');shape.setAttribute('stroke-width','2');}
-      else {shape.setAttribute('d',`M ${x-7} ${y-7} L ${x+7} ${y+7} M ${x+7} ${y-7} L ${x-7} ${y+7}`);shape.setAttribute('stroke','#db1821');shape.setAttribute('stroke-width','4');shape.setAttribute('fill','none');shape.setAttribute('stroke-linecap','round');}
+      // Same team-coloured shot markers as Stats: solid = made, ring = missed.
+      const shape=document.createElementNS(NS,'circle');
+      const made=shot.made===true||shot.made===1;
+      shape.setAttribute('cx',x);
+      shape.setAttribute('cy',y);
+      shape.setAttribute('r','7');
+      shape.setAttribute('fill',made?'var(--team-primary,#233f85)':'none');
+      shape.setAttribute('stroke','var(--team-primary,#233f85)');
+      shape.setAttribute('stroke-width',made?'2':'3');
+      shape.setAttribute('class',made?'player-shot-made':'player-shot-missed');
       const title=document.createElementNS(NS,'title');title.textContent=`${shot.made?'Made':'Missed'} ${shot.points||2}PT`;
       shape.appendChild(title);points.appendChild(shape);
     }
