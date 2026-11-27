@@ -830,22 +830,19 @@ function apexShotLayerControls(side){
   const selected=side==='team'?apexTeamShotLayer:apexPlayerShotLayer;
   return `<div class="apex-shot-layer-controls" role="group" aria-label="Shot chart marker style"><button type="button" data-shot-layer="results" data-shot-side="${side}" aria-pressed="${selected==='results'}">Shot Results</button><button type="button" data-shot-layer="creation" data-shot-side="${side}" aria-pressed="${selected==='creation'}">Shot Creation</button></div>`;
 }
+// Shared result marker for the Stats surfaces: solid = made, ring = missed.
+// Both use the active team palette; opponents use the comparison accent.
 function apexShotMarker(shot,x,y,layer){
-  if(layer!=='creation')return shot.made
-    ? `<circle cx="${x}" cy="${y}" r="6.8" fill="#15964c"/>`
-    : `<path d="M${x-7} ${y-7} L${x+7} ${y+7} M${x+7} ${y-7} L${x-7} ${y+7}" fill="none" stroke="#df3138" stroke-width="3.4" stroke-linecap="round"/>`;
-  const kind=shot.shotCreation||'unknown',color=shot.made?'#15964c':'#df3138';
-  const fill=shot.made?color:'#fff9f1';
-  const shape=kind==='pull_up'?`<rect x="${x-7}" y="${y-7}" width="14" height="14"/>`
-    :kind==='drive'?`<polygon points="${x},${y-9} ${x+9},${y+8} ${x-9},${y+8}"/>`
-    :kind==='post'?`<polygon points="${x},${y-9} ${x+9},${y} ${x},${y+9} ${x-9},${y}"/>`
-    :kind==='putback'?`<polygon points="${[0,1,2,3,4,5].map(j=>`${x+8*Math.cos(j*Math.PI/3)},${y+8*Math.sin(j*Math.PI/3)}`).join(' ')}"/>`
-    :`<circle cx="${x}" cy="${y}" r="7"/>`;
-  const unknown=kind==='unknown'?' stroke-dasharray="3 2"':'';
-  const cross=shot.made?'':`<path d="M${x-3} ${y-3} L${x+3} ${y+3} M${x+3} ${y-3} L${x-3} ${y+3}" stroke="#df3138" stroke-width="1.8" fill="none"/>`;
-  return `<g fill="${fill}" stroke="${color}" stroke-width="2.4"${unknown}>${shape}${cross}<title>${escapeHTML(kind.replaceAll('_',' '))} · ${shot.made?'made':'missed'}</title></g>`;
+  const opponent=['opponent','them','away'].includes(String(shot.team||'').toLowerCase());
+  const color=opponent?'var(--team-secondary,#b8772f)':'var(--team-primary,#233f85)';
+  const made=shot.made===true||shot.made===1;
+  const kind=shot.shotCreation||'unknown';
+  return `<circle cx="${x}" cy="${y}" r="7" fill="${made?color:'none'}"
+    stroke="${color}" stroke-width="${made?2:3}" class="sc-shot-result ${made?'sc-shot-made':'sc-shot-missed'}">
+    <title>${escapeHTML((layer==='creation'?kind.replaceAll('_',' ')+' · ':'')+(made?'Made':'Missed')+(opponent?' · Opponent':' · Tracked team'))}</title>
+  </circle>`;
 }
-function apexShotLegend(){return `<p class="apex-shot-legend">● Catch-and-shoot · ■ Pull-up · ▲ Drive · ◆ Post · ⬡ Putback · ◌ Unknown. Green = made; red outline + X = missed.</p>`;}
+function apexShotLegend(){return `<p class="apex-shot-legend">● Made shot · ○ Missed shot. Marker colour identifies the team.</p>`;}
 
 function courtSVG(shots, mode = "full", markerLayer = 'results') {
 
@@ -1042,7 +1039,7 @@ function boxHTML(g) {
 function shootingHTML(g) {
  if(!g)return '';
  const us=apexCountSide(g.events,'us'),op=apexCountSide(g.events,'opponent');
- return `<section class="sc-game-court-whole"><h3>Full Game · Shot Locations</h3><div class="sc-game-court-labels"><span>${escapeHTML(g.team)} · ${us.fgm}/${us.fga} FG</span><span>${escapeHTML(g.opponent)} · ${op.observed?op.fgm+'/'+op.fga+' FG':'No recorded shots'}</span></div>${courtSVG(g.shots||[],'full')}<div class="shot-legend"><span class="made-marker">●</span> Made <span class="miss-marker">✕</span> Missed</div></section>`;
+ return `<section class="sc-game-court-whole"><h3>Full Game · Shot Locations</h3><div class="sc-game-court-labels"><span>${escapeHTML(g.team)} · ${us.fgm}/${us.fga} FG</span><span>${escapeHTML(g.opponent)} · ${op.observed?op.fgm+'/'+op.fga+' FG':'No recorded shots'}</span></div>${courtSVG(g.shots||[],'full')}<div class="shot-legend"><span class="made-marker">●</span> Made <span class="miss-marker">○</span> Missed</div></section>`;
 }
 function playsHTML(g){
  if(!g)return '<p>No game selected</p>';
@@ -1094,7 +1091,7 @@ function renderDetails(){
   const typeFilter=filterSelect('detail-type-select',[['all','All Shots'],['2','2-Point'],['3','3-Point']],state.detailType);
   const shots=shotsFor([g],state.detailPlayer,state.detailTeam,state.detailType);
   const made=shots.filter(s=>s.made).length;
-  $('detail-content').innerHTML=`<div class="detail-layout"><article class="panel"><h2>FILTER SHOTS</h2><label>Team</label>${teamFilter}<label>Player</label>${playerFilter}<label>Shot Type</label>${typeFilter}<h2>SHOOTING SUMMARY</h2><div class="detail-metric"><span>Shots</span><strong>${shots.length}</strong></div><div class="detail-metric"><span>Made</span><strong>${made}</strong></div><div class="detail-metric"><span>FG%</span><strong>${fmt(pct(made,shots.length))}%</strong></div></article><article class="panel"><div class="panel-heading"><h2>SHOT CHART</h2><div><button class="inline-btn ${state.courtMode==='full'?'active':''}" data-court="full">Full Court</button> <button class="inline-btn ${state.courtMode==='half'?'active':''}" data-court="half">Half Court</button></div></div>${courtSVG(shots,state.courtMode)}<div class="shot-legend"><span class="made-marker">●</span> Made <span class="miss-marker">✕</span> Missed</div></article><article class="panel"><h2>SHOT BREAKDOWN</h2>${shootingHTML(g)}<h2 style="margin-top:20px">SHOT TYPES</h2>${[[2,'2PT'],[3,'3PT']].map(([points,label])=>{const subset=shots.filter(s=>number(s.points)===points);return `<div class="detail-metric"><span>${label}</span><strong>${subset.filter(s=>s.made).length}/${subset.length}</strong></div>`;}).join('')}</article></div>`;
+  $('detail-content').innerHTML=`<div class="detail-layout"><article class="panel"><h2>FILTER SHOTS</h2><label>Team</label>${teamFilter}<label>Player</label>${playerFilter}<label>Shot Type</label>${typeFilter}<h2>SHOOTING SUMMARY</h2><div class="detail-metric"><span>Shots</span><strong>${shots.length}</strong></div><div class="detail-metric"><span>Made</span><strong>${made}</strong></div><div class="detail-metric"><span>FG%</span><strong>${fmt(pct(made,shots.length))}%</strong></div></article><article class="panel"><div class="panel-heading"><h2>SHOT CHART</h2><div><button class="inline-btn ${state.courtMode==='full'?'active':''}" data-court="full">Full Court</button> <button class="inline-btn ${state.courtMode==='half'?'active':''}" data-court="half">Half Court</button></div></div>${courtSVG(shots,state.courtMode)}<div class="shot-legend"><span class="made-marker">●</span> Made <span class="miss-marker">○</span> Missed</div></article><article class="panel"><h2>SHOT BREAKDOWN</h2>${shootingHTML(g)}<h2 style="margin-top:20px">SHOT TYPES</h2>${[[2,'2PT'],[3,'3PT']].map(([points,label])=>{const subset=shots.filter(s=>number(s.points)===points);return `<div class="detail-metric"><span>${label}</span><strong>${subset.filter(s=>s.made).length}/${subset.length}</strong></div>`;}).join('')}</article></div>`;
 }
 let activeOpponent = 'all';
 let activeOpponentGame = 'all';
@@ -1654,20 +1651,8 @@ function getAllFilteredTeamShots() {
 
 function buildShotChartSVG(shots = [], view = "full") {
     const markers = shots.map(shot => {
-        const x = shot.x ?? 200;
-        const y = shot.y ?? 200;
-
-        if (shot.made) {
-            return `
-                <circle cx="${x}" cy="${y}" r="5" fill="#15964c"></circle>
-            `;
-        }
-
-        return `
-            <text x="${x}" y="${y}" fill="#df3138"
-                  font-size="12" font-weight="bold"
-                  text-anchor="middle" dominant-baseline="middle">✕</text>
-        `;
+        if(shot.x==null||shot.y==null)return '';
+        return apexShotMarker(shot,Number(shot.x),Number(shot.y),'results');
     }).join("");
 
     return `
