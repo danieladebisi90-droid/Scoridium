@@ -129,8 +129,8 @@
 
 /* Player Stats and all Stats legends follow the shared team-colour markers:
    solid circle = made; open circle = missed (never green/red or X). */
-#player-view .shot-legend .made-marker,
-#player-view .shot-legend .miss-marker,
+#players-view .shot-legend .made-marker,
+#players-view .shot-legend .miss-marker,
 #team-view .shot-legend .made-marker,
 #team-view .shot-legend .miss-marker,
 #games-view .shot-legend .made-marker,
@@ -143,11 +143,11 @@
   font-weight:750!important;
   vertical-align:middle;
 }
-#player-view #player-shot-court > .court-svg .sc-shot-made {
+#players-view #player-shot-court > .court-svg .sc-shot-made {
   fill:var(--team-primary,#233f85)!important;
   stroke:var(--team-primary,#233f85)!important;
 }
-#player-view #player-shot-court > .court-svg .sc-shot-missed {
+#players-view #player-shot-court > .court-svg .sc-shot-missed {
   fill:none!important;
   stroke:var(--team-primary,#233f85)!important;
 }
