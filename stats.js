@@ -727,9 +727,9 @@ function renderAssistConnections(games){
   const max=Math.max(...counts.values());
   const lines=[...counts].filter(([key])=>key.split('|').every(id=>coords.has(id))).map(([key,value])=>{
     const [from,to]=key.split('|');const a=coords.get(from),b=coords.get(to);
-    return `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="#7493c4" stroke-width="${(2+7*value/max).toFixed(1)}" stroke-linecap="round"><title>${escapeHTML(names.get(from)||from)} assisted ${escapeHTML(names.get(to)||to)} · ${value} baskets</title></line>`;
+    return `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="var(--team-primary, #777)" stroke-width="${(2+7*value/max).toFixed(1)}" stroke-linecap="round"><title>${escapeHTML(names.get(from)||from)} assisted ${escapeHTML(names.get(to)||to)} · ${value} baskets</title></line>`;
   }).join('');
-  const circles=weighted.map(id=>{const c=coords.get(id),p=players.find(p=>String(p.id)===id);return `<g class="sc-assist-node" tabindex="0" role="button" aria-label="Connections for ${escapeHTML(names.get(id)||id)}" data-assist-id="${escapeHTML(id)}"><circle cx="${c.x}" cy="${c.y}" r="25" fill="#123b78" stroke="#ffd600" stroke-width="3"/><text x="${c.x}" y="${c.y+5}" text-anchor="middle" font-size="13" fill="#fff" font-weight="bold" pointer-events="none">${escapeHTML('#'+(p?.number||'?'))}</text></g>`;}).join('');
+  const circles=weighted.map(id=>{const c=coords.get(id),p=players.find(p=>String(p.id)===id);return `<g class="sc-assist-node" tabindex="0" role="button" aria-label="Connections for ${escapeHTML(names.get(id)||id)}" data-assist-id="${escapeHTML(id)}"><circle cx="${c.x}" cy="${c.y}" r="25" fill="var(--team-primary, #222)" stroke="var(--team-secondary, #777)" stroke-width="3"/><text x="${c.x}" y="${c.y+5}" text-anchor="middle" font-size="13" fill="#fff" font-weight="bold" pointer-events="none">${escapeHTML('#'+(p?.number||'?'))}</text></g>`;}).join('');
   host.innerHTML=`<svg viewBox="0 0 400 350" role="group" aria-label="Assist connections. Select a player to inspect connections.">${lines}${circles}</svg><div class="sc-assist-popup" role="status" hidden></div>`;
   host.__assistConnections={counts,names};
 }
@@ -958,8 +958,6 @@ function courtSVG(shots, mode = "full", markerLayer = 'results') {
       fill="none" stroke="white" stroke-width="3"/>
 
 ${dots}
-
-        ${dots}
     </svg>`;
 }
 
@@ -1104,7 +1102,7 @@ function renderOpponents(){
   const heading=single
     ? `<h3>${escapeHTML(selected.opponent)}</h3><p class="muted">${escapeHTML(fullDate(selected.date))} · ${escapeHTML(selected.team)} ${selected.ourScore} – ${selected.opponentScore} ${escapeHTML(selected.opponent)}</p>`
     : `<h3>${escapeHTML(scoped)} · Combined games</h3>`;
-  const opponentColor=getComputedStyle(document.documentElement).getPropertyValue('--team-secondary').trim()||'#ffd600';
+  const opponentColor=getComputedStyle(document.documentElement).getPropertyValue('--team-secondary').trim()||'currentColor';
   const contrastData=[
     ...(!single?[['Wins',wins,losses]]:[]),
     ['Total Points',totals.pts,totals.allowed],
