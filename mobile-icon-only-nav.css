@@ -1,7 +1,31 @@
 /* Mobile navigation: compact left-only icon dock, reserving the bottom-right
    for third-party hosting badge. No desktop or tracker changes. */
 @media (max-width:700px) and (orientation:portrait) {
+  /* Keep the app content full-height. The island floats over it; do not
+     reserve a full-width footer/white strip for this compact nav. */
+  html, body.scoridium-shell {
+    height:100dvh!important;
+    min-height:0!important;
+    overflow:hidden!important;
+  }
+  body.scoridium-shell .shell-main {
+    flex:1 1 auto!important;
+    min-height:0!important;
+    height:auto!important;
+    padding:0!important;
+    margin:0!important;
+    background:transparent!important;
+  }
+  body.scoridium-shell #page-frame {
+    width:100%!important;
+    height:100%!important;
+    display:block!important;
+  }
   body.scoridium-shell nav.mobile-bottom-nav {
+    flex:none!important;
+    border:0!important;
+    border-top:0!important;
+    box-shadow:0 4px 16px rgba(0,0,0,.18)!important;
     position:fixed!important;
     left:calc(10px + env(safe-area-inset-left))!important;right:auto!important;
     bottom:calc(2px + env(safe-area-inset-bottom))!important;top:auto!important;
