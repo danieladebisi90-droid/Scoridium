@@ -1016,6 +1016,9 @@ function selectScheduleGame(gameId) {
     document.getElementById("schedule-game-venue").value =
         game.venue || "";
 
+    document.getElementById("schedule-already-played").checked =
+        game.status === "completed";
+
     updateScheduleLayout();
 
     const editable = game.status === "scheduled";
@@ -1317,11 +1320,13 @@ async function createScheduledGame() {
         game_time: startTime,
         location,
         venue,
-        status: "scheduled"
+        status: document.getElementById("schedule-already-played").checked
+            ? "completed"
+            : "scheduled"
     };
 
     saveButton.disabled = true;
-    message.textContent = "Scheduling game...";
+    message.textContent = "Saving game...";
 
     try {
         const { error } = await supabaseClient
@@ -1335,7 +1340,9 @@ async function createScheduledGame() {
         await loadGameHubGames();
 
         message.textContent =
-            "Game scheduled successfully!";
+            gamePayload.status === "completed"
+                ? "Completed game added! Open Film Room to track it."
+                : "Game scheduled successfully!";
 
     } catch (error) {
         console.error("Game scheduling error:", error);
@@ -1390,7 +1397,11 @@ async function updateScheduledGame() {
 
         venue: document.getElementById(
             "schedule-game-venue"
-        ).value.trim()
+        ).value.trim(),
+
+        status: document.getElementById("schedule-already-played").checked
+            ? "completed"
+            : "scheduled"
     };
 
     if (
@@ -1426,7 +1437,9 @@ async function updateScheduledGame() {
         resetScheduleEditor();
         await loadGameHubGames();
 
-        message.textContent = "Game updated successfully!";
+        message.textContent = changes.status === "completed"
+            ? "Game marked Completed! Open Film Room to track it."
+            : "Game updated successfully!";
 
     } catch (error) {
         console.error("Game update error:", error);
@@ -1871,6 +1884,7 @@ function updateScheduleLayout() {
     opponentInput.required = isGame;
 
     gameFields.hidden = !isGame;
+    document.getElementById("schedule-already-played-field").hidden = !isGame;
     gameVenue.required = isGame;
 
     // The standard event location is replaced by
