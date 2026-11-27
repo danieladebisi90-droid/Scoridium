@@ -7,15 +7,19 @@
     const button=form.querySelector('button[type=submit]');button.disabled=true;
     try{await callback()}catch(err){show(err.message||'Something went wrong. Please try again.')}finally{button.disabled=false}
   }
+  const invite=(new URLSearchParams(location.search)).get('invite')||sessionStorage.getItem('apex_pending_invite');
+  const inviteValid=/^[0-9A-Fa-f]{32}$/.test(invite||'');
+  if(inviteValid){sessionStorage.setItem('apex_pending_invite',invite.toUpperCase());const link=document.querySelector('.no-account a');if(link){const u=new URL(link.getAttribute('href'),location.href);u.searchParams.set('invite',invite);link.href=u.href;}}
+  const nextUrl=inviteValid?new URL('join-team.html?code='+encodeURIComponent(invite.toUpperCase()),location.href).href:new URL('myTeams.html',location.href).href;
   const signup=document.getElementById('signup-form');
   signup?.addEventListener('submit',e=>{e.preventDefault();submit(signup,async()=>{
     const email=document.getElementById('signup-email').value.trim(),password=document.getElementById('signup-password').value;
     if(password!==document.getElementById('signup-confirm').value)throw Error('The passwords do not match.');
     if(password.length<8)throw Error('Use a password of at least 8 characters.');
-    const {data,error}=await client.auth.signUp({email,password,options:{emailRedirectTo:new URL('myTeams.html',location.href).href}});
+    const {data,error}=await client.auth.signUp({email,password,options:{emailRedirectTo:nextUrl}});
     if(error)throw error;
-    if(data.session){location.href='myTeams.html';return;}
-    show('If registration is available for this email, check your inbox for a confirmation link. After confirming, sign in.',true);
+    if(data.session){location.href=nextUrl;return;}
+    show('If registration is available for this email, check your inbox for a confirmation link. After confirming, follow the invitation link or sign in.',true);
   })});
   const forgot=document.getElementById('forgot-form');
   forgot?.addEventListener('submit',e=>{e.preventDefault();submit(forgot,async()=>{

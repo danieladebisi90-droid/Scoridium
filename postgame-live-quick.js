@@ -26,6 +26,7 @@
   let mode='idle', who=null, shooting='us', source=null, last='Ready to track', block=null;
   let foul={type:null,shot:null,result:null,bonus:null,ft:null,technicalPersonal:null,shotAlreadyRecorded:null};
   let committedFoulId=null;
+  let foulAttemptDraftId=null;
   let draftEvents=[]; // An incomplete workflow must never write to Supabase.
   const foulShotDraftIds=new Set();
   let foulShooter = null;
@@ -34,14 +35,15 @@
   const names=()=>({us:teamName||'Tracked team',opponent:currentGame?.opponent||'Opponent'});
   const active=()=>state.status==='live';
   const player=()=>players.find(p=>String(p.id)===String(who));
-  const label=(id)=>id==null?'Unknown Player':`#${players.find(p=>String(p.id)===String(id))?.number??'?'}`;
+  const label=(id)=>id==null?'Unknown Stats':`#${players.find(p=>String(p.id)===String(id))?.number??'?'}`;
   const tell=s=>{last=s;render();};
-  const reset=()=>{discardDraft();document.getElementById('av-linked-shot-picker')?.setAttribute('hidden','');linkIntent=null;linkShot=null;linkingPlayer=null;linkShootingTeam=null;updateLinkHighlights();if(phoneCombined())phoneTeam='choose';teamMode=false;mode='idle';who=null;source=null;block=null;selectedCourtShot=null;opponentJersey=null;committedFoulId=null;foulShooter=null;foul={type:null,shot:null,result:null,bonus:null,ft:null,technicalPersonal:null,shotAlreadyRecorded:null};render();};
+  const reset=()=>{discardDraft();document.getElementById('av-linked-shot-picker')?.setAttribute('hidden','');linkIntent=null;linkShot=null;linkingPlayer=null;linkShootingTeam=null;updateLinkHighlights();if(phoneCombined())phoneTeam='choose';teamMode=false;mode='idle';who=null;source=null;block=null;selectedCourtShot=null;opponentJersey=null;committedFoulId=null;foulAttemptDraftId=null;foulShooter=null;foul={type:null,shot:null,result:null,bonus:null,ft:null,technicalPersonal:null,shotAlreadyRecorded:null};render();};
   const record=(type,team,playerId=null,extra={})=>{
     if(!active())return null;
     if(type==='no_assist')return null; // confirmation is a UI choice, not a real stat event.
     const id=crypto.randomUUID(),relatedId=extra.linkedEventId||null;
     const candidate={type,team,playerId,points:extra.points??null,made:extra.made??null,
+      foulClass:extra.foulClass||null,relatedShotId:extra.relatedShotId||null,outOfBounds:!!extra.outOfBounds,
       position:extra.position??null,linkedEventId:relatedId,fixedId:id,confirmed:!!relatedId};
     if(!candidate.position&&type==='shot'&&selectedCourtShot?.team===team
       &&selectedCourtShot.points===candidate.points&&selectedCourtShot.made===candidate.made){
@@ -70,6 +72,19 @@
       const saved=await api.saveEvent(candidate,document.getElementById('post-review-save-anchor'));
       if(!saved)throw new Error('Event was not saved or was cancelled');
       pendingIds.set(id,saved);
+      if(candidate.foulClass){
+        const details=await supabaseClient.rpc('apexvision_postgame_set_foul_details',{
+          p_game_id:api.gameId,p_foul_id:saved,p_foul_class:candidate.foulClass,
+          p_shot_id:candidate.relatedShotId?(pendingIds.get(candidate.relatedShotId)||null):null
+        });
+        if(details.error)throw details.error;
+      }
+      if(candidate.outOfBounds){
+        const oob=await supabaseClient.rpc('apexvision_postgame_mark_oob',{
+          p_game_id:api.gameId,p_event_id:saved
+        });
+        if(oob.error)throw oob.error;
+      }
       if(needsFoulShotTag){
         const tagged=await supabaseClient.rpc('apexvision_postgame_mark_foul_shot',{
           p_game_id:api.gameId,p_event_id:saved
@@ -112,7 +127,14 @@
   const btn=(action,text,kind='',extra='')=>`<button type="button" class="qv-button ${kind}" data-qv="${action}" ${extra}>${esc(text)}</button>`;
   const tile=(action,text,kind='',extra='')=>`<button type="button" class="qv-button qv-tile ${kind}" data-qv="${action}" ${extra}>${esc(text)}</button>`;
   const tileGrid=items=>`<div class="qv-grid">${items.join('')}</div>`;
-  const roster=(action='player',exclude=null,extra=null)=>teamMode&&action!=='player'?tileGrid([tile(action,'TEAM','qv-neutral'),...(extra?[tile(extra[0],extra[1],'qv-neutral')]:[])]):tileGrid([...players.map(p=>tile(action,`#${p.number??'?'}`,'',`data-player="${esc(p.id)}" ${exclude!==null&&String(exclude)===String(p.id)?'disabled':''}`)),...(extra?[tile(extra[0],extra[1],'qv-neutral')]:[])]);
+  // The jersey grid uses numeric ordering, not lexical ordering (2 before 10).
+  // Unnumbered players remain after numbered players; auxiliary actions stay last.
+  const jerseyOrder=(a,b)=>{
+    const n=p=>p.number===null||p.number===undefined||String(p.number).trim()===''?Infinity:Number(p.number);
+    const aa=n(a),bb=n(b);
+    return (Number.isFinite(aa)?aa:Infinity)-(Number.isFinite(bb)?bb:Infinity) || String(a.number??'').localeCompare(String(b.number??''),undefined,{numeric:true});
+  };
+  const roster=(action='player',exclude=null,extra=null)=>teamMode&&action!=='player'?tileGrid([tile(action,'UNKNOWN STATS','qv-neutral'),...(extra?[tile(extra[0],extra[1],'qv-neutral')]:[])]):tileGrid([...players.map(p=>tile(action,`#${p.number??'?'}`,'',`data-player="${esc(p.id)}" ${exclude!==null&&String(exclude)===String(p.id)?'disabled':''}`)),...(extra?[tile(extra[0],extra[1],'qv-neutral')]:[])]);
   const choice=(options)=>`<div class="qv-choices">${options.map(x=>tile(x[0],x[1],x[2]||'')).join('')}</div>`;
   function startRebound(missedTeam,id,blocked=null){shooting=missedTeam;source=id;block=blocked;mode='reboundChoice';if(phoneCombined())phoneTeam='us';render();}
   function conclude(message){
@@ -156,6 +178,7 @@
   };
   function beginFoul(team,pid){
     committedFoulId=null;
+    foulAttemptDraftId=null;
     foulShooter=null;
     shooting=team;who=pid;foul={type:null,shot:null,result:null,bonus:null,ft:null,technicalPersonal:null,shotAlreadyRecorded:null};mode='foul';render();}
   function confirmFoul(){
@@ -165,7 +188,7 @@
     if(foul.type==='nonshooting'&&foul.bonus==null)return;
     if(foul.type==='technical'){foul.ft=1;foul.technicalPersonal=pid!=null;}
     if(committedFoulId){mode='ftShooter';render();return;}
-    const rootId=record('foul',t,((foul.type==='technical'&&!foul.technicalPersonal)?null:pid));
+    const rootId=record('foul',t,((foul.type==='technical'&&!foul.technicalPersonal)?null:pid),{foulClass:foul.type,relatedShotId:foulAttemptDraftId});
     committedFoulId=rootId;
     if(!rootId)return;
     last=`${names()[t]} • ${foul.type} foul`;
@@ -423,6 +446,7 @@ const linkEligible = () => {
     if(kind==='foul'){
       // Missed shooting-foul attempts remain visible but do not count as FGA.
       // Enqueue AFTER the shot write, so the event exists before tagging it.
+      foulAttemptDraftId=newId;
       if(!detail.made)foulShotDraftIds.add(newId);
       foul.shot=String(detail.points);foul.result=detail.made?'made':'missed';foul.shotAlreadyRecorded=true;
       linkIntent=null;linkShot=null;updateLinkHighlights();confirmFoul();return;
@@ -459,7 +483,7 @@ const linkEligible = () => {
     };
     for(const candidate of candidates){
       const playerName=candidate.team==='us'&&candidate.player_id!=null?
-        label(candidate.player_id):candidate.team==='us'?'Unknown Player':names().opponent;
+        label(candidate.player_id):candidate.team==='us'?'Unknown Stats':names().opponent;
       const distance=Math.hypot(Number(candidate.x)-(Number(candidate.x)<430?57.25:802.75),Number(candidate.y)-235)/30*3.28084;
       const shotButton=document.createElement('button');shotButton.type='button';
       shotButton.style.borderLeft='6px solid '+shotColor(candidate);
@@ -789,7 +813,7 @@ const trackedLeft = (displayQuarter <= 2) !==
       <section style="${compact&&(chooseTeams||phoneTeam!=='us')?'display:none!important':''}" class="qv-tracked ${trackedActive?'qv-highlight':''}" aria-label="Tracked team controls">
         <div class="qv-team-heading"><div><strong>${esc(ns.us)}</strong><small>${esc(descriptive[mode]||'Choose action')}</small></div>
 ${headerNavigation('us') || (mode==='idle' && !teamMode && !selectedCourtShot
-        ? btn('teamPlayer','TEAM STAT','qv-team-btn') : '')}
+        ? btn('teamPlayer','UNKNOWN STATS','qv-team-btn') : '')}
 </div>
         <div class="qv-action-surface">${content}</div>
         <div class="qv-bottom">${['assist','steal','oppSteal'].includes(mode)?btn('skip','SKIP','qv-neutral'):''}</div>
@@ -967,7 +991,7 @@ if (phoneCombined()) {
       if(mode!=='opponentStealTurnover')return;
       const turnoverPlayer=a==='opponentStealTurnoverPlayer'?b.dataset.player:null;
       if(turnoverPlayer!=null&&!players.some(p=>String(p.id)===String(turnoverPlayer))){
-        notify('Select a Falcons player or UNKNOWN PLAYER.');return;
+        notify('Select a Falcons player or UNKNOWN STATS.');return;
       }
       // Steal and attributed turnover remain unsaved until this final choice.
       const stealId=record('steal','opponent');
@@ -990,7 +1014,7 @@ if (phoneCombined()) {
       // Record exactly one linked TEAM rebound, not an individual rebound.
       if(source){
         const reboundType=team===shooting?'team_offensive_rebound':'team_defensive_rebound';
-        related(reboundType,team,null,source);
+        record(reboundType,team,null,{linkedEventId:source,outOfBounds:true});
       }
       conclude('Out of Bounds — '+names()[team]+' Ball');
       return;
@@ -1189,7 +1213,7 @@ return;
   // Render immediately even before asynchronous roster hydration. This avoids
   // a blank combined-mode column while the parent page is loading.
   const hydrate=()=>{
-    players=api.getPlayers();
+    players=[...api.getPlayers()].sort(jerseyOrder);
     teamMode=false;
     const g=api.getGame?.()||{};
     teamName=g.team_name||'Tracked team';

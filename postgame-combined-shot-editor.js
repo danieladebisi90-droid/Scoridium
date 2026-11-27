@@ -97,8 +97,15 @@
   });
   async function submit(remove=false){
     if(!selected||busy)return;
+    if(remove){
+      const all=api.getEvents();const found=new Map([[String(selected.id),selected]]);
+      for(let changed=true;changed;){changed=false;for(const e of all){if(!found.has(String(e.id))&&((e.linked_event_id&&found.has(String(e.linked_event_id)))||(e.type==='foul'&&e.foul_shot_id&&found.has(String(e.foul_shot_id)))||[...found.values()].some(x=>x.type==='foul'&&String(x.foul_shot_id)===String(e.id)))){found.set(String(e.id),e);changed=true;}}}
+      const deps=[...found.values()].filter(e=>String(e.id)!==String(selected.id));
+      const description=deps.map(e=>'• '+e.type.replaceAll('_',' ')+(e.type==='free_throw'?(e.made?' MADE':' MISSED'):''));
+      if(!confirm('Delete shot?'+(deps.length?'\n\nBy deleting this shot, you are also deleting these dependent events:\n'+description.join('\n'):'')+'\n\nThis cannot be undone.'))return;
+    }
     busy=true;feedback.textContent='Saving…';
-    const action=remove?'apexvision_postgame_delete_shot':'apexvision_postgame_edit_shot_gameday';
+    const action=remove?'apexvision_postgame_delete_branch':'apexvision_postgame_edit_shot_gameday';
     const args=remove?{
       p_game_id:api.gameId,p_event_id:selected.id,p_expected_version:Number(selected.version)
     }:{

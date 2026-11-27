@@ -16,6 +16,41 @@ const shotValue=(x,y)=>{
    :(x>=hoopX-delta?outside:Math.hypot(x-hoopX,y-235)>202.5);
  return isThree?3:2;
 };
+// Derive a stable, visible opponent accent without overwriting saved team colours.
+function applyApexTeamPalette(primary,secondary){
+ const valid=c=>/^#[a-f0-9]{6}$/i.test(c||'');
+ if(!valid(primary))primary='#1E3A8A';
+ const rgb=[1,3,5].map(i=>parseInt(primary.slice(i,i+2),16)/255);
+ const hi=Math.max(...rgb),lo=Math.min(...rgb),d=hi-lo;
+ let hue=0;
+ if(d){
+  if(hi===rgb[0])hue=((rgb[1]-rgb[2])/d)%6;
+  else if(hi===rgb[1])hue=(rgb[2]-rgb[0])/d+2;
+  else hue=(rgb[0]-rgb[1])/d+4;
+  hue=(hue*60+360)%360;
+ }
+ const opponent=d<0.09?'#B45309':`hsl(${Math.round((hue+180)%360)} 70% 37%)`;
+ // If secondary is absent or very close to white, use a visible primary accent.
+ const secondaryUsable=valid(secondary) && secondary.toLowerCase()!=='#ffffff' &&
+  [1,3,5].map(i=>parseInt(secondary.slice(i,i+2),16)).some(n=>n<230);
+ const highlight=secondaryUsable?secondary:primary;
+ const brightness=c=>{
+  if(!valid(c))return 0.25;
+  const v=[1,3,5].map(i=>parseInt(c.slice(i,i+2),16)/255)
+    .map(x=>x<=0.04045?x/12.92:((x+0.055)/1.055)**2.4);
+  return 0.2126*v[0]+0.7152*v[1]+0.0722*v[2];
+ };
+ const ink=brightness(highlight)>0.34?'#101820':'#FFFFFF';
+ const border=brightness(primary)>0.84?'#475569':primary;
+ document.documentElement.style.setProperty('--review-primary',primary);
+ document.documentElement.style.setProperty('--review-secondary',highlight);
+ document.body.style.setProperty('--av-tracked-accent',primary);
+ document.body.style.setProperty('--av-tracked-visible-border',border);
+ document.body.style.setProperty('--av-tracked-highlight-ink',ink);
+ document.body.style.setProperty('--av-tracked-highlight',highlight);
+ document.body.style.setProperty('--av-opponent-accent',opponent);
+ document.body.style.setProperty('--av-opponent-highlight',opponent);
+}
 const currentPeriod=()=>Number($('post-period').value);
 const currentTeam=()=>$('post-team').value;
 const currentPlayer=()=>currentTeam()==='us'&&$('post-player').value?$('post-player').value:null;
@@ -127,11 +162,23 @@ function renderShotMarkers(){
  const selectedView=document.getElementById('av-cn-shot-filter')?.value||String(currentPeriod());
  for(const event of events){
    if(event.type!=='shot'||event.x==null||event.y==null)continue;
+   // A missed shooting-foul attempt is an observation, not a field-goal attempt.
+   if(event.non_fga && !event.made)continue;
    if(selectedView!=='all'&&Number(event.period)!==Number(selectedView))continue;
    const circle=document.createElementNS('http://www.w3.org/2000/svg','circle');
    circle.setAttribute('cx',event.x);circle.setAttribute('cy',event.y);
-   circle.setAttribute('r','5');circle.setAttribute('stroke',event.made?'#16763c':'#9c2a2a');
-   circle.setAttribute('fill',event.made?'#42d784':'#f87d7d');circle.setAttribute('stroke-width','2');
+   const color=event.team==='opponent'
+     ? getComputedStyle(document.body).getPropertyValue('--av-opponent-accent').trim()||'#b45309'
+     : getComputedStyle(document.documentElement).getPropertyValue('--review-primary').trim()||'#1e3a8a';
+   // A neutral halo keeps white or pale team colours visible on the tan court.
+   const halo=document.createElementNS('http://www.w3.org/2000/svg','circle');
+   halo.setAttribute('cx',event.x);halo.setAttribute('cy',event.y);
+   halo.setAttribute('r','7.5');halo.setAttribute('fill','none');
+   halo.setAttribute('stroke','#273547');halo.setAttribute('stroke-width','1.5');
+   halo.setAttribute('pointer-events','none');host.append(halo);
+   circle.setAttribute('r','5.5');circle.setAttribute('stroke',color);
+   circle.setAttribute('fill',event.made?color:'none');circle.setAttribute('stroke-width','3');
+   circle.setAttribute('aria-label',(event.team==='us'?'Tracked':'Opponent')+' '+(event.made?'made':'missed')+' shot');
    host.append(circle);
  }
 }
@@ -158,6 +205,22 @@ async function refresh(){
  if(!foulTags.error){
    const nonFga=new Set((foulTags.data||[]).map(e=>String(e.event_id)));
    events.forEach(e=>{e.non_fga=nonFga.has(String(e.id));});
+ }
+ if(mode==='combined'){
+  const details=await supabaseClient.from('apexvision_postgame_foul_details')
+    .select('event_id,foul_class,shot_event_id').eq('game_id',gameId);
+  if(!details.error){
+    const lookup=new Map((details.data||[]).map(x=>[String(x.event_id),x]));
+    for(const e of events)if(e.type==='foul'&&lookup.has(String(e.id))){
+      const d=lookup.get(String(e.id));e.foul_class=d.foul_class;e.foul_shot_id=d.shot_event_id;
+    }
+  }
+  const oob=await supabaseClient.from('apexvision_postgame_out_of_bounds')
+    .select('event_id').eq('game_id',gameId);
+  if(!oob.error){
+    const ids=new Set((oob.data||[]).map(x=>String(x.event_id)));
+    for(const e of events)if(ids.has(String(e.id)))e.out_of_bounds=true;
+  }
  }
  if(mode!=='stat'){
   const o=await supabaseClient.from('tracker_observations').select('id,period,kind,team,points,made,x,y,matched_event_id').eq('game_id',gameId).eq('kind','shot').is('matched_event_id',null).limit(1000);
@@ -192,18 +255,18 @@ async function init(){
  try{
   const cached=sessionStorage.getItem('scoridium:team-preview:'+teamId);
   if(cached){const theme=JSON.parse(cached);game.team_name=[theme.school_name||theme.club_name,theme.mascot].filter(Boolean).join(' ')||'Tracked team';
-    if(/^#[a-f0-9]{6}$/i.test(theme.primary_color||''))document.documentElement.style.setProperty('--review-primary',theme.primary_color);
-    if(/^#[a-f0-9]{6}$/i.test(theme.secondary_color||''))document.documentElement.style.setProperty('--review-secondary',theme.secondary_color);
+    applyApexTeamPalette(theme.primary_color,theme.secondary_color);
   }
  }catch(error){console.warn('Stored team theme unavailable',error);}
  try{
   const teamRes=await supabaseClient.from('teams').select('name,primary_color,secondary_color').eq('id',teamId).maybeSingle();
   if(teamRes.data){
    game.team_name=teamRes.data.name||game.team_name||'Tracked Team';
-   if(/^#[a-f0-9]{6}$/i.test(teamRes.data.primary_color||''))document.documentElement.style.setProperty('--review-primary',teamRes.data.primary_color);
-   if(/^#[a-f0-9]{6}$/i.test(teamRes.data.secondary_color||''))document.documentElement.style.setProperty('--review-secondary',teamRes.data.secondary_color);
+   applyApexTeamPalette(teamRes.data.primary_color,teamRes.data.secondary_color);
   }
  }catch(error){console.warn('Team theme unavailable',error);}
+ if(!document.body.style.getPropertyValue('--av-opponent-accent'))applyApexTeamPalette(
+   getComputedStyle(document.documentElement).getPropertyValue('--review-primary').trim(),null);
  document.body.classList.add('postgame-shot-mode','pg-v3-'+mode);
  document.body.classList.toggle('pgq-stat-workflow',mode!=='shot');
  if(game.status!=='completed'){say('This post-game screen is only for completed games. Live games use the Game Tracker.');return;}
@@ -225,7 +288,13 @@ async function init(){
  });
  const roster=await supabaseClient.from('players').select('id,first_name,last_name,number').eq('team_id',teamId).order('number');
  if(roster.error){say('Unable to load roster: '+roster.error.message);return;}
- players=roster.data||[];
+ // Supabase may store jersey numbers as text, so sort numerically client-side.
+ const jerseySort=(a,b)=>{
+   const numeric=p=>p.number==null||String(p.number).trim()===''?Infinity:Number(p.number);
+   const x=numeric(a),y=numeric(b);
+   return (Number.isFinite(x)?x:Infinity)-(Number.isFinite(y)?y:Infinity) || String(a.number??'').localeCompare(String(b.number??''),undefined,{numeric:true});
+ };
+ players=(roster.data||[]).slice().sort(jerseySort);
  for(const player of players)$('post-player').add(new Option('#'+(player.number??'?')+' '+(player.first_name||'')+' '+(player.last_name||''),player.id));
  $('post-period').addEventListener('change',()=>{resetPending();renderEvents();renderShotMarkers();refreshChoices();renderObservations();});
  window.addEventListener('apex:shot-view-change',()=>{renderShotMarkers();renderEvents();});

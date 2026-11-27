@@ -4,6 +4,24 @@
  'use strict';
  const api=window.apexPostgame;if(!api||api.mode!=='combined')return;
  const $=id=>document.getElementById(id);
+
+function apexDeletionTree(root,all){
+ const found=new Map([[String(root.id),root]]);
+ for(let changed=true;changed;){
+  changed=false;
+  for(const event of all){
+   if(!found.has(String(event.id)) && ((event.linked_event_id && found.has(String(event.linked_event_id))) || (event.type==='foul' && event.foul_shot_id && found.has(String(event.foul_shot_id))) || [...found.values()].some(x=>x.type==='foul' && String(x.foul_shot_id)===String(event.id)))){
+    found.set(String(event.id),event);changed=true;
+   }
+  }
+ }
+ return [...found.values()];
+}
+function apexDeletionPrompt(entry,all){
+ const descendants=apexDeletionTree(entry,all).filter(x=>String(x.id)!==String(entry.id));
+ const describe=e=>(e.type||'event').replaceAll('_',' ') + (e.type==='shot'?` ${e.points}PT ${e.made?'made':'missed'}`:e.type==='free_throw'?` ${e.made?'made':'missed'}`:'');
+ return `Delete ${describe(entry)}?`+(descendants.length?`\n\nBy deleting this event, you are also deleting these dependent events:\n${descendants.map(x=>'• '+describe(x)).join('\n')}`:'')+'\n\nThis cannot be undone.';
+}
  const types=['free_throw','assist','offensive_rebound','defensive_rebound','team_offensive_rebound','team_defensive_rebound','steal','turnover','block','foul'];
  const dialog=document.createElement('dialog');dialog.id='av-event-editor';
  dialog.innerHTML=`<form class="av-event-editor-inner" method="dialog"><h3>Edit Recorded Event</h3>
@@ -71,7 +89,7 @@
  }
  async function save(remove){
   if(!selected||busy)return;
-  if(remove&&!confirm('Permanently delete this recorded event? Related events may need review.'))return;
+  if(remove&&!confirm(apexDeletionPrompt(selected,api.getEvents())))return;
   busy=true;
   const buttons=[$('av-ee-save'),$('av-ee-delete')];buttons.forEach(b=>b.disabled=true);
   $('av-ee-feedback').textContent='Saving…';
@@ -83,7 +101,7 @@
     p_made:type.value==='free_throw'?result.value==='true':null,
     p_linked_event_id:linked.value||null
    });
-   const response=await supabaseClient.rpc(remove?'apexvision_postgame_delete_event':'apexvision_postgame_edit_event',args);
+   const response=await supabaseClient.rpc(remove?'apexvision_postgame_delete_branch':'apexvision_postgame_edit_event',args);
    if(response.error)throw response.error;
    await api.refresh();
    window.dispatchEvent(new CustomEvent('apex:postgame-events-updated'));

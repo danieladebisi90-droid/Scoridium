@@ -76,6 +76,7 @@ statusRow.appendChild(pageIndicator);
     <section id="av-cn-box" class="av-cn-card av-cn-box-card" aria-label="Box Score">
       <div class="av-cn-review-heading"><div><h3>Box Score</h3><small>Tracked team</small></div><span class="av-cn-team-totals">Team Totals</span></div>
       <div class="av-cn-scroll"><table id="av-cn-box-table"></table></div>
+      <div id="av-cn-tracked-fouls" class="av-cn-fouls-summary" aria-label="Tracked team fouls by quarter"></div>
       <div class="av-cn-review-heading av-cn-opponent-heading"><div><h3 id="av-cn-opponent-heading">Opponent — Team Box Score</h3><small>Team-level statistics only</small></div></div>
       <div class="av-cn-scroll"><table id="av-cn-opponent-table" aria-label="Opponent team statistics"></table></div>
       <div id="av-cn-opponent-fouls" class="av-cn-fouls-summary" aria-label="Opponent fouls by quarter"></div>
@@ -224,15 +225,23 @@ if (teamMode) {
     return String(b.created_at||b.id||'').localeCompare(String(a.created_at||a.id||''));
   }
   async function commitOrder(){
-    if(!orderReady){api.notify('Apply the Play-by-Play SQL migration first.');return;}
+    if(!orderReady){api.notify('Play order storage is unavailable. Apply the Play-by-Play SQL migration.');return;}
     const rows=[...document.querySelectorAll('#av-cn-play-list .av-cn-play[data-root-id]')];
-    const currentPeriod=$('av-cn-shot-filter')?.value;
-    if(currentPeriod==='all') {api.notify('Select one quarter to reorder its plays.');return;}
-    const ids=rows.slice().reverse().map(el=>el.dataset.rootId);
-    const result=await supabaseClient.rpc('apexvision_postgame_reorder_plays',{
-      p_game_id:api.gameId,p_period:Number(currentPeriod||api.getPeriod()),p_roots:ids
-    });
-    if(result.error){api.notify('Order not saved: '+result.error.message);renderReview();return;}
+    const groups=new Map();
+    for(const el of rows){
+      const period=Number(el.dataset.period);
+      if(!groups.has(period))groups.set(period,[]);
+      groups.get(period).push(el.dataset.rootId);
+    }
+    // Each period is saved separately. "All" can be viewed and dragged, but
+    // events cannot silently change quarters merely by being reordered.
+    for(const [period,ids] of groups){
+      if(!ids.length)continue;
+      const result=await supabaseClient.rpc('apexvision_postgame_reorder_plays',{
+        p_game_id:api.gameId,p_period:period,p_roots:ids.reverse()
+      });
+      if(result.error){api.notify('Order not saved: '+result.error.message);await reloadOrder();renderReview();return;}
+    }
     await reloadOrder();renderReview();api.notify('Play order saved.');
   }
   function menuAction(label,handler){
@@ -360,26 +369,24 @@ if (teamMode) {
     oppBody.appendChild(statRow);
     oppTable.appendChild(oppBody);
 
-    // Opponent team fouls by quarter.
+    // Each team has its own per-quarter foul summary beneath its own Box Score.
     const totalPeriods = Math.max(
       4,
       ...events.map(e => Number(e.period) || 1)
     );
 
-    const foulContainer = $('av-cn-opponent-fouls');
-    foulContainer.replaceChildren();
-
-    for (let i = 1; i <= totalPeriods; i++) {
-      const count = opponent.filter(e =>
-        e.type === 'foul' && Number(e.period) === i
-      ).length;
-
-      const label = document.createElement('span');
-      label.textContent =
-        `${i <= 4 ? 'Q' + i : 'OT' + (i - 4)}: ${count}`;
-
-      label.style.marginRight = '14px';
-      foulContainer.appendChild(label);
+    for(const [target,teamName] of [['av-cn-tracked-fouls','us'],['av-cn-opponent-fouls','opponent']]){
+      const foulContainer=$(target);
+      if(!foulContainer)continue;
+      foulContainer.replaceChildren();
+      const heading=document.createElement('strong');heading.textContent='Team fouls by quarter';
+      heading.className='av-cn-foul-label';foulContainer.append(heading);
+      for(let i=1;i<=totalPeriods;i++){
+        const count=events.filter(e=>e.team===teamName&&e.type==='foul'&&Number(e.period)===i).length;
+        const label=document.createElement('span');
+        label.textContent=`${i<=4?'Q'+i:'OT'+(i-4)}: ${count}`;
+        foulContainer.append(label);
+      }
     }
 
     
@@ -422,9 +429,8 @@ const plays = events
 
     if (!plays.length) { const p = document.createElement('p'); p.textContent = `No recorded events for ${q}.`; list.append(p); }
     const byId = new Map(events.map(e => [String(e.id),e]));
-    // Free throws are already stored as individual game_events. Keep them as
-    // individual Play-by-Play rows, even when all attempts link to one foul.
-    // Build sequence labels from the full event set, not just the current view.
+    // Free throws are stored individually but displayed under their parent foul.
+    // Build attempt labels from the entire game to preserve numbering.
     const ftSequences = new Map();
     for (const e of events) {
       if (e.type !== 'free_throw' || !e.linked_event_id) continue;
@@ -444,11 +450,20 @@ const plays = events
     }
     const grouped = new Map();
     for(const e of plays){
-      if (e.type === 'free_throw') continue; // Never hide an FT inside the foul row.
+      // Group linked FTs and turnovers with the originating foul/play.
       const linked = e.linked_event_id && byId.get(String(e.linked_event_id));
       if(linked && linked!==e && Number(linked.period)===Number(e.period)){
         if(!grouped.has(linked.id))grouped.set(linked.id,[]);
         grouped.get(linked.id).push(e);
+      }
+    }
+    // Shooting-foul shots may precede their foul in save order: use explicit
+    // foul/shot association rather than pretending the basket was entered twice.
+    for(const foul of plays.filter(x=>x.type==='foul'&&x.foul_shot_id)){
+      const shot=byId.get(String(foul.foul_shot_id));
+      if(shot && Number(shot.period)===Number(foul.period)){
+        if(!grouped.has(foul.id))grouped.set(foul.id,[]);
+        if(!grouped.get(foul.id).some(e=>String(e.id)===String(shot.id)))grouped.get(foul.id).unshift(shot);
       }
     }
     const childIds=new Set([...grouped.values()].flat().map(e=>String(e.id)));
@@ -466,9 +481,11 @@ const plays = events
         return `${distance}${e.points}PT ${e.made?'MADE':'MISS'}`;
       }
       if(e.type==='free_throw')return `${ftLabels.get(String(e.id)) || 'FT'} ${e.made?'MADE':'MISS'}`;
+      if(e.type==='foul')return ({shooting:'Shooting foul',nonshooting:'Non-shooting foul',
+        offensive:'Offensive foul',technical:'Technical foul'})[e.foul_class]||'Foul (classification unavailable)';
       return ({assist:'AST',offensive_rebound:'OREB',defensive_rebound:'DREB',
         team_offensive_rebound:'TEAM OREB',team_defensive_rebound:'TEAM DREB',
-        steal:'STL',turnover:'TO',block:'BLK',foul:'PF'})[e.type]||String(e.type||'EVENT').toUpperCase();
+        steal:'STL',turnover:'TO',block:'BLK'})[e.type]||String(e.type||'EVENT').toUpperCase();
     };
     // Calculate cumulative score in chronological order, excluding non-counting
     // missed-foul attempts (which score zero regardless).
@@ -487,24 +504,27 @@ const plays = events
       if(childIds.has(String(e.id)))continue;
       const item=document.createElement('div');item.className='av-cn-play';
       item.dataset.rootId=String(e.id);
+      item.dataset.period=String(e.period);
       const line=document.createElement('div');line.className='av-pbp-line';
       const handle=document.createElement('button');handle.type='button';handle.className='av-pbp-handle';
       handle.textContent='⠿';handle.title='Drag to reorder play';handle.setAttribute('aria-label','Drag to reorder play');
-      handle.draggable=orderReady && $('av-cn-shot-filter')?.value!=='all';
-      handle.addEventListener('dragstart',ev=>{dragId=String(e.id);ev.dataTransfer?.setData('text/plain',dragId);});
+      handle.draggable=orderReady;
+      handle.title=orderReady?'Drag to reorder within this quarter':'Play ordering requires the Play-by-Play database migration';
+      handle.addEventListener('dragstart',ev=>{if(!handle.draggable){ev.preventDefault();return;}dragId=String(e.id);ev.dataTransfer?.setData('text/plain',dragId);if(ev.dataTransfer)ev.dataTransfer.effectAllowed='move';});
+      item.addEventListener('dragstart',ev=>{if(ev.target===handle)return;ev.preventDefault();});
       handle.addEventListener('dragend',()=>{dragId=null;});
-      item.addEventListener('dragover',ev=>{if(dragId&&dragId!==String(e.id))ev.preventDefault();});
+      item.addEventListener('dragover',ev=>{if(dragId&&dragId!==String(e.id)){const from=list.querySelector('.av-cn-play[data-root-id=\"'+CSS.escape(dragId)+'\"]');if(from?.dataset.period===item.dataset.period)ev.preventDefault();}});
       item.addEventListener('drop',ev=>{ev.preventDefault();
         if(!dragId||dragId===String(e.id))return;
         const moving=list.querySelector('.av-cn-play[data-root-id="'+CSS.escape(dragId)+'"]');
-        if(!moving)return;
+        if(!moving || moving.dataset.period!==item.dataset.period)return;
         list.insertBefore(moving,item);dragId=null;void commitOrder();
       });
       // Keep the reorder grip at the far right; the three-dot menu sits before it.
       // A touch grip moves the same complete play row as HTML drag on desktop.
       let touchMove=false, touchOriginY=0;
       handle.addEventListener('pointerdown', ev=>{
-        if(!orderReady || $('av-cn-shot-filter')?.value==='all' || ev.pointerType==='mouse')return;
+        if(!orderReady || ev.pointerType==='mouse')return;
         ev.preventDefault();touchMove=false;touchOriginY=ev.clientY;
         dragId=String(e.id);handle.setPointerCapture(ev.pointerId);
         item.classList.add('av-pbp-moving');
@@ -514,7 +534,7 @@ const plays = events
         if(Math.abs(ev.clientY-touchOriginY)>5)touchMove=true;
         if(!touchMove)return;
         const over=document.elementFromPoint(ev.clientX,ev.clientY)?.closest('.av-cn-play[data-root-id]');
-        if(!over || over===item || over.parentNode!==list)return;
+        if(!over || over===item || over.parentNode!==list || over.dataset.period!==item.dataset.period)return;
         const rect=over.getBoundingClientRect();
         list.insertBefore(item,ev.clientY>rect.top+rect.height/2?over.nextSibling:over);
       });
@@ -527,6 +547,18 @@ const plays = events
       handle.addEventListener('pointerup',endTouch);
       handle.addEventListener('pointercancel',endTouch);
       let children=grouped.get(e.id)||[];
+      // Fold nested children (e.g. rebound after FT 2/2) into the same play.
+      const seenChildren=new Set(children.map(c=>String(c.id)));
+      const queue=[...children];
+      while(queue.length){
+        const next=queue.shift();
+        for(const nested of grouped.get(next.id)||[]){
+          if(!seenChildren.has(String(nested.id))){
+            seenChildren.add(String(nested.id));children.push(nested);queue.push(nested);
+          }
+        }
+      }
+      children=children.slice().sort((a,b)=>String(a.created_at||'').localeCompare(String(b.created_at||'')));
       // Turnover is the primary PBP event even when a steal was saved first.
       const turnoverChild=e.type==='steal'?children.find(c=>c.type==='turnover'):null;
       const primaryEvent=turnoverChild||e;
@@ -537,13 +569,22 @@ const eventQuarter = eventPeriod <= 4
   ? `Q${eventPeriod}`
   : `OT${eventPeriod - 4}`;
 
-primary.textContent =
-  `${eventQuarter} · ${name(primaryEvent)} — ${action(primaryEvent)}`;
+const shootingShot=e.type==='foul' && e.foul_class==='shooting'
+  ? children.find(c=>c.type==='shot') : null;
+primary.textContent=shootingShot
+  ? `${eventQuarter} · ${name(shootingShot)} ${shootingShot.made?'made':'missed'} ${shootingShot.points}PT${shootingShot.made?' (And-One)':''} — Shooting foul on ${name(e)}`
+  : `${eventQuarter} · ${name(primaryEvent)} — ${action(primaryEvent)}`;
       const details=document.createElement('div');details.className='av-pbp-details';
       details.append(primary);
-      if(children.length){
+      for(const child of children){
+        if(shootingShot && String(child.id)===String(shootingShot.id))continue;
+        if(child.out_of_bounds){
+          const possession=document.createElement('span');possession.className='av-cn-linked';
+          possession.textContent=`↳ Out of bounds — ${name(child)} ball`;
+          details.append(possession);
+        }
         const linked=document.createElement('span');linked.className='av-cn-linked';
-        linked.textContent=' ('+children.map(c=>`${name(c)} — ${action(c)}`).join(', ')+')';
+        linked.textContent=`↳ ${name(child)} — ${action(child)}`;
         details.append(linked);
       }
       line.append(details);
