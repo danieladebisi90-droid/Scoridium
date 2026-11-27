@@ -1007,3 +1007,23 @@ body{background:linear-gradient(180deg,#101a30 0,#080e1c 48%,#070c17 100%)!impor
 .player-banner{background:var(--team-secondary,var(--secondary,#ffd600))!important;color:var(--team-secondary-ink,#10233f)!important}
 .player-banner .player-heading,.player-banner .player-heading h1,.player-banner .player-heading p{color:var(--team-secondary-ink,#10233f)!important}
 .letter-mark{display:none!important}
+
+
+/* Individual player-profile season shot chart: same markers as Stats.
+   The team's theme supplies colour; results are shape-coded, not red/green. */
+.concept-shot-panel .shot-legend .player-shot-symbol{
+  display:inline-block;
+  font-size:17px;
+  font-weight:800;
+  line-height:1;
+  vertical-align:middle;
+  color:var(--team-primary,#233f85);
+}
+#shot-points .player-shot-made{
+  fill:var(--team-primary,#233f85);
+  stroke:var(--team-primary,#233f85);
+}
+#shot-points .player-shot-missed{
+  fill:none;
+  stroke:var(--team-primary,#233f85);
+}
