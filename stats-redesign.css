@@ -57,7 +57,7 @@
 .sc-pbp-event strong{color:var(--team-strong,currentColor);margin-right:8px}
 .sc-pbp-link{margin-top:5px;margin-left:15px;padding-left:10px;border-left:3px solid var(--team-secondary,var(--team-primary));color:#475569;font-size:12px}
 .sc-full-comparison .compare-track{background:var(--team-soft,#e6eaf0)}
-#assist-connections .sc-assist-node circle{stroke:var(--team-secondary,var(--team-primary))}
+#assist-connections .sc-assist-node circle{stroke:var(--stats-assist-outline,var(--team-primary))}
 /* Never override the SVG aspect ratio with a short fixed height. */
 @media(max-width:700px){
   #opponent-analysis .opponent-full-court>.court-svg,
