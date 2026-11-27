@@ -36,6 +36,16 @@ function updateMobileTrackerMode() {
     inGame
   );
 
+  if(inGame) {
+    document.body.classList.remove('mobile-nav-expanded');
+    const toggle=document.getElementById('mobile-nav-toggle');
+    const nav=document.getElementById('mobile-primary-nav');
+    toggle?.setAttribute('aria-expanded','false');
+    toggle?.setAttribute('aria-label','Open navigation');
+    nav?.setAttribute('aria-hidden','true');
+    if(nav && 'inert' in nav)nav.inert=true;
+  }
+
   // Hide the website navigation while tracking.
   const header = document.getElementById('app-header');
   if (header) header.hidden = inGame;
@@ -50,6 +60,30 @@ function updateMobileTrackerMode() {
   }
   moreButtons.forEach(b=>b?.addEventListener('click',()=>setMoreOpen(moreMenu.hidden)));
   moreMenu.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>setMoreOpen(false)));
+
+  // Phone navigation is a small arrow until the viewer requests its links.
+  const mobileNavToggle=document.getElementById('mobile-nav-toggle');
+  const mobileNav=document.getElementById('mobile-primary-nav');
+  function setMobileNavigationOpen(open){
+    if(!mobileNavToggle||!mobileNav)return;
+    const visible=Boolean(open) && !document.body.classList.contains('tracker-fullscreen');
+    document.body.classList.toggle('mobile-nav-expanded',visible);
+    mobileNavToggle.setAttribute('aria-expanded',String(visible));
+    mobileNavToggle.setAttribute('aria-label',visible?'Close navigation':'Open navigation');
+    mobileNav.setAttribute('aria-hidden',String(!visible));
+    if('inert' in mobileNav)mobileNav.inert=!visible;
+    else mobileNav.querySelectorAll('a,button').forEach(el=>{el.tabIndex=visible?0:-1;});
+  }
+  setMobileNavigationOpen(false);
+  mobileNavToggle?.addEventListener('click',()=>setMobileNavigationOpen(!document.body.classList.contains('mobile-nav-expanded')));
+  mobileNav?.querySelectorAll('a').forEach(link=>link.addEventListener('click',()=>setMobileNavigationOpen(false)));
+  document.addEventListener('keydown',event=>{
+    if(event.key==='Escape'&&document.body.classList.contains('mobile-nav-expanded')){
+      setMobileNavigationOpen(false);
+      mobileNavToggle?.focus();
+    }
+  });
+
 
   function highlight(file){const selected=file.split(/[?#]/)[0];document.querySelectorAll('[data-view]').forEach(link=>link.classList.toggle('active',link.dataset.view===selected));const keys=['dashboard.html','gamehub.html','roster.html','stats.html'];const idx=keys.indexOf(selected);const nav=document.querySelector('.mobile-bottom-nav');if(nav&&idx!==-1)nav.style.setProperty('--nav-index',idx);}
   function navigate(view,{replace=false}={}) {
