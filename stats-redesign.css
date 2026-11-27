@@ -100,3 +100,28 @@
 .sc-game-zone-preview .sc-game-zone-hint {display:block;margin-top:6px;padding:7px 9px;border:1px solid #cbd8ec;border-radius:7px;background:#fff;color:var(--team-primary,#183d78);font-size:12px;font-weight:750}
 .sc-game-zone-preview:hover .sc-game-zone-hint {background:#eaf2fc}
 .sc-game-zone-preview:focus-visible {outline:3px solid var(--team-secondary,var(--team-primary,#183d78));outline-offset:3px}
+
+
+/* Team Stats: give the full FIBA court the complete available card width.
+   Older stats.css rules capped this chart at 250/280/300px tall and made
+   it appear small despite ample horizontal room. */
+#team-view #team-shot-court{
+  display:block!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  margin:0!important;
+  padding:0!important;
+}
+#team-view #team-shot-court > .court-svg{
+  display:block!important;
+  width:100%!important;
+  max-width:none!important;
+  height:auto!important;
+  max-height:none!important;
+  aspect-ratio:860 / 470;
+  margin:8px 0 0!important;
+}
+#team-view #team-shot-court + .shot-legend{
+  margin:8px 0 0!important;
+}
