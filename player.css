@@ -1027,3 +1027,10 @@ body{background:linear-gradient(180deg,#101a30 0,#080e1c 48%,#070c17 100%)!impor
   fill:none;
   stroke:var(--team-primary,#233f85);
 }
+
+/* Six season-average metrics: PTS REB AST / STL BLK TO on every device. */
+#season-average-grid {
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:8px!important;
+}
