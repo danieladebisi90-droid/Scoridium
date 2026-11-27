@@ -7,6 +7,7 @@ displayedMonth.setDate(1);
 
 let selectedGameDate = null;
 let scSelectedTrackingGameId = null;
+let scSelectedCompletedGameId = null;
 
 
 /* =========================================
@@ -290,6 +291,7 @@ initializeGameHub();
 window.addEventListener("seasonChanged", async () => {
     selectedGameId = null;
     scSelectedTrackingGameId = null;
+    scSelectedCompletedGameId = null;
     selectedGameDate = null;
     loadGameHubGames();
     await loadGameHubEvents();
@@ -408,7 +410,8 @@ async function displayPreviousGame(games) {
         .filter(game => game.status === "completed")
         .sort((a, b) => String(b.date).localeCompare(String(a.date)));
 
-    const game = completedGames[0];
+    const game = completedGames.find(g=>String(g.id)===String(scSelectedCompletedGameId))||completedGames[0];
+    scRenderSameDayCompletedPicker(document.querySelector('.previous-game'),completedGames,game,'.apex-game-actions');
     const scoreLink=document.getElementById('apex-add-score-link');
     const filmLink=document.getElementById('apex-film-analysis-link');
     if(scoreLink)scoreLink.hidden=!game;
@@ -816,6 +819,33 @@ function scCurrentGameCard(games){
  const next=list.filter(g=>g.status==='scheduled'&&String(g.date||'').slice(0,10)>=today)
    .sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')))[0];
  return {game:next||null,live:false};
+}
+function scRenderSameDayCompletedPicker(card,completedGames,game,actionSelector){
+ if(!card)return;
+ const previous=card.querySelector('.sc-completed-day-game-picker');
+ previous?.remove();
+ if(!game)return;
+ const choices=(completedGames||[]).filter(g=>String(g.date||'').slice(0,10)===String(game.date||'').slice(0,10));
+ if(choices.length<2)return;
+ const before=card.querySelector(actionSelector);
+ if(!before)return;
+ const wrap=document.createElement('div');wrap.className='sc-same-day-game-picker sc-completed-day-game-picker';
+ const label=document.createElement('label');label.textContent='CHOOSE GAME FOR FILM ROOM';
+ const select=document.createElement('select');select.setAttribute('aria-label','Choose completed game to review');
+ for(const g of [...choices].sort((a,b)=>String(a.start_time||a.time||'').localeCompare(String(b.start_time||b.time||'')))){
+   const option=document.createElement('option');option.value=String(g.id);
+   option.textContent=(g.opponent||'Opponent')+' · '+(g.start_time||g.time||'Time TBD')+' · '+(g.location||'Location TBD');
+   select.append(option);
+ }
+ select.value=String(game.id);label.append(select);wrap.append(label);
+ select.addEventListener('change',()=>{
+   scSelectedCompletedGameId=select.value;
+   const day=selectedGameDate?mobileDateKey(selectedGameDate):null;
+   const scoped=day?gameHubGames.filter(g=>g.status==='completed'&&String(g.date||'').slice(0,10)===day):[];
+   displayPreviousGame(scoped.length?scoped:gameHubGames);
+   renderMobilePreviousGame();
+ });
+ before.before(wrap);
 }
 function scRenderSameDayGamePicker(card,game,action){
  const existing=card.querySelector('.sc-same-day-game-picker');
@@ -2296,7 +2326,10 @@ function renderMobilePreviousGame(){
  const day=selectedGameDate?
    [selectedGameDate.getFullYear(),String(selectedGameDate.getMonth()+1).padStart(2,'0'),
     String(selectedGameDate.getDate()).padStart(2,'0')].join('-'):null;
- const game=(day&&completed.find(g=>String(g.date).slice(0,10)===day))||completed[0];
+ const currentDayGames=day?completed.filter(g=>String(g.date).slice(0,10)===day):[];
+ const candidates=currentDayGames.length?currentDayGames:completed;
+ const game=candidates.find(g=>String(g.id)===String(scSelectedCompletedGameId))||candidates[0];
+ scRenderSameDayCompletedPicker(card,candidates,game,'.apex-mobile-previous-actions');
  const submit=document.getElementById('apex-mobile-previous-submit');
  const film=document.getElementById('apex-mobile-previous-film');
  const box=document.getElementById('apex-mobile-previous-box');
