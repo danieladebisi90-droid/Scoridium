@@ -1214,3 +1214,43 @@ label[for="schedule-end-time"][hidden] {
 @media(max-width:900px){.game-info-container{display:block}.next-game.sc-no-upcoming{min-height:120px}}
 
 .sc-season-fallback{display:grid;gap:9px;padding:12px 4px}.sc-season-fallback h4{font-size:15px;color:var(--team-strong,#173c75);margin:0 0 4px}.sc-season-metric{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e7ecf2;padding:9px 2px;gap:12px}.sc-season-metric span{color:#526174;font-size:13px}.sc-season-metric strong{font-variant-numeric:tabular-nums}
+
+/* Doubleheader: a per-fixture selector for game tracking and completed Film Room review. */
+.sc-same-day-game-picker{
+  margin:12px 0;
+  padding:11px 12px;
+  border:1px solid var(--team-primary,#2a4575);
+  border-radius:9px;
+  background:rgba(120,140,170,.08);
+  color:inherit;
+  text-align:left;
+  min-width:0;
+}
+.sc-same-day-game-picker label{
+  display:block;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.06em;
+  line-height:1.4;
+  color:inherit;
+}
+.sc-same-day-game-picker select{
+  display:block;
+  width:100%;
+  min-width:0;
+  max-width:100%;
+  box-sizing:border-box;
+  margin-top:7px;
+  padding:10px 9px;
+  border-radius:7px;
+  border:1px solid #aab6c7;
+  background:#fff;
+  color:#182941;
+  font-size:13px;
+  font-weight:650;
+  cursor:pointer;
+}
+.sc-same-day-game-picker select:focus-visible{
+  outline:3px solid var(--team-secondary,#c9a052);
+  outline-offset:2px;
+}
