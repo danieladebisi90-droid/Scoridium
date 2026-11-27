@@ -658,3 +658,34 @@ html body.pg-v3-combined #post-quick-root .qv-ft-line .qv-ft-actions > .qv-butto
   padding:4px 8px!important;
   transform:none!important;
 }
+
+
+/* Combined review roster selectors (assist/shooter/rebound):
+   legacy fixed fractional grid rows are shorter than the 42px minimum buttons
+   in the compact stat panel, causing rows to overlap. Use content-sized rows. */
+html body.pg-v3-combined #post-quick-root .qv-tracked .qv-action-surface > .qv-grid {
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  grid-template-rows:none!important;
+  grid-auto-rows:minmax(42px,auto)!important;
+  align-content:start!important;
+  align-items:stretch!important;
+  gap:7px!important;
+  width:100%!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:100%!important;
+  padding:2px 0!important;
+  margin:0!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  box-sizing:border-box!important;
+}
+html body.pg-v3-combined #post-quick-root .qv-tracked .qv-action-surface > .qv-grid > .qv-tile {
+  position:static!important;
+  min-height:42px!important;
+  height:100%!important;
+  width:100%!important;
+  margin:0!important;
+  box-sizing:border-box!important;
+}
