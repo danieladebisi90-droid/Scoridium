@@ -19,5 +19,5 @@
  }
  form.addEventListener('submit',e=>{e.preventDefault();attempt();});
  input.addEventListener('change',()=>{const token=save();if(valid(token))history.replaceState(null,'','join-team.html?code='+encodeURIComponent(token));});
- (async()=>{const {data}=await client.auth.getUser();if(!data?.user){auth.hidden=false;form.hidden=true;message.textContent='Sign up or sign in to accept your invitation.';refreshLinks();return;}if(valid(save())){attempt();}else{message.textContent='Enter an invitation code to join.';}})();
+ (async()=>{const {data}=await client.auth.getUser();if(!data?.user){auth.hidden=false;form.hidden=true;message.textContent='Sign up or sign in to accept your invitation.';refreshLinks();return;}if(valid(save())){message.textContent='Invitation ready. Choose how you are connected to the team, then select Join Team.';}else{message.textContent='Enter an invitation code, choose your role, and select Join Team.';}})();
 })();
