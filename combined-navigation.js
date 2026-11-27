@@ -495,10 +495,12 @@ const plays = events
     });
     let tallyUs=0,tallyOpp=0;
     const scoreAfter=new Map();
-    for(const event of gameChronological){
+    const chronologicalIndex=new Map();
+    for(const [index,event] of gameChronological.entries()){
       const n=pointsFor(event);
       if(event.team==='us')tallyUs+=n;else if(event.team==='opponent')tallyOpp+=n;
       scoreAfter.set(String(event.id),[tallyUs,tallyOpp]);
+      chronologicalIndex.set(String(event.id),index);
     }
     for(const e of plays){
       if(childIds.has(String(e.id)))continue;
@@ -589,8 +591,16 @@ primary.textContent=shootingShot
       }
       line.append(details);
       const score=document.createElement('strong');score.className='av-pbp-running-score';
-      const result=scoreAfter.get(String(e.id))||[0,0];
-      score.textContent=result.join('–');score.title='Tracked score after this event (tracked–opponent)';
+      // Use the last chronological event in this *entire displayed play*.
+      // A shooting foul's free throws and the rebound are grouped under the
+      // foul; looking up the foul alone shows the score BEFORE its free throws.
+      const playEvents=[e,...children];
+      const latest=playEvents.reduce((best,event)=>{
+        const at=chronologicalIndex.get(String(event.id))??-1;
+        return at>best.index?{index:at,id:String(event.id)}:best;
+      },{index:-1,id:String(e.id)});
+      const result=scoreAfter.get(latest.id)||scoreAfter.get(String(e.id))||[0,0];
+      score.textContent=result.join('–');score.title='Tracked score after this complete play (tracked–opponent)';
       line.append(score);
       const more=document.createElement('details');more.className='av-pbp-more';
       const summary=document.createElement('summary');summary.textContent='⋮';summary.title='Play options';
