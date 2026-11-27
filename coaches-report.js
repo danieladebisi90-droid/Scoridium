@@ -73,6 +73,7 @@ window.apexOpenCoachesReport=function({game,tracked,opponent,fullCourt,offenseCo
     'thead th{background:#e9eff8;color:var(--primary);font-weight:800}tbody tr:nth-child(even){background:#f7f9fc}tr.total{background:#e0ebf9;font-weight:800}',
     '.leaders{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.leader{padding:11px;background:#f0f4fa;border-radius:8px}.leader small{display:block;font-size:10px;color:var(--muted)}.leader b{display:block;font-size:12px;margin-top:5px}',
     '.boxscore{font-size:10px}.boxscore td,.boxscore th{padding:8px 6px}',
+    'body > section.page:first-of-type .panel{padding:9px;margin-bottom:10px}body > section.page:first-of-type th,body > section.page:first-of-type td{padding:4px 7px;font-size:10px}body > section.page:first-of-type .scoreboard{padding:10px;margin-bottom:10px}body > section.page:first-of-type .leader{padding:8px}',
     '.court-card{border:1px solid var(--line);border-radius:9px;padding:10px;margin:0 auto 14px;break-inside:avoid}',
     '.court-card h2{margin:0 0 9px}.court-card svg{display:block;width:100%;height:auto;max-height:100%}.court-card.full{max-width:850px}.court-card.full svg{max-height:74mm;width:auto;max-width:100%;margin:auto}',
     '.halves{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.halves .court-card svg{max-height:65mm;width:auto;max-width:100%;margin:auto}',
