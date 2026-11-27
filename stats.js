@@ -1616,6 +1616,21 @@ function init(){
   $('close-game-summary')?.addEventListener('click',()=>{state.gameSummaryExpanded=false;renderGames();});
   $('open-game-details').addEventListener('click',()=>{state.detail='box';setView('details');});
   $('back-to-games').addEventListener('click',()=>setView('games'));
+  $('download-coaches-report')?.addEventListener('click',()=>{
+    const g=selectedGame();
+    if(!g){alert('Choose a completed game before exporting a report.');return;}
+    const shots=g.shots||[];
+    const ours=shots.filter(x=>['us','our','ours','home'].includes(String(x.team??'us').toLowerCase()));
+    const theirs=shots.filter(x=>['opponent','away','them'].includes(String(x.team??'').toLowerCase()));
+    window.apexOpenCoachesReport?.({
+      game:g,
+      tracked:apexCountSide(g.events,'us'),
+      opponent:apexCountSide(g.events,'opponent'),
+      fullCourt:courtSVG(shots,'full'),
+      offenseCourt:courtSVG(ours,'half'),
+      defenseCourt:courtSVG(theirs,'half')
+    });
+  });
   document.querySelectorAll('[data-detail]').forEach(b=>b.addEventListener('click',()=>{state.detail=b.dataset.detail;renderDetails();}));
   $('detail-content').addEventListener('click',e=>{const b=e.target.closest('[data-court]');if(b){state.courtMode=b.dataset.court;renderDetails();}});
   $('detail-content').addEventListener('change',e=>{
