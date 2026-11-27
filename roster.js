@@ -115,7 +115,9 @@ function jerseySVG(player) {
         x: "90",
         y: "88",
         "text-anchor": "middle",
-        "font-size": "19",
+        "font-size": String(teamName).length > 14 ? "12" : String(teamName).length > 10 ? "15" : "19",
+        "textLength": String(teamName).length > 10 ? "137" : undefined,
+        "lengthAdjust": "spacingAndGlyphs",
         "font-weight": "900",
         fill: "white"
     }, teamName);
@@ -186,7 +188,7 @@ function jerseySVG(player) {
     const mascot = team.mascot || (team.team_type === 'club' ? '' : 'Team');
     const label = mascot.toLowerCase().includes(school.toLowerCase()) ? mascot : `${school} ${mascot}`;
     $('team-name').textContent = label.toUpperCase();
-    jerseyWordmark = String(school.split(' ')[0] || mascot).toUpperCase().slice(0, 11); 
+    jerseyWordmark = String((team.mascot || school || 'TEAM')).trim().toUpperCase(); 
     if ($('school-name')) $('school-name').textContent = '';
     const details = $('roster-team-info');
     if (details) {
