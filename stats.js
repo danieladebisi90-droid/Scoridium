@@ -1057,12 +1057,18 @@ function shootingHTML(g) {
        <div class="sc-game-zone-card">
          <h4>Offence · ${escapeHTML(g.team)}</h4>
          <p>${us.fgm}/${us.fga} FG · Our shot locations</p>
-         ${offenceCourt}
+         <button type="button" class="sc-game-zone-preview zone-preview" data-game-zone-side="offence" aria-label="Expand this game's offensive shot zones: Basic, Traditional and Distance" aria-haspopup="dialog" aria-controls="shooting-zones-modal">
+           ${offenceCourt}
+           <span class="sc-game-zone-hint">Expand · Basic / Traditional / Distance</span>
+         </button>
        </div>
        <div class="sc-game-zone-card">
          <h4>Defence · ${escapeHTML(g.opponent)}</h4>
          <p>${op.observed?op.fgm+'/'+op.fga+' FG':'No recorded attempts'} · Opponent shot locations</p>
-         ${defenceCourt}
+         <button type="button" class="sc-game-zone-preview zone-preview" data-game-zone-side="defence" aria-label="Expand this game's defensive shot zones: Basic, Traditional and Distance" aria-haspopup="dialog" aria-controls="shooting-zones-modal">
+           ${defenceCourt}
+           <span class="sc-game-zone-hint">Expand · Basic / Traditional / Distance</span>
+         </button>
        </div>
      </div>
    </div>
@@ -1725,6 +1731,7 @@ const closeZonesButton = document.getElementById("close-zones");
 let previousZoneFocus = null;
 
 let selectedAnalysisSide = "offence";
+let selectedAnalysisGame = null; // null = existing season-wide Team Stats analysis
 let selectedZoneView = "basic";
 
 let selectedTraditionalZones = new Set();
@@ -2864,9 +2871,15 @@ $("expanded-analysis-summary").addEventListener("click", event => {
 });
 
 function renderSelectedZoneView() {
-    const shots = selectedAnalysisSide === "offence"
-        ? getTeamShots("us")
-        : getTeamShots("opponent");
+    const side = selectedAnalysisSide === "offence" ? "us" : "opponent";
+    const shots = selectedAnalysisGame
+        ? (selectedAnalysisGame.shots || []).filter(shot => {
+            const team=String(shot.team??'us').toLowerCase();
+            return side==='us'
+              ? ['us','our','ours','home'].includes(team)
+              : ['opponent','them','away'].includes(team);
+          })
+        : getTeamShots(side);
 
     let analysis;
 
@@ -2896,15 +2909,16 @@ function openZonesModal() {
     previousZoneFocus = document.activeElement;
 
     $("zones-modal-title").textContent =
-        selectedAnalysisSide === "offence"
+        (selectedAnalysisSide === "offence"
             ? "OFFENSIVE SHOT ANALYSIS"
-            : "DEFENSIVE SHOT ANALYSIS";
+            : "DEFENSIVE SHOT ANALYSIS") +
+        (selectedAnalysisGame ? " · " + (selectedAnalysisGame.opponent || "Selected Game") : "");
 
     selectedZoneView = "basic";
-
-    renderSelectedZoneView();
-
     selectedTraditionalZones.clear();
+    selectedBasicZones.clear();
+    selectedDistanceZones.clear();
+    renderSelectedZoneView();
 
     zonesModal.hidden = false;
     closeZonesButton.focus();
@@ -2914,14 +2928,25 @@ function openZonesModal() {
 function closeZonesModal() {
     zonesModal.hidden = true;
     previousZoneFocus?.focus();
+    selectedAnalysisGame = null;
 }
 
-// Clicking either small court opens the popup
-document.querySelectorAll(".zone-preview").forEach(button => {
+// Team Stats uses the existing season-wide previews. Game Details is
+// rendered dynamically, so delegate its click to the current game card.
+document.querySelectorAll(".zone-preview[data-zone-side]").forEach(button => {
     button.addEventListener("click", () => {
+        selectedAnalysisGame = null;
         selectedAnalysisSide = button.dataset.zoneSide;
         openZonesModal();
     });
+});
+$('detail-content')?.addEventListener('click', event => {
+    const button=event.target.closest?.('.sc-game-zone-preview[data-game-zone-side]');
+    if(!button) return;
+    selectedAnalysisGame=selectedGame();
+    if(!selectedAnalysisGame)return;
+    selectedAnalysisSide=button.dataset.gameZoneSide;
+    openZonesModal();
 });
 
 document.querySelectorAll("[data-zone-view]").forEach(button => {
