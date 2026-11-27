@@ -283,8 +283,83 @@ async function init(){
   if(index<select.options.length-1){select.selectedIndex=index+1;select.dispatchEvent(new Event('change'));say('Reviewing '+periodName(currentPeriod())+'. The completed game result is unchanged.');}
   else say('Final recorded period reached. End Game Review returns to Game Hub.');
  });
- $('post-end-review').addEventListener('click',()=>{
-  if(confirm('Finish review and return to Film Room? Saved events remain unchanged.'))location.href='app.html?page='+encodeURIComponent('gamehub.html?filmRoomGameId='+gameId);
+ // The official score only changes when Finish Review is explicitly confirmed.
+ const finalScoreDialog=$('post-final-score-dialog');
+ const finalScoreSave=$('post-final-score-save');
+ const finalScoreKeep=$('post-final-score-keep');
+ const finalScoreContinue=$('post-final-score-continue');
+ const returnToFilmRoom=()=>{
+  location.href='app.html?page='+encodeURIComponent('gamehub.html?filmRoomGameId='+gameId);
+ };
+ const formatReviewScore=value=>value==null?'—':String(value);
+ const reviewScoringTotals=()=>{
+  let ours=0,opponent=0,attempts=0;
+  for(const event of events){
+   if(event.type!=='shot'&&event.type!=='free_throw')continue;
+   attempts++;
+   if(event.made!==true)continue;
+   const points=event.type==='free_throw'?1:Number(event.points);
+   if(!Number.isInteger(points)||(event.type==='shot'&&![2,3].includes(points))){
+    throw new Error('A made basket has an invalid point value. Review the event before finalizing.');
+   }
+   if(event.team==='us')ours+=points;
+   else if(event.team==='opponent')opponent+=points;
+   else throw new Error('A made scoring event has an unknown team. Review it before finalizing.');
+  }
+  return {ours,opponent,attempts};
+ };
+ $('post-end-review').addEventListener('click',async()=>{
+  if(busy||finalScoreDialog.open)return;
+  const finishButton=$('post-end-review');
+  finishButton.disabled=true;
+  $('post-final-score-error').hidden=true;
+  try{
+   await refresh();
+   const totals=reviewScoringTotals();
+   const original=game.team_score==null||game.opponent_score==null
+    ? formatReviewScore(game.team_score)+' – '+formatReviewScore(game.opponent_score)
+    : game.team_score+' – '+game.opponent_score;
+   $('post-final-score-comparison').textContent=
+    'Current official score: '+original+' | Reviewed score: '+totals.ours+' – '+totals.opponent;
+   finalScoreSave.disabled=totals.attempts===0;
+   if(totals.attempts===0){
+    $('post-final-score-comparison').textContent+=' | No scoring attempts recorded yet; the official score cannot be updated.';
+   }
+   finalScoreDialog.showModal();
+  }catch(error){
+   say('Could not prepare final score: '+(error.message||'Unknown error'));
+  }finally{
+   finishButton.disabled=false;
+  }
+ });
+ finalScoreContinue.addEventListener('click',()=>finalScoreDialog.close());
+ finalScoreKeep.addEventListener('click',()=>{finalScoreDialog.close();returnToFilmRoom();});
+ finalScoreSave.addEventListener('click',async()=>{
+  if(finalScoreSave.disabled)return;
+  finalScoreSave.disabled=true;
+  finalScoreKeep.disabled=true;
+  finalScoreContinue.disabled=true;
+  $('post-final-score-error').hidden=true;
+  try{
+   const {data,error}=await supabaseClient.rpc('apexvision_finish_review_score',{p_game_id:gameId});
+   if(error)throw error;
+   if(data==null||!Number.isInteger(Number(data.team_score))||!Number.isInteger(Number(data.opponent_score))){
+    throw new Error('The score update returned an invalid result.');
+   }
+   game.team_score=Number(data.team_score);
+   game.opponent_score=Number(data.opponent_score);
+   finalScoreDialog.close();
+   returnToFilmRoom();
+  }catch(error){
+   const errorLabel=$('post-final-score-error');
+   errorLabel.textContent='Could not update final score: '+(error.message||'Unknown error')+'. Review is still open.';
+   errorLabel.hidden=false;
+   say(errorLabel.textContent);
+  }finally{
+   finalScoreSave.disabled=false;
+   finalScoreKeep.disabled=false;
+   finalScoreContinue.disabled=false;
+  }
  });
  const roster=await supabaseClient.from('players').select('id,first_name,last_name,number').eq('team_id',teamId).order('number');
  if(roster.error){say('Unable to load roster: '+roster.error.message);return;}
