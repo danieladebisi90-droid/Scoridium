@@ -94,3 +94,9 @@
  .sc-game-zones-grid {grid-template-columns:1fr;gap:10px}
  .sc-game-zone-card {padding:10px}
 }
+
+/* Interactive selected-game half courts use the existing shooting-zone modal. */
+.sc-game-zone-preview.zone-preview {display:block;width:100%;padding:0;border:0;background:transparent;text-align:center;border-radius:8px;cursor:zoom-in}
+.sc-game-zone-preview .sc-game-zone-hint {display:block;margin-top:6px;padding:7px 9px;border:1px solid #cbd8ec;border-radius:7px;background:#fff;color:var(--team-primary,#183d78);font-size:12px;font-weight:750}
+.sc-game-zone-preview:hover .sc-game-zone-hint {background:#eaf2fc}
+.sc-game-zone-preview:focus-visible {outline:3px solid var(--team-secondary,var(--team-primary,#183d78));outline-offset:3px}
