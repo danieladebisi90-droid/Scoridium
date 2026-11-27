@@ -8,13 +8,23 @@
     min-height:0!important;
     overflow:hidden!important;
   }
-  body.scoridium-shell .shell-main {
-    flex:1 1 auto!important;
-    min-height:0!important;
+  /* The old bottom bar reserved a full-width ~65px flex row.
+     Anchor the actual page viewport independently of that row so no
+     white footer remains behind the floating navigation island. */
+  body.scoridium-shell:not(.tracker-fullscreen) .shell-main {
+    position:absolute!important;
+    top:calc(57px + env(safe-area-inset-top))!important;
+    bottom:0!important;
+    left:0!important;
+    right:0!important;
+    width:100%!important;
     height:auto!important;
+    min-height:0!important;
     padding:0!important;
     margin:0!important;
-    background:transparent!important;
+    background:var(--team-primary)!important;
+    border-radius:0!important;
+    z-index:1;
   }
   body.scoridium-shell #page-frame {
     width:100%!important;
