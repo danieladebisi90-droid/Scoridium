@@ -50,7 +50,9 @@ function finish(e){
  if(!courtSwipable())return;
  const ctl=window.apexFilmCourtView;
  const selected=ctl.currentTeam();
- const currentIsTrackedLeft=(Number(api.getPeriod?.()||1)<=2)!==
+ const filter=document.getElementById('av-cn-shot-filter')?.value;
+ const selectedQuarter=filter&&filter!=='all'?Number(filter):Number(api.getPeriod?.()||1);
+ const currentIsTrackedLeft=(selectedQuarter<=2)!==
   Boolean(document.getElementById('post-switch-direction')?.getAttribute('aria-pressed')==='true');
  const currentLeft=selected==='us'?currentIsTrackedLeft:!currentIsTrackedLeft;
  // Swipe left to reveal the physical right half; swipe right to reveal the left.
