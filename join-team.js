@@ -9,11 +9,13 @@
  async function attempt(){
   if(!client){message.textContent='Unable to initialize Supabase.';return;}
   const token=save();if(!valid(token)){message.textContent='Enter a valid invitation code.';return;}
+  const selectedRole=document.getElementById('membership-type').value;
+  if(!['viewer','parent','player','coach'].includes(selectedRole)){message.textContent='Choose Team Viewer, Parent, Player, or Coach before joining.';return;}
   const {data:{user},error}=await client.auth.getUser();
   if(error||!user){message.textContent='Sign up or sign in to join this team.';auth.hidden=false;form.hidden=true;refreshLinks();return;}
   if(!user.email_confirmed_at){message.textContent='Verify your email address before joining.';auth.hidden=false;form.hidden=true;refreshLinks();return;}
   auth.hidden=true;form.hidden=false;button.disabled=true;message.textContent='Joining team…';
-  try{const {data,error:joinError}=await client.rpc('apex_auto_join_team',{p_code:token,p_kind:document.getElementById('membership-type').value});if(joinError)throw joinError;
+  try{const {data,error:joinError}=await client.rpc('apex_auto_join_team',{p_code:token,p_kind:selectedRole});if(joinError)throw joinError;
    sessionStorage.removeItem('apex_pending_invite');message.textContent=data||'You joined the team.';location.replace('myTeams.html');
   }catch(err){message.textContent=err.message||'Unable to join. Try a new invitation.';}finally{button.disabled=false;}
  }
