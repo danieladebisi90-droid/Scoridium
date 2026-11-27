@@ -595,7 +595,9 @@ function aggregatePlayers(games) {
 function apexCountSide(events, side) {
   const mine = e => side === "us" ? ["us","our","ours"].includes(String(e.team).toLowerCase())
     : ["opponent","them","away"].includes(String(e.team).toLowerCase());
-  const rows=(events||[]).filter(mine);
+  const statTypes=new Set(['shot','free_throw','offensive_rebound','defensive_rebound',
+    'team_offensive_rebound','team_defensive_rebound','assist','steal','block','turnover','foul']);
+  const rows=(events||[]).filter(e=>mine(e)&&statTypes.has(e.type));
   const totals={observed:rows.length>0,pts:0,reb:0,oreb:0,dreb:0,ast:0,stl:0,blk:0,tov:0,pf:0,fgm:0,fga:0,threeMade:0,threeAtt:0,ftm:0,fta:0};
   for(const e of rows){
     const type=String(e.type||"");
@@ -713,6 +715,13 @@ function setView(view) {
 function renderAssistConnections(games){
   const host=$('assist-connections');if(!host)return;
   const counts=new Map();const ids=new Set();
+  const theme=getComputedStyle(document.documentElement);
+  const primary=theme.getPropertyValue('--team-primary').trim();
+  const secondary=theme.getPropertyValue('--team-secondary').trim();
+  const rgb=s=>/^#[0-9a-f]{6}$/i.test(s)?[1,3,5].map(i=>parseInt(s.slice(i,i+2),16)):null;
+  const light=s=>{const c=rgb(s);return c?(0.2126*c[0]+0.7152*c[1]+0.0722*c[2]):255;};
+  const outline=light(secondary)<225?secondary:primary;
+  host.style.setProperty('--stats-assist-outline',outline||'currentColor');
   for(const g of games)for(const pair of (g.assistConnections||[])){
     if(!pair.from||!pair.to)continue;
     const key=pair.from+'|'+pair.to;counts.set(key,(counts.get(key)||0)+1);
@@ -728,7 +737,7 @@ function renderAssistConnections(games){
     const [from,to]=key.split('|');const a=coords.get(from),b=coords.get(to);
     return `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="var(--team-primary, #777)" stroke-width="${(2+7*value/max).toFixed(1)}" stroke-linecap="round"><title>${escapeHTML(names.get(from)||from)} assisted ${escapeHTML(names.get(to)||to)} · ${value} baskets</title></line>`;
   }).join('');
-  const circles=weighted.map(id=>{const c=coords.get(id),p=players.find(p=>String(p.id)===id);return `<g class="sc-assist-node" tabindex="0" role="button" aria-label="Connections for ${escapeHTML(names.get(id)||id)}" data-assist-id="${escapeHTML(id)}"><circle cx="${c.x}" cy="${c.y}" r="25" fill="var(--team-primary, #222)" stroke="var(--team-secondary, #777)" stroke-width="3"/><text x="${c.x}" y="${c.y+5}" text-anchor="middle" font-size="13" fill="#fff" font-weight="bold" pointer-events="none">${escapeHTML('#'+(p?.number||'?'))}</text></g>`;}).join('');
+  const circles=weighted.map(id=>{const c=coords.get(id),p=players.find(p=>String(p.id)===id);return `<g class="sc-assist-node" tabindex="0" role="button" aria-label="Connections for ${escapeHTML(names.get(id)||id)}" data-assist-id="${escapeHTML(id)}"><circle cx="${c.x}" cy="${c.y}" r="25" fill="var(--team-primary, #222)" stroke="var(--stats-assist-outline, currentColor)" stroke-width="3"/><text x="${c.x}" y="${c.y+5}" text-anchor="middle" font-size="13" fill="var(--team-primary-ink, white)" font-weight="bold" pointer-events="none">${escapeHTML('#'+(p?.number||'?'))}</text></g>`;}).join('');
   host.innerHTML=`<svg viewBox="0 0 400 350" role="group" aria-label="Assist connections. Select a player to inspect connections.">${lines}${circles}</svg><div class="sc-assist-popup" role="status" hidden></div>`;
   host.__assistConnections={counts,names};
 }
