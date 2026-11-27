@@ -3,6 +3,11 @@
 @media (max-width:700px) and (orientation:portrait) {
   /* Keep the app content full-height. The island floats over it; do not
      reserve a full-width footer/white strip for this compact nav. */
+  /* The former full-width mobile footer had a pale background on the
+     shell body. Use the current team's colour everywhere outside cards. */
+  body.scoridium-shell {
+    background:var(--team-primary,#181818)!important;
+  }
   html, body.scoridium-shell {
     height:100dvh!important;
     min-height:0!important;
