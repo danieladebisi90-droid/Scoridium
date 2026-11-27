@@ -160,6 +160,15 @@ async function loadSupabaseStatistics() {
         games.map(game => game.team_id).filter(Boolean)
     )];
 
+    // Resolve the selected team's actual name; never label every team "Our Team".
+    let displayTeamName = "Tracked Team";
+    const teamResponse = await supabaseClient.from("teams")
+        .select("mascot,club_name,team_type").eq("id",teamId).maybeSingle();
+    if (!teamResponse.error && teamResponse.data) {
+        const t = teamResponse.data;
+        displayTeamName = String((t.team_type === "club" ? (t.club_name || t.mascot) : t.mascot) || "Tracked Team");
+    }
+
     // 2. Fetch recorded events.
     
 /* =========================================
@@ -209,6 +218,20 @@ console.log(
         .in('game_id',gameIds);
       if(!filmError)filmTagsByEvent=new Map((filmTags||[]).map(row=>[String(row.event_id),row]));
     }catch(_error){/* Optional classification features unavailable. */}
+
+    // Optional saved chronological play order and foul classification.
+    // Missing optional Film Room migrations must not break the Statistics page.
+    let playOrder = new Map(), foulDetails = new Map();
+    try {
+      const result = await supabaseClient.from('apexvision_postgame_order')
+        .select('event_id,sort_key').in('game_id',gameIds);
+      if (!result.error) playOrder = new Map((result.data||[]).map(e=>[String(e.event_id),Number(e.sort_key)]));
+    } catch (_) {}
+    try {
+      const result = await supabaseClient.from('apexvision_postgame_foul_details')
+        .select('event_id,foul_class,shot_event_id').in('game_id',gameIds);
+      if (!result.error) foulDetails = new Map((result.data||[]).map(e=>[String(e.event_id),e]));
+    } catch (_) {}
 
     // 3. Fetch roster details for player names and numbers.
     let roster = [];
@@ -454,7 +477,7 @@ console.log(
             id: String(game.id),
             date: String(game.date ?? "").slice(0, 10),
             season: String(game.seasons_id),
-            team: "Our Team",
+            team: displayTeamName,
             opponent: game.opponent ?? "Opponent",
             location: game.location ?? "Home",
             ourScore: Number(game.team_score) || 0,
@@ -463,7 +486,8 @@ console.log(
             hasRecordedStats,
             shots,
             quarters,
-            plays,
+            plays: detailedGamePlays(gameEvents,rosterById,displayTeamName,game.opponent||"Opponent",playOrder,foulDetails),
+            events: gameEvents,
             assistConnections
         };
     });
@@ -565,6 +589,89 @@ function aggregatePlayers(games) {
     for(const field of fields) row[field]+=number(player[field]);
   }
   return [...map.values()];
+}
+// Count both teams from the actual recorded game events, including unassigned/team rebounds.
+// Missing categories are not evidence that the opposing side had zero stats.
+function apexCountSide(events, side) {
+  const mine = e => side === "us" ? ["us","our","ours"].includes(String(e.team).toLowerCase())
+    : ["opponent","them","away"].includes(String(e.team).toLowerCase());
+  const rows=(events||[]).filter(mine);
+  const totals={observed:rows.length>0,pts:0,reb:0,oreb:0,dreb:0,ast:0,stl:0,blk:0,tov:0,pf:0,fgm:0,fga:0,threeMade:0,threeAtt:0,ftm:0,fta:0};
+  for(const e of rows){
+    const type=String(e.type||"");
+    if(type==="shot"){
+      totals.fga++;if(Number(e.points)===3)totals.threeAtt++;
+      if(e.made===true){totals.fgm++;totals.pts+=Number(e.points)||0;if(Number(e.points)===3)totals.threeMade++;}
+    }else if(type==="free_throw"){totals.fta++;if(e.made===true){totals.ftm++;totals.pts++;}}
+    else if(type==="offensive_rebound"||type==="team_offensive_rebound"){totals.oreb++;totals.reb++;}
+    else if(type==="defensive_rebound"||type==="team_defensive_rebound"){totals.dreb++;totals.reb++;}
+    else if(type==="assist")totals.ast++;else if(type==="steal")totals.stl++;
+    else if(type==="block")totals.blk++;else if(type==="turnover")totals.tov++;
+    else if(type==="foul")totals.pf++;
+  }
+  return totals;
+}
+function apexSideTotals(games,side){
+  const fields=["pts","reb","oreb","dreb","ast","stl","blk","tov","pf","fgm","fga","threeMade","threeAtt","ftm","fta"];
+  const totals=Object.fromEntries(fields.map(k=>[k,0]));
+  let observed=false;
+  for(const game of games){
+    const row=apexCountSide(game.events,side);observed ||= row.observed;
+    for(const field of fields)totals[field]+=row[field];
+  }
+  return {...totals,observed};
+}
+// The Statistics page is read-only; this is a richer presentation of the
+// saved Film Room event/link data, never a second editable copy.
+function detailedGamePlays(events,players,teamName,opponentName,order,fouls){
+  const byId=new Map(events.map(e=>[String(e.id),e]));
+  const ftSeq=new Map();
+  for(const e of events){
+    if(e.type!=="free_throw"||!e.linked_event_id)continue;
+    const key=[e.linked_event_id,e.period,e.team,e.player_id||""].join("|");
+    if(!ftSeq.has(key))ftSeq.set(key,[]);ftSeq.get(key).push(e);
+  }
+  const ftLabels=new Map();
+  for(const seq of ftSeq.values()){
+    seq.sort((a,b)=>String(a.created_at||a.id).localeCompare(String(b.created_at||b.id)));
+    seq.forEach((e,i)=>ftLabels.set(String(e.id),"FT "+(i+1)+" of "+seq.length));
+  }
+  const actor=e=>{
+    const team=["us","our","ours"].includes(String(e.team).toLowerCase())?teamName:opponentName;
+    const p=e.player_id?players.get(String(e.player_id)):null;
+    return team+(p?" #"+(p.number??"?"):"");
+  };
+  const action=e=>{
+    if(e.type==="shot"){
+      const x=Number(e.x),y=Number(e.y);
+      const distance=e.x!=null&&e.y!=null&&Number.isFinite(x)&&Number.isFinite(y)
+        ? (Math.hypot(x-(x<430?57.25:802.75),y-235)/30*3.28084).toFixed(1)+" ft · ":"";
+      return distance+(Number(e.points)||"?")+"PT "+(e.made===true?"MADE":"MISS");
+    }
+    if(e.type==="free_throw")return (ftLabels.get(String(e.id))||"FT")+" "+(e.made===true?"MADE":"MISS");
+    if(e.type==="foul"){
+      const kind=fouls.get(String(e.id))?.foul_class;
+      return ({shooting:"Shooting foul",nonshooting:"Non-shooting foul",offensive:"Offensive foul",technical:"Technical foul"})[kind]||"Foul";
+    }
+    return ({assist:"AST",offensive_rebound:"OREB",defensive_rebound:"DREB",team_offensive_rebound:"TEAM OREB",team_defensive_rebound:"TEAM DREB",steal:"STL",turnover:"TO",block:"BLK",game_end:"Game finalized"})[e.type]||String(e.type||"Event").replaceAll("_"," ");
+  };
+  const rows=events.slice().sort((a,b)=>{
+    const pd=(Number(a.period)||1)-(Number(b.period)||1);if(pd)return pd;
+    const va=order.get(String(a.id)),vb=order.get(String(b.id));
+    if(Number.isFinite(va)&&Number.isFinite(vb)&&va!==vb)return va-vb;
+    return String(a.created_at||a.id).localeCompare(String(b.created_at||b.id));
+  });
+  return rows.map(e=>{
+    const parent=e.linked_event_id?byId.get(String(e.linked_event_id)):null;
+    const foul=fouls.get(String(e.id));
+    const related=foul?.shot_event_id?byId.get(String(foul.shot_event_id)):null;
+    const period=Number(e.period)||1;
+    return {id:String(e.id),period:period<=4?"Q"+period:"OT"+(period-4),
+      team:actor(e),action:action(e),
+      linked:parent?"Linked to "+actor(parent)+" · "+action(parent):
+        related?"Linked shot: "+actor(related)+" · "+action(related):"",
+      type:e.type};
+  });
 }
 function teamTotals(games) {
   const players=games.flatMap(g=>g.players), shots=games.flatMap(g=>g.shots);
