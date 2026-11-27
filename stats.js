@@ -1039,7 +1039,34 @@ function boxHTML(g) {
 function shootingHTML(g) {
  if(!g)return '';
  const us=apexCountSide(g.events,'us'),op=apexCountSide(g.events,'opponent');
- return `<section class="sc-game-court-whole"><h3>Full Game · Shot Locations</h3><div class="sc-game-court-labels"><span>${escapeHTML(g.team)} · ${us.fgm}/${us.fga} FG</span><span>${escapeHTML(g.opponent)} · ${op.observed?op.fgm+'/'+op.fga+' FG':'No recorded shots'}</span></div>${courtSVG(g.shots||[],'full')}<div class="shot-legend"><span class="made-marker">●</span> Made <span class="miss-marker">○</span> Missed</div></section>`;
+ // Reuse Team Stats' exact OFFENCE/DEFENCE half-court zone diagrams, but
+ // restrict both datasets to this game rather than the season.
+ const gameShots=g.shots||[];
+ const offence=gameShots.filter(shot=>['us','our','ours','home'].includes(String(shot.team??'us').toLowerCase()));
+ const defence=gameShots.filter(shot=>['opponent','them','away'].includes(String(shot.team??'').toLowerCase()));
+ const offenceCourt=addZonePreviewLettering(buildZoneCourt(offence,'offence'),'OFFENCE');
+ const defenceCourt=addZonePreviewLettering(buildZoneCourt(defence,'defence'),'DEFENCE');
+ return `<section class="sc-game-court-whole">
+   <h3>Full Game · Shot Locations</h3>
+   <div class="sc-game-court-labels"><span>${escapeHTML(g.team)} · ${us.fgm}/${us.fga} FG</span><span>${escapeHTML(g.opponent)} · ${op.observed?op.fgm+'/'+op.fga+' FG':'No recorded shots'}</span></div>
+   ${courtSVG(gameShots,'full')}
+   <div class="shot-legend"><span class="made-marker">●</span> Made <span class="miss-marker">○</span> Missed</div>
+   <div class="sc-game-zones">
+     <h3>Offence &amp; Defence · This Game</h3>
+     <div class="sc-game-zones-grid">
+       <div class="sc-game-zone-card">
+         <h4>Offence · ${escapeHTML(g.team)}</h4>
+         <p>${us.fgm}/${us.fga} FG · Our shot locations</p>
+         ${offenceCourt}
+       </div>
+       <div class="sc-game-zone-card">
+         <h4>Defence · ${escapeHTML(g.opponent)}</h4>
+         <p>${op.observed?op.fgm+'/'+op.fga+' FG':'No recorded attempts'} · Opponent shot locations</p>
+         ${defenceCourt}
+       </div>
+     </div>
+   </div>
+ </section>`;
 }
 function playsHTML(g){
  if(!g)return '<p>No game selected</p>';
