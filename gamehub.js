@@ -6,6 +6,7 @@ let displayedMonth = new Date();
 displayedMonth.setDate(1);
 
 let selectedGameDate = null;
+let scSelectedTrackingGameId = null;
 
 
 /* =========================================
@@ -288,6 +289,7 @@ initializeGameHub();
 
 window.addEventListener("seasonChanged", async () => {
     selectedGameId = null;
+    scSelectedTrackingGameId = null;
     selectedGameDate = null;
     loadGameHubGames();
     await loadGameHubEvents();
@@ -799,11 +801,52 @@ function scFullDate(value){
 }
 // A single card owns both upcoming and live states. Never tie it to the calendar selection.
 function scCurrentGameCard(games){
- const live=(games||[]).filter(g=>g.status==='live').sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')))[0];
+ const list=games||[];
+ const now=new Date(),today=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');
+ const active=g=>['scheduled','live','paused'].includes(g.status);
+ if(scSelectedTrackingGameId){
+   const chosen=list.find(g=>String(g.id)===String(scSelectedTrackingGameId)&&active(g));
+   if(chosen&&(String(chosen.date||'').slice(0,10)>=today||chosen.status==='live'||chosen.status==='paused'))
+     return {game:chosen,live:chosen.status==='live'||chosen.status==='paused'};
+   scSelectedTrackingGameId=null;
+ }
+ const live=list.filter(g=>g.status==='live'||g.status==='paused')
+   .sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')))[0];
  if(live)return {game:live,live:true};
- const now=new Date();const today=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
- const next=(games||[]).filter(g=>g.status==='scheduled' && String(g.date||'').slice(0,10)>=today).sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')))[0];
+ const next=list.filter(g=>g.status==='scheduled'&&String(g.date||'').slice(0,10)>=today)
+   .sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')))[0];
  return {game:next||null,live:false};
+}
+function scRenderSameDayGamePicker(card,game,action){
+ const existing=card.querySelector('.sc-same-day-game-picker');
+ if(existing)existing.remove();
+ if(!game||!action)return;
+ const date=String(game.date||'').slice(0,10);
+ const sameDay=gameHubGames.filter(g=>
+   String(g.date||'').slice(0,10)===date && ['scheduled','live','paused'].includes(g.status));
+ if(sameDay.length<2)return;
+ const wrap=document.createElement('div');wrap.className='sc-same-day-game-picker';
+ const label=document.createElement('label');label.textContent='CHOOSE GAME TO TRACK';
+ const select=document.createElement('select');
+ select.setAttribute('aria-label','Choose which game to track');
+ const sorted=[...sameDay].sort((a,b)=>
+   String(a.start_time||a.time||'').localeCompare(String(b.start_time||b.time||''))||
+   String(a.opponent||'').localeCompare(String(b.opponent||'')));
+ for(const g of sorted){
+   const opt=document.createElement('option');opt.value=String(g.id);
+   opt.textContent=(g.opponent||'Opponent')+' · '+(g.start_time||g.time||'Time TBD')+
+     ' · '+(g.location||'Location TBD')+
+     (g.status==='live'?' · LIVE':g.status==='paused'?' · PAUSED':'');
+   select.append(opt);
+ }
+ select.value=String(game.id);
+ label.append(select);wrap.append(label);
+ select.addEventListener('change',()=>{
+   scSelectedTrackingGameId=select.value;
+   displayNextGame(gameHubGames);
+   renderMobileGameCard();
+ });
+ action.before(wrap);
 }
 function displayNextGame(games){
  const {game,live}=scCurrentGameCard(games),card=document.querySelector('.next-game');if(!card)return;
@@ -815,6 +858,7 @@ function displayNextGame(games){
  const vs=card.querySelector('.next-vs'),time=document.getElementById('next-game-time');
  const locationEl=document.getElementById('next-game-location'),action=document.getElementById('open-next-game');
  const scoreButton=document.getElementById('apex-next-score-link');if(scoreButton){scoreButton.hidden=!game;if(game){scoreButton.dataset.gameId='?gameId='+encodeURIComponent(game.id);scoreButton.dataset.matchup=gameHubTeamName+' vs '+(game.opponent||'Opponent');}}
+ scRenderSameDayGamePicker(card,game,action);
  heading.textContent=live?'LIVE GAME':'NEXT GAME';vs.textContent='VS';
  const oldHome=card.querySelector('.next-home .sc-score'),oldAway=card.querySelector('.next-away .sc-score');oldHome?.remove();oldAway?.remove();
  if(!game){date.textContent='';home.textContent='';away.textContent='';time.textContent='';locationEl.textContent='';action.disabled=true;action.textContent='No upcoming games';action.onclick=null;return;}
@@ -2302,6 +2346,7 @@ function renderMobileGameCard(){
  const matchup=card.querySelector('[data-mobile-game-matchup]'),result=card.querySelector('[data-mobile-game-result]'),action=card.querySelector('[data-mobile-game-action]');
  const {game,live}=scCurrentGameCard(gameHubGames);
  const scoreButton=document.getElementById('apex-mobile-score-link');if(scoreButton){scoreButton.hidden=!game;if(game){scoreButton.dataset.gameId='?gameId='+encodeURIComponent(game.id);scoreButton.dataset.matchup=gameHubTeamName+' vs '+(game.opponent||'Opponent');}}
+ scRenderSameDayGamePicker(card,game,action);
  card.classList.toggle('sc-is-live',live);card.classList.toggle('sc-no-upcoming',!game);heading.textContent=live?'LIVE GAME':'NEXT GAME';
  date.textContent=game?scFullDate(game.date):'No upcoming games';
  const isHome=String(game?.location||'').toLowerCase()==='home';
