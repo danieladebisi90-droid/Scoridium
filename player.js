@@ -127,7 +127,7 @@ let inDemo = false;
   function renderConceptSections(){
     const cards=$('season-average-grid');
     cards.replaceChildren();
-    for(const [label,stat] of [['PTS','pts'],['REB','reb'],['AST','ast'],['STL','stl'],['BLK','blk']]){
+    for(const [label,stat] of [['PTS','pts'],['REB','reb'],['AST','ast'],['STL','stl'],['BLK','blk'],['TO','tov']]){
       const tile=document.createElement('div');tile.className='average-tile';
       const value=document.createElement('strong');value.textContent=one(average(stat));
       const name=document.createElement('span');name.textContent=label;
